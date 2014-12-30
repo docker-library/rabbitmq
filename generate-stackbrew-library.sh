@@ -24,3 +24,15 @@ echo
 for va in "${versionAliases[@]}"; do
 	echo "$va: ${url}@${commit}"
 done
+
+for variant in management; do
+	echo
+	for va in "${versionAliases[@]}"; do
+		if [ "$va" = 'latest' ]; then
+			va="$variant"
+		else
+			va="$va-$variant"
+		fi
+		echo "$va: ${url}@${commit} $variant"
+	done
+done
