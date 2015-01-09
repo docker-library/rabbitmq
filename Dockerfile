@@ -16,6 +16,8 @@ RUN grep -vE '^\s+-rabbit .*error_logger.*' /usr/lib/rabbitmq/lib/rabbitmq_serve
 	&& mv /tmp/rabbitmq-server /usr/lib/rabbitmq/lib/rabbitmq_server-*/sbin/rabbitmq-server
 ENV RABBITMQ_SERVER_START_ARGS -eval error_logger:tty(true).
 
+RUN echo '[{rabbit, [{loopback_users, []}]}].' > /etc/rabbitmq/rabbitmq.config
+
 VOLUME /var/lib/rabbitmq
 
 COPY docker-entrypoint.sh /
