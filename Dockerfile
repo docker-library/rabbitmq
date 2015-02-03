@@ -3,6 +3,9 @@ FROM debian:wheezy
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r rabbitmq && useradd -r -d /var/lib/rabbitmq -m -g rabbitmq rabbitmq
 
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv D208507CA14F4FCA
+RUN echo 'deb http://packages.erlang-solutions.com/debian wheezy contrib' > /etc/apt/sources.list.d/erlang.list
+
 # http://www.rabbitmq.com/install-debian.html
 # "Please note that the word testing in this line refers to the state of our release of RabbitMQ, not any particular Debian distribution."
 RUN apt-key adv --keyserver pool.sks-keyservers.net --recv-keys F78372A06FF50C80464FC1B4F7B8CEA6056E8E56
