@@ -32,6 +32,9 @@ RUN apt-get update && apt-get install -y rabbitmq-server=$RABBITMQ_VERSION --no-
 # /usr/sbin/rabbitmq-server has some irritating behavior, and only exists to "su - rabbitmq /usr/lib/rabbitmq/bin/rabbitmq-server ..."
 ENV PATH /usr/lib/rabbitmq/bin:$PATH
 
+ENV RABBITMQ_USER guest
+ENV RABBITMQ_PASSWD guest
+
 # get logs to stdout (thanks to http://www.superpumpup.com/docker-rabbitmq-stdout for inspiration)
 # TODO figure out what we'd need to do to add "(sasl_)?" to this sed and have it work ("{"init terminating in do_boot",{rabbit,failure_during_boot,{error,{cannot_log_to_tty,sasl_report_tty_h,not_installed}}}}")
 RUN sed -E 's!^(\s*-rabbit\s+error_logger)\s+\S*!\1 tty!' /usr/lib/rabbitmq/lib/rabbitmq_server-*/sbin/rabbitmq-server > /tmp/rabbitmq-server \
