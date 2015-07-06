@@ -40,6 +40,9 @@ RUN echo '[{rabbit, [{loopback_users, []}]}].' > /etc/rabbitmq/rabbitmq.config
 
 VOLUME /var/lib/rabbitmq
 
+# add a symlink to the .erlang.cookie in /root so we can "docker exec rabbitmqctl ..." without gosu
+RUN ln -sf /var/lib/rabbitmq/.erlang.cookie /root/
+
 COPY docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
