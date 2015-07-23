@@ -22,6 +22,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 		default_vhost
 		default_user
 		default_pass
+		cluster_nodes
 	)
 
 	haveConfig=
@@ -45,7 +46,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			val="${!var}"
 			[ "$val" ] || continue
 			cat >> /etc/rabbitmq/rabbitmq.config <<-EOC
-			      {$conf, <<"$val">>},
+			      {$conf, $val},
 			EOC
 		done
 		cat >> /etc/rabbitmq/rabbitmq.config <<-'EOF'
