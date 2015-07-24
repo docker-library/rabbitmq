@@ -13,6 +13,12 @@ RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/dow
 	&& rm /usr/local/bin/gosu.asc \
 	&& chmod +x /usr/local/bin/gosu
 
+# grab tini for signal processing and zombie killing
+RUN set -x \
+	&& curl -fSL "https://github.com/krallin/tini/releases/download/v0.5.0/tini" -o /usr/local/bin/tini \
+	&& chmod +x /usr/local/bin/tini \
+	&& tini -h
+
 # Add the officially endorsed Erlang debian repository:
 # See:
 #  - http://www.erlang.org/download.html
