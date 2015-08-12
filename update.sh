@@ -10,4 +10,3 @@ tagVersion="${fullVersion%%-*}"
 
 set -x
 sed -ri 's/^(ENV RABBITMQ_VERSION) .*/\1 '"$fullVersion"'/' Dockerfile
-sed -ri 's/^(FROM rabbitmq):.*/\1:'"$tagVersion"'/' management/Dockerfile
