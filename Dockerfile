@@ -1,7 +1,7 @@
 FROM debian:wheezy
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
-RUN groupadd -r rabbitmq && useradd -r -d /var/lib/rabbitmq -m -g rabbitmq rabbitmq
+RUN groupadd rabbitmq && useradd -d /var/lib/rabbitmq -m -g rabbitmq rabbitmq
 
 RUN apt-get update && apt-get install -y curl ca-certificates --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
