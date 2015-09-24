@@ -57,7 +57,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 	fi
 
 	chown -R rabbitmq /var/lib/rabbitmq
-	set -- gosu rabbitmq tini -- "$@"
+	set -- gosu rabbitmq "$@"
 fi
 
 exec "$@"
