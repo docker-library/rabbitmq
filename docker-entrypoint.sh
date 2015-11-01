@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# If long & short hostnames are not the same, use long hostnames
+if ! [[ $(hostname) == $(hostname -s) ]]; then
+	export RABBITMQ_USE_LONGNAME=true
+fi
 if [ "$RABBITMQ_ERLANG_COOKIE" ]; then
 	cookieFile='/var/lib/rabbitmq/.erlang.cookie'
 	if [ -e "$cookieFile" ]; then
