@@ -2,11 +2,11 @@
 set -e
 
 # If long & short hostnames are not the same, use long hostnames
-if ! [[ $(hostname) == $(hostname -s) ]]; then
+if [ $(hostname) != $(hostname -s) ]; then
 	export RABBITMQ_USE_LONGNAME=true
 fi
 
-if ! [[ -z ${RABBIT_SSL_CERT_FILE+x} ]] || ! [[ -z ${RABBIT_SSL_KEY_FILE+x} ]] || ! [[ -z ${RABBIT_SSL_CA_FILE+x} ]]; then
+if [ ${RABBITMQ_SSL_CERT_FILE:+x} -a ${RABBITMQ_SSL_KEY_FILE:+x} -a ${RABBITMQ_SSL_CA_FILE:+x} ]; then
 	use_ssl="yes"
 fi
 
@@ -50,14 +50,14 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			    [
 		EOH
 		
-		if [[ "${use_ssl}" == "yes" ]]; then
+		if [ "${use_ssl}" = "yes" ]; then
 			cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
 			      { tcp_listeners, [ ] },
 			      { ssl_listeners, [ 5671 ] },
 			      { ssl_options,  [ 
-			        { certfile,   "$RABBIT_SSL_CERT_FILE" },
-			        { keyfile,    "$RABBIT_SSL_KEY_FILE" },
-			        { cacertfile, "$RABBIT_SSL_CA_FILE" },
+			        { certfile,   "$RABBITMQ_SSL_CERT_FILE" },
+			        { keyfile,    "$RABBITMQ_SSL_KEY_FILE" },
+			        { cacertfile, "$RABBITMQ_SSL_CA_FILE" },
 			        { verify,   verify_peer },
 			        { fail_if_no_peer_cert, true } ] },
 			EOS
@@ -88,14 +88,14 @@ if [ "$1" = 'rabbitmq-server' ]; then
 				      { listener, [
 			EOF
 
-			if [[ "${use_ssl}" == "yes" ]]; then
+			if [ "${use_ssl}" = "yes" ]; then
 				cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
 				      { port, 15671 }, 
 				      { ssl, true },
 				      { ssl_opts, [ 
-				          { certfile,   "$RABBIT_SSL_CERT_FILE" },
-				          { keyfile,    "$RABBIT_SSL_KEY_FILE" },
-				          { cacertfile, "$RABBIT_SSL_CA_FILE" },
+				          { certfile,   "$RABBITMQ_SSL_CERT_FILE" },
+				          { keyfile,    "$RABBITMQ_SSL_KEY_FILE" },
+				          { cacertfile, "$RABBITMQ_SSL_CA_FILE" },
 				      { verify,   verify_none },
 				      { fail_if_no_peer_cert, false } ] } ] }
 				EOS
@@ -116,9 +116,9 @@ if [ "$1" = 'rabbitmq-server' ]; then
 		EOF
 	fi
 
-	if [[ "${use_ssl}" == "yes" ]]; then
+	if [ "${use_ssl}" = "yes" ]; then
 		# Create combined cert
-		cat ${RABBIT_SSL_CERT_FILE} ${RABBIT_SSL_KEY_FILE} > /tmp/combined.pem
+		cat ${RABBITMQ_SSL_CERT_FILE} ${RABBITMQ_SSL_KEY_FILE} > /tmp/combined.pem
 		chmod 0400 /tmp/combined.pem
 
 		# More ENV vars for make clustering happiness
@@ -129,7 +129,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 		export RABBITMQ_CTL_ERL_ARGS="-pa ${ERL_SSL_PATH} -proto_dist inet_tls -ssl_dist_opt server_certfile /tmp/combined.pem -ssl_dist_opt server_secure_renegotiate true client_secure_renegotiate true"
 
 		echo "Launching RabbitMQ with SSL..."
-		echo -e " - RABBIT_SSL_CERT_FILE: $RABBIT_SSL_CERT_FILE\n - RABBIT_SSL_KEY_FILE: $RABBIT_SSL_KEY_FILE\n - RABBIT_SSL_CA_FILE: $RABBIT_SSL_CA_FILE"
+		echo -e " - RABBITMQ_SSL_CERT_FILE: $RABBITMQ_SSL_CERT_FILE\n - RABBITMQ_SSL_KEY_FILE: $RABBITMQ_SSL_KEY_FILE\n - RABBITMQ_SSL_CA_FILE: $RABBITMQ_SSL_CA_FILE"
 	else
 		echo "Launching RabbitMQ..."
 	fi
