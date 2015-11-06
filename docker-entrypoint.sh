@@ -80,7 +80,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			      {loopback_users, []}
 		EOF
 
-		if [ "$RABBIT_MANAGEMENT_ENABLED" ]; then
+		if [ "$RABBITMQ_MANAGEMENT_ENABLED" ]; then
 			cat >> /etc/rabbitmq/rabbitmq.config <<-'EOF'
 				    ]
 				  },
