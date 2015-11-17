@@ -7,8 +7,8 @@ RUN apt-get update && apt-get install -y curl ca-certificates --no-install-recom
 
 # grab gosu for easy step-down from root
 RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
-RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.3/gosu-$(dpkg --print-architecture)" \
-	&& curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.3/gosu-$(dpkg --print-architecture).asc" \
+RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.6/gosu-$(dpkg --print-architecture)" \
+	&& curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.6/gosu-$(dpkg --print-architecture).asc" \
 	&& gpg --verify /usr/local/bin/gosu.asc \
 	&& rm /usr/local/bin/gosu.asc \
 	&& chmod +x /usr/local/bin/gosu
@@ -31,7 +31,10 @@ RUN echo 'deb http://www.rabbitmq.com/debian testing main' > /etc/apt/sources.li
 
 ENV RABBITMQ_VERSION 3.5.6-1
 
-RUN apt-get update && apt-get install -y rabbitmq-server=$RABBITMQ_VERSION --no-install-recommends && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+	apt-get install -y erlang erlang-mnesia erlang-public-key erlang-crypto erlang-ssl \
+		erlang-asn1 erlang-inets erlang-os-mon erlang-xmerl erlang-eldap && \
+	apt-get install -y rabbitmq-server=$RABBITMQ_VERSION --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 # /usr/sbin/rabbitmq-server has some irritating behavior, and only exists to "su - rabbitmq /usr/lib/rabbitmq/bin/rabbitmq-server ..."
 ENV PATH /usr/lib/rabbitmq/bin:$PATH
@@ -46,5 +49,5 @@ RUN ln -sf /var/lib/rabbitmq/.erlang.cookie /root/
 COPY docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-EXPOSE 5672 4369 25672
+EXPOSE 4369 5671 5672 25672
 CMD ["rabbitmq-server"]
