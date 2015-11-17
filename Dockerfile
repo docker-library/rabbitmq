@@ -46,5 +46,5 @@ RUN ln -sf /var/lib/rabbitmq/.erlang.cookie /root/
 COPY docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-EXPOSE 5672 4369 25672
+EXPOSE 5671 5672 4369 25672
 CMD ["rabbitmq-server"]
