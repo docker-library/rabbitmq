@@ -1,13 +1,15 @@
 #!/bin/bash
 set -e
 
-# If long & short hostnames are not the same, use long hostnames
-if [ $(hostname) != $(hostname -s) ]; then
-	export RABBITMQ_USE_LONGNAME=true
-fi
+ssl=
 
 if [ ${RABBITMQ_SSL_CERT_FILE:+x} -a ${RABBITMQ_SSL_KEY_FILE:+x} -a ${RABBITMQ_SSL_CA_FILE:+x} ]; then
-	use_ssl="yes"
+	ssl=1
+fi
+
+# If long & short hostnames are not the same, use long hostnames
+if [ "$(hostname)" != "$(hostname -s)" ]; then
+	export RABBITMQ_USE_LONGNAME=true
 fi
 
 if [ "$RABBITMQ_ERLANG_COOKIE" ]; then
@@ -50,7 +52,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			    [
 		EOH
 		
-		if [ "${use_ssl}" = "yes" ]; then
+		if [ "$ssl" ]; then
 			cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
 			      { tcp_listeners, [ ] },
 			      { ssl_listeners, [ 5671 ] },
@@ -89,7 +91,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 				      { listener, [
 			EOF
 
-			if [ "${use_ssl}" = "yes" ]; then
+			if [ "$ssl" ]; then
 				cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
 				      { port, 15671 }, 
 				      { ssl, true },
@@ -117,22 +119,17 @@ if [ "$1" = 'rabbitmq-server' ]; then
 		EOF
 	fi
 
-	if [ "${use_ssl}" = "yes" ]; then
+	if [ "$ssl" ]; then
 		# Create combined cert
-		cat ${RABBITMQ_SSL_CERT_FILE} ${RABBITMQ_SSL_KEY_FILE} > /tmp/combined.pem
+		cat "$RABBITMQ_SSL_CERT_FILE" "$RABBITMQ_SSL_KEY_FILE" > /tmp/combined.pem
 		chmod 0400 /tmp/combined.pem
 
 		# More ENV vars for make clustering happiness
 		# we don't handle clustering in this script, but these args should ensure
 		# clustered SSL-enabled members will talk nicely
-		export ERL_SSL_PATH=`erl -eval 'io:format("~p", [code:lib_dir(ssl, ebin)]),halt().' -noshell`
-		export RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="-pa ${ERL_SSL_PATH} -proto_dist inet_tls -ssl_dist_opt server_certfile /tmp/combined.pem -ssl_dist_opt server_secure_renegotiate true client_secure_renegotiate true"
-		export RABBITMQ_CTL_ERL_ARGS="-pa ${ERL_SSL_PATH} -proto_dist inet_tls -ssl_dist_opt server_certfile /tmp/combined.pem -ssl_dist_opt server_secure_renegotiate true client_secure_renegotiate true"
-
-		echo "Launching RabbitMQ with SSL..."
-		echo -e " - RABBITMQ_SSL_CERT_FILE: $RABBITMQ_SSL_CERT_FILE\n - RABBITMQ_SSL_KEY_FILE: $RABBITMQ_SSL_KEY_FILE\n - RABBITMQ_SSL_CA_FILE: $RABBITMQ_SSL_CA_FILE"
-	else
-		echo "Launching RabbitMQ..."
+		export ERL_SSL_PATH="$(erl -eval 'io:format("~p", [code:lib_dir(ssl, ebin)]),halt().' -noshell)"
+		export RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="-pa '$ERL_SSL_PATH' -proto_dist inet_tls -ssl_dist_opt server_certfile /tmp/combined.pem -ssl_dist_opt server_secure_renegotiate true client_secure_renegotiate true"
+		export RABBITMQ_CTL_ERL_ARGS="-pa '$ERL_SSL_PATH' -proto_dist inet_tls -ssl_dist_opt server_certfile /tmp/combined.pem -ssl_dist_opt server_secure_renegotiate true client_secure_renegotiate true"
 	fi
 
 	chown -R rabbitmq /var/lib/rabbitmq
