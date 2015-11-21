@@ -31,10 +31,10 @@ RUN echo 'deb http://www.rabbitmq.com/debian testing main' > /etc/apt/sources.li
 
 ENV RABBITMQ_VERSION 3.5.6-1
 
-RUN apt-get update && \
-	apt-get install -y erlang erlang-mnesia erlang-public-key erlang-crypto erlang-ssl \
-		erlang-asn1 erlang-inets erlang-os-mon erlang-xmerl erlang-eldap && \
-	apt-get install -y rabbitmq-server=$RABBITMQ_VERSION --no-install-recommends && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		erlang erlang-mnesia erlang-public-key erlang-crypto erlang-ssl erlang-asn1 erlang-inets erlang-os-mon erlang-xmerl erlang-eldap \
+		rabbitmq-server=$RABBITMQ_VERSION \
+	&& rm -rf /var/lib/apt/lists/*
 
 # /usr/sbin/rabbitmq-server has some irritating behavior, and only exists to "su - rabbitmq /usr/lib/rabbitmq/bin/rabbitmq-server ..."
 ENV PATH /usr/lib/rabbitmq/bin:$PATH
