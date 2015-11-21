@@ -80,7 +80,8 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			      {loopback_users, []}
 		EOF
 
-		if [ "$RABBITMQ_MANAGEMENT_ENABLED" ]; then
+		# If management plugin is installed, then generate config consider this
+		if [ "$(rabbitmq-plugins list -m -e rabbitmq_management)" ]; then
 			cat >> /etc/rabbitmq/rabbitmq.config <<-'EOF'
 				    ]
 				  },
