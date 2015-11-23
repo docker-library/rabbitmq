@@ -2,8 +2,7 @@
 set -e
 
 ssl=
-
-if [ ${RABBITMQ_SSL_CERT_FILE:+x} -a ${RABBITMQ_SSL_KEY_FILE:+x} -a ${RABBITMQ_SSL_CA_FILE:+x} ]; then
+if [ "$RABBITMQ_SSL_CERT_FILE" -a "$RABBITMQ_SSL_KEY_FILE" -a "$RABBITMQ_SSL_CA_FILE" ]; then
 	ssl=1
 fi
 
@@ -56,7 +55,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
 			      { tcp_listeners, [ ] },
 			      { ssl_listeners, [ 5671 ] },
-			      { ssl_options,  [ 
+			      { ssl_options,  [
 			        { certfile,   "$RABBITMQ_SSL_CERT_FILE" },
 			        { keyfile,    "$RABBITMQ_SSL_KEY_FILE" },
 			        { cacertfile, "$RABBITMQ_SSL_CA_FILE" },
@@ -93,9 +92,9 @@ if [ "$1" = 'rabbitmq-server' ]; then
 
 			if [ "$ssl" ]; then
 				cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
-				      { port, 15671 }, 
+				      { port, 15671 },
 				      { ssl, true },
-				      { ssl_opts, [ 
+				      { ssl_opts, [
 				          { certfile,   "$RABBITMQ_SSL_CERT_FILE" },
 				          { keyfile,    "$RABBITMQ_SSL_KEY_FILE" },
 				          { cacertfile, "$RABBITMQ_SSL_CA_FILE" },
@@ -105,7 +104,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			else
 				cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
 				        { port, 15672 },
-				        { ssl, false } 
+				        { ssl, false }
 				        ]
 				      }
 				EOS
@@ -129,7 +128,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 		# clustered SSL-enabled members will talk nicely
 		export ERL_SSL_PATH="$(erl -eval 'io:format("~p", [code:lib_dir(ssl, ebin)]),halt().' -noshell)"
 		export RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="-pa '$ERL_SSL_PATH' -proto_dist inet_tls -ssl_dist_opt server_certfile /tmp/combined.pem -ssl_dist_opt server_secure_renegotiate true client_secure_renegotiate true"
-		export RABBITMQ_CTL_ERL_ARGS="-pa '$ERL_SSL_PATH' -proto_dist inet_tls -ssl_dist_opt server_certfile /tmp/combined.pem -ssl_dist_opt server_secure_renegotiate true client_secure_renegotiate true"
+		export RABBITMQ_CTL_ERL_ARGS="$RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS"
 	fi
 
 	chown -R rabbitmq /var/lib/rabbitmq
