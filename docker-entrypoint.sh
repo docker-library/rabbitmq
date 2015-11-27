@@ -131,6 +131,15 @@ if [ "$1" = 'rabbitmq-server' ]; then
 		export RABBITMQ_CTL_ERL_ARGS="$RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS"
 	fi
 
+	echo
+	for f in /docker-entrypoint-initdb.d/*; do
+		case "$f" in
+			*.sh)  echo "$0: running $f"; . "$f" ;;
+			*)     echo "$0: ignoring $f" ;;
+		esac
+		echo
+	done
+
 	chown -R rabbitmq /var/lib/rabbitmq
 	set -- gosu rabbitmq "$@"
 fi
