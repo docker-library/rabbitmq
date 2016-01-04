@@ -29,9 +29,12 @@ fi
 if [ "$1" = 'rabbitmq-server' ]; then
 	configs=(
 		# https://www.rabbitmq.com/configure.html
-		default_vhost
-		default_user
 		default_pass
+		default_user
+		default_vhost
+		ssl_ca_file
+		ssl_cert_file
+		ssl_key_file
 	)
 
 	haveConfig=
@@ -70,6 +73,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 		fi
 		
 		for conf in "${configs[@]}"; do
+			[ "${conf#ssl_}" = "$conf" ] || continue
 			var="RABBITMQ_${conf^^}"
 			val="${!var}"
 			[ "$val" ] || continue
