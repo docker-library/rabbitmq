@@ -10,9 +10,6 @@ echo '# maintainer: InfoSiftr <github@infosiftr.com> (@infosiftr)'
 commit="$(git log -1 --format='format:%H' -- Dockerfile $(awk 'toupper($1) == "COPY" { for (i = 2; i < NF; i++) { print $i } }' Dockerfile))"
 fullVersion="$(grep -m1 'ENV RABBITMQ_VERSION ' Dockerfile | cut -d' ' -f3)"
 
-# fullVersion is a Debian version and we only care about the RabbitMQ version, so let's trim -*
-fullVersion="${fullVersion%%-*}"
-
 versionAliases=()
 while [ "${fullVersion%.*}" != "$fullVersion" ]; do
 	versionAliases+=( $fullVersion )
