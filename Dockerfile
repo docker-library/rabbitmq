@@ -42,6 +42,9 @@ ENV PATH /usr/lib/rabbitmq/bin:$PATH
 
 RUN echo '[{rabbit, [{loopback_users, []}]}].' > /etc/rabbitmq/rabbitmq.config
 
+# set home so that any `--user` knows where to put the erlang cookie
+ENV HOME /var/lib/rabbitmq
+
 VOLUME /var/lib/rabbitmq
 
 # add a symlink to the .erlang.cookie in /root so we can "docker exec rabbitmqctl ..." without gosu
