@@ -40,6 +40,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 		ssl_ca_file
 		ssl_cert_file
 		ssl_key_file
+		hipe_compile
 	)
 
 	haveConfig=
@@ -82,9 +83,15 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			var="RABBITMQ_${conf^^}"
 			val="${!var}"
 			[ "$val" ] || continue
-			cat >> /etc/rabbitmq/rabbitmq.config <<-EOC
-			      {$conf, <<"$val">>},
-			EOC
+			if [[ $conf == default_pass || $conf == default_user || $conf == default_vhost ]]; then
+				cat >> /etc/rabbitmq/rabbitmq.config <<-EOC
+				      {$conf, <<"$val">>},
+				EOC
+			else
+				cat >> /etc/rabbitmq/rabbitmq.config <<-EOC
+				      {$conf, $val},
+				EOC
+			fi
 		done
 		cat >> /etc/rabbitmq/rabbitmq.config <<-'EOF'
 			      {loopback_users, []}
