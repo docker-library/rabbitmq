@@ -134,7 +134,7 @@ if [ "$ssl" ]; then
 	# As a workaround prefix the combined cert with the username so each user only operates on the file they control.
 	combined_file="/tmp/$(id -un)_combined.pem"
 	cat "$RABBITMQ_SSL_CERT_FILE" "$RABBITMQ_SSL_KEY_FILE" > $combined_file
-	chmod 0400 $combined_file
+	chmod 0600 $combined_file
 
 	# More ENV vars for make clustering happiness
 	# we don't handle clustering in this script, but these args should ensure
