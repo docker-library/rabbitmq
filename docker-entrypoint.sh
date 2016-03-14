@@ -4,7 +4,11 @@ set -e
 # allow the container to be started with `--user`
 if [ "$1" = 'rabbitmq-server' -a "$(id -u)" = '0' ]; then
 	chown -R rabbitmq /var/lib/rabbitmq
-	exec gosu rabbitmq "$BASH_SOURCE" "$@"
+fi
+
+# Always run as the RabbitMQ user: Greatly simplifies permissions handling
+if [ "$(id -u)" = '0' ]; then
+    exec gosu rabbitmq "$BASH_SOURCE" "$@"
 fi
 
 ssl=
@@ -130,9 +134,7 @@ fi
 
 if [ "$ssl" ]; then
 	# Create combined cert
-	# If calling this script with an exec this is problematic, as it needs to be owned 400 for perms but this code can run as root OR rabbitmq.
-	# As a workaround prefix the combined cert with the username so each user only operates on the file they control.
-	combined_file="/tmp/$(id -un)_combined.pem"
+	combined_file="/tmp/combined.pem"
 	cat "$RABBITMQ_SSL_CERT_FILE" "$RABBITMQ_SSL_KEY_FILE" > $combined_file
 	chmod 0600 $combined_file
 
