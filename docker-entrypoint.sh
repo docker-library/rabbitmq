@@ -129,6 +129,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 
 	if [ "$ssl" ]; then
 		# Create combined cert
+		rm -f /tmp/combined.pem
 		cat "$RABBITMQ_SSL_CERT_FILE" "$RABBITMQ_SSL_KEY_FILE" > /tmp/combined.pem
 		chmod 0400 /tmp/combined.pem
 
