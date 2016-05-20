@@ -22,7 +22,7 @@ for va in "${versionAliases[@]}"; do
 	echo "$va: ${url}@${commit}"
 done
 
-for variant in management; do
+for variant in management mqtt; do
 	echo
 	for va in "${versionAliases[@]}"; do
 		if [ "$va" = 'latest' ]; then

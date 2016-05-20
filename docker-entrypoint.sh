@@ -120,6 +120,36 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			fi
 		fi
 
+		# If mqtt plugin is installed, then generate config consider this
+		if [ "$(rabbitmq-plugins list -m -e rabbitmq_mqtt)" ]; then
+			cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
+				    ]
+				  },
+				  { rabbitmq_mqtt, [
+				      { allow_anonymous,  true },
+				      { default_user,     <<"$RABBITMQ_DEFAULT_USER">> },
+				      { default_pass,     <<"$RABBITMQ_DEFAULT_PASS">> },
+				      { vhost,            <<"$RABBITMQ_DEFAULT_VHOST">> },
+				      { exchange,         <<"amq.topic">> },
+				      { subscription_ttl, 86400000 },
+				      { prefetch,         10 },
+				      { tcp_listen_options, [{backlog,   128},
+				                             {nodelay,   true}] },
+			EOS
+
+			if [ "$ssl" ]; then
+				cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
+				    { tcp_listeners, [ ] },
+				    { ssl_listeners, [ 8883 ] }
+				EOS
+			else
+				cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
+				    { tcp_listeners, [ 1883 ] },
+				    { ssl_listeners, [ ] }
+				EOS
+			fi
+		fi
+
 		cat >> /etc/rabbitmq/rabbitmq.config <<-'EOF'
 			    ]
 			  }

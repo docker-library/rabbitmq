@@ -13,6 +13,8 @@ script:
   - ~/official-images/test/run.sh "$image"
   - docker build -t "$image:management" management
   - ~/official-images/test/run.sh "$image:management"
+  - docker build -t "$image:mqtt" mqtt
+  - ~/official-images/test/run.sh "$image:mqtt"
 
 after_script:
   - docker images
