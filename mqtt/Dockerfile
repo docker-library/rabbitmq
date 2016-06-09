@@ -1,4 +1,4 @@
-FROM robertobarreda/rabbitmq
+FROM robertobarreda/rabbitmq:management
 
 RUN rabbitmq-plugins enable --offline rabbitmq_mqtt
 
