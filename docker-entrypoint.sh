@@ -55,6 +55,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 	if [ "$haveConfig" ]; then
 		cat > /etc/rabbitmq/rabbitmq.config <<-'EOH'
 			[
+			  {ssl, [ { versions, [ 'tlsv1.2', 'tlsv1.1', tlsv1 ] } ]},
 			  {rabbit,
 			    [
 		EOH
@@ -68,6 +69,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			        { keyfile,    "$RABBITMQ_SSL_KEY_FILE" },
 			        { cacertfile, "$RABBITMQ_SSL_CA_FILE" },
 			        { verify,   verify_peer },
+			        { versions, [ 'tlsv1.2', 'tlsv1.1', tlsv1 ] },
 			        { fail_if_no_peer_cert, true } ] },
 			EOS
 		else
