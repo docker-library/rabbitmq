@@ -24,6 +24,21 @@ RUN set -x \
 RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 434975BD900CCBE4F7EE1B1ED208507CA14F4FCA
 RUN echo 'deb http://packages.erlang-solutions.com/debian jessie contrib' > /etc/apt/sources.list.d/erlang.list
 
+# install Erlang
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		erlang-asn1 \
+		erlang-crypto \
+		erlang-eldap \
+		erlang-inets \
+		erlang-mnesia \
+		erlang-nox \
+		erlang-os-mon \
+		erlang-public-key \
+		erlang-ssl \
+		erlang-xmerl \
+	&& rm -rf /var/lib/apt/lists/*
+
 # get logs to stdout (thanks @dumbbell for pushing this upstream! :D)
 ENV RABBITMQ_LOGS=- RABBITMQ_SASL_LOGS=-
 # https://github.com/rabbitmq/rabbitmq-server/commit/53af45bf9a162dec849407d114041aad3d84feaf
@@ -37,7 +52,6 @@ ENV RABBITMQ_VERSION 3.6.2
 ENV RABBITMQ_DEBIAN_VERSION 3.6.2-1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-		erlang-nox erlang-mnesia erlang-public-key erlang-crypto erlang-ssl erlang-asn1 erlang-inets erlang-os-mon erlang-xmerl erlang-eldap \
 		rabbitmq-server=$RABBITMQ_DEBIAN_VERSION \
 	&& rm -rf /var/lib/apt/lists/*
 
