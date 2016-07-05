@@ -58,7 +58,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			  {rabbit,
 			    [
 		EOH
-		
+
 		if [ "$ssl" ]; then
 			cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
 			      { tcp_listeners, [ ] },
@@ -67,7 +67,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			        { certfile,   "$RABBITMQ_SSL_CERT_FILE" },
 			        { keyfile,    "$RABBITMQ_SSL_KEY_FILE" },
 			        { cacertfile, "$RABBITMQ_SSL_CA_FILE" },
-			        { verify,   verify_peer },
+			        { verify,     verify_peer },
 			        { fail_if_no_peer_cert, true } ] },
 			EOS
 		else
@@ -76,7 +76,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			      { ssl_listeners, [ ] },
 			EOS
 		fi
-		
+
 		for conf in "${configs[@]}"; do
 			[ "${conf#ssl_}" = "$conf" ] || continue
 			var="RABBITMQ_${conf^^}"
@@ -86,6 +86,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			      {$conf, <<"$val">>},
 			EOC
 		done
+
 		cat >> /etc/rabbitmq/rabbitmq.config <<-'EOF'
 			      {loopback_users, []}
 		EOF
@@ -118,11 +119,11 @@ if [ "$1" = 'rabbitmq-server' ]; then
 				        { ssl, false }
 				EOS
 			fi
+
 			cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
 			        ]
 			      }
 			EOS
-
 		fi
 
 		cat >> /etc/rabbitmq/rabbitmq.config <<-'EOF'
