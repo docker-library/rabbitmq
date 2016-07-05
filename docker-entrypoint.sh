@@ -12,6 +12,11 @@ if [ "$RABBITMQ_SSL_CERT_FILE" -a "$RABBITMQ_SSL_KEY_FILE" -a "$RABBITMQ_SSL_CA_
 	ssl=1
 fi
 
+cluster=
+if [ "$RABBITMQ_CLUSTERER_CONFIG" ]; then
+	cluster=1
+fi
+
 # If long & short hostnames are not the same, use long hostnames
 if [ "$(hostname)" != "$(hostname -s)" ]; then
 	export RABBITMQ_USE_LONGNAME=true
@@ -89,6 +94,15 @@ if [ "$1" = 'rabbitmq-server' ]; then
 		cat >> /etc/rabbitmq/rabbitmq.config <<-'EOF'
 			      {loopback_users, []}
 		EOF
+
+		if [ "$cluster" ]; then
+			cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
+				    ]
+				  },
+				  { rabbitmq_clusterer, [
+					{ config, "$RABBITMQ_CLUSTERER_CONFIG" }
+			EOS
+		fi		
 
 		# If management plugin is installed, then generate config consider this
 		if [ "$(rabbitmq-plugins list -m -e rabbitmq_management)" ]; then
