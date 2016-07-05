@@ -37,7 +37,7 @@ ENV RABBITMQ_VERSION 3.6.2
 ENV RABBITMQ_DEBIAN_VERSION 3.6.2-1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-		erlang-nox erlang-mnesia erlang-public-key erlang-crypto erlang-ssl erlang-asn1 erlang-inets erlang-os-mon erlang-xmerl erlang-eldap \
+		erlang-nox erlang-mnesia erlang-public-key erlang-crypto erlang-ssl erlang-asn1 erlang-inets erlang-os-mon erlang-xmerl erlang-eldap erlang-base-hipe \
 		rabbitmq-server=$RABBITMQ_DEBIAN_VERSION \
 	&& rm -rf /var/lib/apt/lists/*
 
