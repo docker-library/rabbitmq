@@ -81,19 +81,30 @@ if [ "$1" = 'rabbitmq-server' ]; then
 		fi
 
 		for conf in "${configs[@]}"; do
-			[ "${conf#ssl_}" = "$conf" ] || continue
 			var="RABBITMQ_${conf^^}"
 			val="${!var}"
-			[ "$val" ] || continue
-			if [[ $conf == default_pass || $conf == default_user || $conf == default_vhost ]]; then
-				cat >> /etc/rabbitmq/rabbitmq.config <<-EOC
-				      {$conf, <<"$val">>},
-				EOC
-			else
-				cat >> /etc/rabbitmq/rabbitmq.config <<-EOC
-				      {$conf, $val},
-				EOC
-			fi
+
+			rawVal=
+			case "$conf" in
+				# SSL-related options are configured above, so should be ignored here
+				ssl_*) continue ;;
+
+				# convert shell booleans into Erlang booleans
+				hipe_compile)
+					[ "$val" ] && rawVal='true' || rawVal='false'
+					;;
+
+				# otherwise, assume string-based (and skip or add appropriate decorations)
+				*)
+					[ "$val" ] || continue
+					rawVal='<<"'"$val"'">>'
+					;;
+			esac
+			[ "$rawVal" ] || continue
+
+			cat >> /etc/rabbitmq/rabbitmq.config <<-EOC
+				      {$conf, $rawVal},
+			EOC
 		done
 
 		cat >> /etc/rabbitmq/rabbitmq.config <<-'EOF'
