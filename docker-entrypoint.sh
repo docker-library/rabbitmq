@@ -2,8 +2,10 @@
 set -e
 
 # allow the container to be started with `--user`
-if [ "$1" = 'rabbitmq-server' -a "$(id -u)" = '0' ]; then
-	chown -R rabbitmq /var/lib/rabbitmq
+if [[ "$1" == rabbitmq* ]] && [ "$(id -u)" = '0' ]; then
+	if [ "$1" = 'rabbitmq-server' ]; then
+		chown -R rabbitmq /var/lib/rabbitmq
+	fi
 	exec gosu rabbitmq "$BASH_SOURCE" "$@"
 fi
 
@@ -126,19 +128,19 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			].
 		EOF
 	fi
+fi
 
-	if [ "$ssl" ]; then
-		# Create combined cert
-		cat "$RABBITMQ_SSL_CERT_FILE" "$RABBITMQ_SSL_KEY_FILE" > /tmp/combined.pem
-		chmod 0400 /tmp/combined.pem
+if [ "$ssl" ]; then
+	# Create combined cert
+	cat "$RABBITMQ_SSL_CERT_FILE" "$RABBITMQ_SSL_KEY_FILE" > /tmp/combined.pem
+	chmod 0400 /tmp/combined.pem
 
-		# More ENV vars for make clustering happiness
-		# we don't handle clustering in this script, but these args should ensure
-		# clustered SSL-enabled members will talk nicely
-		export ERL_SSL_PATH="$(erl -eval 'io:format("~p", [code:lib_dir(ssl, ebin)]),halt().' -noshell)"
-		export RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="-pa '$ERL_SSL_PATH' -proto_dist inet_tls -ssl_dist_opt server_certfile /tmp/combined.pem -ssl_dist_opt server_secure_renegotiate true client_secure_renegotiate true"
-		export RABBITMQ_CTL_ERL_ARGS="$RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS"
-	fi
+	# More ENV vars for make clustering happiness
+	# we don't handle clustering in this script, but these args should ensure
+	# clustered SSL-enabled members will talk nicely
+	export ERL_SSL_PATH="$(erl -eval 'io:format("~p", [code:lib_dir(ssl, ebin)]),halt().' -noshell)"
+	export RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="-pa '$ERL_SSL_PATH' -proto_dist inet_tls -ssl_dist_opt server_certfile /tmp/combined.pem -ssl_dist_opt server_secure_renegotiate true client_secure_renegotiate true"
+	export RABBITMQ_CTL_ERL_ARGS="$RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS"
 fi
 
 exec "$@"
