@@ -59,8 +59,9 @@ RUN ln -sf /var/lib/rabbitmq/.erlang.cookie /root/
 
 RUN ln -sf /usr/lib/rabbitmq/lib/rabbitmq_server-$RABBITMQ_VERSION/plugins /plugins
 
-COPY docker-entrypoint.sh /
-ENTRYPOINT ["/docker-entrypoint.sh"]
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN ln -s usr/local/bin/docker-entrypoint.sh / # backwards compat
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 4369 5671 5672 25672
 CMD ["rabbitmq-server"]
