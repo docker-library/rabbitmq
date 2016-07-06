@@ -28,6 +28,7 @@ RUN echo 'deb http://packages.erlang-solutions.com/debian jessie contrib' > /etc
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		erlang-asn1 \
+		erlang-base-hipe \
 		erlang-crypto \
 		erlang-eldap \
 		erlang-inets \
