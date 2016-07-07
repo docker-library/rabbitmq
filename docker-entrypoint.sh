@@ -101,7 +101,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			[ "$rawVal" ] || continue
 
 			cat >> /etc/rabbitmq/rabbitmq.config <<-EOC
-				      {$conf, $rawVal},
+				      { $conf, $rawVal },
 			EOC
 		done
 
