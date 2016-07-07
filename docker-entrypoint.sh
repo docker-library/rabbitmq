@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eu
 
 # allow the container to be started with `--user`
 if [[ "$1" == rabbitmq* ]] && [ "$(id -u)" = '0' ]; then
@@ -14,32 +14,62 @@ fi
 : "${RABBITMQ_SSL_KEYFILE:=${RABBITMQ_SSL_KEY_FILE:-}}"
 : "${RABBITMQ_SSL_CACERTFILE:=${RABBITMQ_SSL_CA_FILE:-}}"
 
+# "management" SSL config should default to using the same certs
+: "${RABBITMQ_MANAGEMENT_SSL_CACERTFILE:=$RABBITMQ_SSL_CACERTFILE}"
+: "${RABBITMQ_MANAGEMENT_SSL_CERTFILE:=$RABBITMQ_SSL_CERTFILE}"
+: "${RABBITMQ_MANAGEMENT_SSL_KEYFILE:=$RABBITMQ_SSL_KEYFILE}"
+
 # https://www.rabbitmq.com/configure.html
-fileConfigs=(
-	ssl_cacertfile
-	ssl_certfile
-	ssl_keyfile
+sslConfigKeys=(
+	cacertfile
+	certfile
+	fail_if_no_peer_cert
+	keyfile
+	verify
 )
-configs=(
+managementConfigKeys=(
+	"${sslConfigKeys[@]/#/ssl_}"
+)
+rabbitConfigKeys=(
 	default_pass
 	default_user
 	default_vhost
 	hipe_compile
-	ssl_fail_if_no_peer_cert
-	ssl_verify
-	"${fileConfigs[@]}"
+)
+fileConfigKeys=(
+	management_ssl_cacertfile
+	management_ssl_certfile
+	management_ssl_keyfile
+	ssl_cacertfile
+	ssl_certfile
+	ssl_keyfile
+)
+allConfigKeys=(
+	"${managementConfigKeys[@]/#/management_}"
+	"${rabbitConfigKeys[@]}"
+	"${sslConfigKeys[@]/#/ssl_}"
+)
+
+declare -A configDefaults=(
+	[management_ssl_fail_if_no_peer_cert]='false'
+	[management_ssl_verify]='verify_none'
+
+	[ssl_fail_if_no_peer_cert]='true'
+	[ssl_verify]='verify_peer'
 )
 
 haveConfig=
 haveSslConfig=
-for conf in "${configs[@]}"; do
+haveManagementSslConfig=
+for conf in "${allConfigKeys[@]}"; do
 	var="RABBITMQ_${conf^^}"
-	val="${!var}"
+	val="${!var:-}"
 	if [ "$val" ]; then
 		haveConfig=1
-		if [[ "$conf" == ssl_* ]]; then
-			haveSslConfig=1
-		fi
+		case "$conf" in
+			ssl_*) haveSslConfig=1 ;;
+			management_ssl_*) haveManagementSslConfig=1 ;;
+		esac
 	fi
 done
 if [ "$haveSslConfig" ]; then
@@ -64,7 +94,7 @@ if [ "$haveSslConfig" ]; then
 	fi
 fi
 missingFiles=()
-for conf in "${fileConfigs[@]}"; do
+for conf in "${fileConfigKeys[@]}"; do
 	var="RABBITMQ_${conf^^}"
 	val="${!var}"
 	if [ "$val" ] && [ ! -f "$val" ]; then
@@ -83,12 +113,20 @@ if [ "${#missingFiles[@]}" -gt 0 ]; then
 	exit 1
 fi
 
+# set defaults for missing values (but only after we're done with all our checking so we don't throw any of that off)
+for conf in "${!configDefaults[@]}"; do
+	default="${configDefaults[$conf]}"
+	var="RABBITMQ_${conf^^}"
+	[ -z "${!var:-}" ] || continue
+	eval "export $var=\"\$default\""
+done
+
 # If long & short hostnames are not the same, use long hostnames
 if [ "$(hostname)" != "$(hostname -s)" ]; then
 	: "${RABBITMQ_USE_LONGNAME:=true}"
 fi
 
-if [ "$RABBITMQ_ERLANG_COOKIE" ]; then
+if [ "${RABBITMQ_ERLANG_COOKIE:-}" ]; then
 	cookieFile='/var/lib/rabbitmq/.erlang.cookie'
 	if [ -e "$cookieFile" ]; then
 		if [ "$(cat "$cookieFile" 2>/dev/null)" != "$RABBITMQ_ERLANG_COOKIE" ]; then
@@ -127,6 +165,45 @@ rabbit_array() {
 	esac
 	echo -n ']'
 }
+rabbit_env_config() {
+	local prefix="$1"; shift
+
+	local ret=()
+	local conf
+	for conf; do
+		local var="rabbitmq${prefix:+_$prefix}_$conf"
+		var="${var^^}"
+
+		local val="${!var:-}"
+
+		local rawVal=
+		case "$conf" in
+			verify|fail_if_no_peer_cert)
+				[ "$val" ] || continue
+				rawVal="$val"
+				;;
+
+			hipe_compile)
+				[ "$val" ] && rawVal='true' || rawVal='false'
+				;;
+
+			cacertfile|certfile|keyfile)
+				[ "$val" ] || continue
+				rawVal='"'"$val"'"'
+				;;
+
+			*)
+				[ "$val" ] || continue
+				rawVal='<<"'"$val"'">>'
+				;;
+		esac
+		[ "$rawVal" ] || continue
+
+		ret+=( "{ $conf, $rawVal }" )
+	done
+
+	join $'\n' "${ret[@]}"
+}
 
 if [ "$1" = 'rabbitmq-server' ] && [ "$haveConfig" ]; then
 	fullConfig=()
@@ -135,34 +212,10 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$haveConfig" ]; then
 		"{ loopback_users, $(rabbit_array) }"
 	)
 
-	rabbitSslOptions=()
 	if [ "$haveSslConfig" ]; then
-		for conf in "${configs[@]}"; do
-			sslConf="${conf#ssl_}"
-			[ "$sslConf" != "$conf" ] || continue
-
-			var="RABBITMQ_${conf^^}"
-			val="${!var}"
-
-			# default values
-			case "$sslConf" in
-				verify) : "${val:=verify_peer}" ;;
-				fail_if_no_peer_cert) : "${val:=true}" ;;
-			esac
-
-			rawVal=
-			case "$sslConf" in
-				verify|fail_if_no_peer_cert) rawVal="$val" ;;
-
-				*)
-					[ "$val" ] || continue
-					rawVal='"'"$val"'"'
-					;;
-			esac
-			[ "$rawVal" ] || continue
-
-			rabbitSslOptions+=( "{ $sslConf, $rawVal }" )
-		done
+		IFS=$'\n'
+		rabbitSslOptions=( $(rabbit_env_config 'ssl' "${sslConfigKeys[@]}") )
+		unset IFS
 
 		rabbitConfig+=(
 			"{ tcp_listeners, $(rabbit_array) }"
@@ -176,41 +229,23 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$haveConfig" ]; then
 		)
 	fi
 
-	for conf in "${configs[@]}"; do
-		var="RABBITMQ_${conf^^}"
-		val="${!var}"
-
-		rawVal=
-		case "$conf" in
-			# SSL-related options are configured above, so should be ignored here
-			ssl_*) continue ;;
-
-			# convert shell booleans into Erlang booleans
-			hipe_compile)
-				[ "$val" ] && rawVal='true' || rawVal='false'
-				;;
-
-			# otherwise, assume string-based (and skip or add appropriate decorations)
-			*)
-				[ "$val" ] || continue
-				rawVal='<<"'"$val"'">>'
-				;;
-		esac
-		[ "$rawVal" ] || continue
-
-		rabbitConfig+=( "{ $conf, $rawVal }" )
-	done
+	IFS=$'\n'
+	rabbitConfig+=( $(rabbit_env_config '' "${rabbitConfigKeys[@]}") )
+	unset IFS
 
 	fullConfig+=( "{ rabbit, $(rabbit_array "${rabbitConfig[@]}") }" )
 
 	# If management plugin is installed, then generate config consider this
 	if [ "$(rabbitmq-plugins list -m -e rabbitmq_management)" ]; then
-		rabbitManagementListenerConfig=()
-		if [ "$haveSslConfig" ]; then
+		if [ "$haveManagementSslConfig" ]; then
+			IFS=$'\n'
+			rabbitManagementSslOptions=( $(rabbit_env_config 'management_ssl' "${sslConfigKeys[@]}") )
+			unset IFS
+
 			rabbitManagementListenerConfig+=(
 				'{ port, 15671 }'
 				'{ ssl, true }'
-				"{ ssl_opts, $(rabbit_array "${rabbitSslOptions[@]}") }"
+				"{ ssl_opts, $(rabbit_array "${rabbitManagementSslOptions[@]}") }"
 			)
 		else
 			rabbitManagementListenerConfig+=(
