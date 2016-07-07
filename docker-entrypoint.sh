@@ -129,6 +129,8 @@ rabbit_array() {
 }
 
 if [ "$1" = 'rabbitmq-server' ] && [ "$haveConfig" ]; then
+	fullConfig=()
+
 	rabbitConfig=(
 		"{ loopback_users, $(rabbit_array) }"
 	)
@@ -199,6 +201,8 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$haveConfig" ]; then
 		rabbitConfig+=( "{ $conf, $rawVal }" )
 	done
 
+	fullConfig+=( "{ rabbit, $(rabbit_array "${rabbitConfig[@]}") }" )
+
 	# If management plugin is installed, then generate config consider this
 	if [ "$(rabbitmq-plugins list -m -e rabbitmq_management)" ]; then
 		rabbitManagementListenerConfig=()
@@ -214,12 +218,13 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$haveConfig" ]; then
 				'{ ssl, false }'
 			)
 		fi
-		rabbitConfig+=(
+
+		fullConfig+=(
 			"{ rabbitmq_management, $(rabbit_array "{ listener, $(rabbit_array "${rabbitManagementListenerConfig[@]}") }") }"
 		)
 	fi
 
-	echo "$(rabbit_array "{ rabbit, $(rabbit_array "${rabbitConfig[@]}") }")." > /etc/rabbitmq/rabbitmq.config
+	echo "$(rabbit_array "${fullConfig[@]}")." > /etc/rabbitmq/rabbitmq.config
 fi
 
 combinedSsl='/tmp/combined.pem'
