@@ -9,14 +9,33 @@ if [[ "$1" == rabbitmq* ]] && [ "$(id -u)" = '0' ]; then
 	exec gosu rabbitmq "$BASH_SOURCE" "$@"
 fi
 
-ssl=
-if [ "$RABBITMQ_SSL_CERT_FILE" -a "$RABBITMQ_SSL_KEY_FILE" -a "$RABBITMQ_SSL_CA_FILE" ]; then
-	ssl=1
-fi
+configs=(
+	# https://www.rabbitmq.com/configure.html
+	default_pass
+	default_user
+	default_vhost
+	hipe_compile
+	ssl_ca_file
+	ssl_cert_file
+	ssl_key_file
+)
+
+haveConfig=
+haveSslConfig=
+for conf in "${configs[@]}"; do
+	var="RABBITMQ_${conf^^}"
+	val="${!var}"
+	if [ "$val" ]; then
+		haveConfig=1
+		if [[ "$conf" == ssl_* ]]; then
+			haveSslConfig=1
+		fi
+	fi
+done
 
 # If long & short hostnames are not the same, use long hostnames
 if [ "$(hostname)" != "$(hostname -s)" ]; then
-	export RABBITMQ_USE_LONGNAME=true
+	: "${RABBITMQ_USE_LONGNAME:=true}"
 fi
 
 if [ "$RABBITMQ_ERLANG_COOKIE" ]; then
@@ -34,27 +53,6 @@ if [ "$RABBITMQ_ERLANG_COOKIE" ]; then
 fi
 
 if [ "$1" = 'rabbitmq-server' ]; then
-	configs=(
-		# https://www.rabbitmq.com/configure.html
-		default_pass
-		default_user
-		default_vhost
-		ssl_ca_file
-		ssl_cert_file
-		ssl_key_file
-		hipe_compile
-	)
-
-	haveConfig=
-	for conf in "${configs[@]}"; do
-		var="RABBITMQ_${conf^^}"
-		val="${!var}"
-		if [ "$val" ]; then
-			haveConfig=1
-			break
-		fi
-	done
-
 	if [ "$haveConfig" ]; then
 		cat > /etc/rabbitmq/rabbitmq.config <<-'EOH'
 			[
@@ -62,7 +60,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 			    [
 		EOH
 
-		if [ "$ssl" ]; then
+		if [ "$haveSslConfig" ]; then
 			cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
 			      { tcp_listeners, [ ] },
 			      { ssl_listeners, [ 5671 ] },
@@ -120,7 +118,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 				      { listener, [
 			EOF
 
-			if [ "$ssl" ]; then
+			if [ "$haveSslConfig" ]; then
 				cat >> /etc/rabbitmq/rabbitmq.config <<-EOS
 				        { port, 15671 },
 				        { ssl, true },
@@ -154,7 +152,7 @@ if [ "$1" = 'rabbitmq-server' ]; then
 	fi
 fi
 
-if [ "$ssl" ]; then
+if [ "$haveSslConfig" ]; then
 	# Create combined cert
 	cat "$RABBITMQ_SSL_CERT_FILE" "$RABBITMQ_SSL_KEY_FILE" > /tmp/combined.pem
 	chmod 0400 /tmp/combined.pem
