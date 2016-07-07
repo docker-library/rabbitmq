@@ -37,7 +37,10 @@ RUN apt-get update \
 		erlang-public-key \
 		erlang-ssl \
 		erlang-xmerl \
+		# socat is required starting from 3.6.2 version
+		socat \		
 	&& rm -rf /var/lib/apt/lists/*
+
 
 # get logs to stdout (thanks @dumbbell for pushing this upstream! :D)
 ENV RABBITMQ_LOGS=- RABBITMQ_SASL_LOGS=-
