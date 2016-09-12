@@ -26,6 +26,7 @@ sslConfigKeys=(
 	fail_if_no_peer_cert
 	keyfile
 	verify
+	depth
 )
 managementConfigKeys=(
 	"${sslConfigKeys[@]/#/ssl_}"
@@ -188,6 +189,11 @@ rabbit_env_config() {
 				[ "$val" ] && rawVal='true' || rawVal='false'
 				;;
 
+			depth)
+				[ "$val" ] || continue
+				rawVal=''"$val"''
+				;;
+
 			cluster_nodes)
 				[ "$val" ] || continue
 				rawVal=''"$val"''
@@ -276,8 +282,6 @@ if [ "$haveSslConfig" ] && [[ "$1" == rabbitmq* ]] && [ ! -f "$combinedSsl" ]; t
 fi
 if [ "$haveSslConfig" ] && [ -f "$combinedSsl" ]; then
 	# More ENV vars for make clustering happiness
-	# we don't handle clustering in this script, but these args should ensure
-	# clustered SSL-enabled members will talk nicely
 	export ERL_SSL_PATH="$(erl -eval 'io:format("~p", [code:lib_dir(ssl, ebin)]),halt().' -noshell)"
 	export RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="-pa $ERL_SSL_PATH -proto_dist inet_tls -ssl_dist_opt server_certfile $combinedSsl -ssl_dist_opt server_secure_renegotiate true client_secure_renegotiate true"
 	export RABBITMQ_CTL_ERL_ARGS="$RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS"
