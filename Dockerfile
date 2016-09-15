@@ -20,9 +20,25 @@ RUN set -x \
 # Add the officially endorsed Erlang debian repository:
 # See:
 #  - http://www.erlang.org/download.html
-#  - https://www.erlang-solutions.com/downloads/download-erlang-otp
+#  - https://www.erlang-solutions.com/resources/download.html
 RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 434975BD900CCBE4F7EE1B1ED208507CA14F4FCA
 RUN echo 'deb http://packages.erlang-solutions.com/debian jessie contrib' > /etc/apt/sources.list.d/erlang.list
+
+# install Erlang
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		erlang-asn1 \
+		erlang-base-hipe \
+		erlang-crypto \
+		erlang-eldap \
+		erlang-inets \
+		erlang-mnesia \
+		erlang-nox \
+		erlang-os-mon \
+		erlang-public-key \
+		erlang-ssl \
+		erlang-xmerl \
+	&& rm -rf /var/lib/apt/lists/*
 
 # get logs to stdout (thanks @dumbbell for pushing this upstream! :D)
 ENV RABBITMQ_LOGS=- RABBITMQ_SASL_LOGS=-
@@ -30,21 +46,20 @@ ENV RABBITMQ_LOGS=- RABBITMQ_SASL_LOGS=-
 
 # http://www.rabbitmq.com/install-debian.html
 # "Please note that the word testing in this line refers to the state of our release of RabbitMQ, not any particular Debian distribution."
-RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys F78372A06FF50C80464FC1B4F7B8CEA6056E8E56
+RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 0A9AF2115F4687BD29803A206B73A36E6026DFCA
 RUN echo 'deb http://www.rabbitmq.com/debian testing main' > /etc/apt/sources.list.d/rabbitmq.list
 
-ENV RABBITMQ_VERSION 3.6.2
-ENV RABBITMQ_DEBIAN_VERSION 3.6.2-1
+ENV RABBITMQ_VERSION 3.6.5
+ENV RABBITMQ_DEBIAN_VERSION 3.6.5-1
 
-RUN apt-get update && apt-get install -y --force-yes --no-install-recommends \
-		erlang-nox erlang-mnesia erlang-public-key erlang-crypto erlang-ssl erlang-asn1 erlang-inets erlang-os-mon erlang-xmerl erlang-eldap \
+RUN apt-get update && apt-get install -y --no-install-recommends \
 		rabbitmq-server=$RABBITMQ_DEBIAN_VERSION \
 	&& rm -rf /var/lib/apt/lists/*
 
 # /usr/sbin/rabbitmq-server has some irritating behavior, and only exists to "su - rabbitmq /usr/lib/rabbitmq/bin/rabbitmq-server ..."
 ENV PATH /usr/lib/rabbitmq/bin:$PATH
 
-RUN echo '[{rabbit, [{loopback_users, []}]}].' > /etc/rabbitmq/rabbitmq.config
+RUN echo '[ { rabbit, [ { loopback_users, [ ] } ] } ].' > /etc/rabbitmq/rabbitmq.config
 
 # set home so that any `--user` knows where to put the erlang cookie
 ENV HOME /var/lib/rabbitmq
@@ -59,8 +74,9 @@ RUN ln -sf /var/lib/rabbitmq/.erlang.cookie /root/
 
 RUN ln -sf /usr/lib/rabbitmq/lib/rabbitmq_server-$RABBITMQ_VERSION/plugins /plugins
 
-COPY docker-entrypoint.sh /
-ENTRYPOINT ["/docker-entrypoint.sh"]
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN ln -s usr/local/bin/docker-entrypoint.sh / # backwards compat
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 4369 5671 5672 25672
 CMD ["rabbitmq-server"]
