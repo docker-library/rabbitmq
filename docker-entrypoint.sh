@@ -265,11 +265,11 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$haveConfig" ]; then
 		unset IFS
 
 		rabbitMqttConfig+=(
-			'{ exchange,         <<"amq.topic">> }',
-			'{ allow_anonymous,  true }',
-			'{ subscription_ttl, 86400000 }',
-			'{ prefetch,         10 }',
-			'{ tcp_listen_options, [{backlog,   128}, {nodelay,   true}] }',
+			'{ exchange,         <<"amq.topic">> }'
+			'{ allow_anonymous,  true }'
+			'{ subscription_ttl, 86400000 }'
+			'{ prefetch,         10 }'
+			'{ tcp_listen_options, [{backlog,   128}, {nodelay,   true}] }'
 		)
 		if [ "$haveSslConfig" ]; then
 			rabbitMqttConfig+=(
