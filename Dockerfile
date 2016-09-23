@@ -74,9 +74,11 @@ RUN ln -sf /var/lib/rabbitmq/.erlang.cookie /root/
 
 RUN ln -sf /usr/lib/rabbitmq/lib/rabbitmq_server-$RABBITMQ_VERSION/plugins /plugins
 
+RUN rabbitmq-plugins enable --offline rabbitmq_management
+
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN ln -s usr/local/bin/docker-entrypoint.sh / # backwards compat
 ENTRYPOINT ["docker-entrypoint.sh"]
 
-EXPOSE 4369 5671 5672 25672
+EXPOSE 4369 5671 5672 25672 15671 15672
 CMD ["rabbitmq-server"]
