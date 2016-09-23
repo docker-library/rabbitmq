@@ -35,6 +35,7 @@ rabbitConfigKeys=(
 	default_user
 	default_vhost
 	hipe_compile
+	vm_memory_high_watermark
 )
 fileConfigKeys=(
 	management_ssl_cacertfile
@@ -190,6 +191,44 @@ rabbit_env_config() {
 			cacertfile|certfile|keyfile)
 				[ "$val" ] || continue
 				rawVal='"'"$val"'"'
+				;;
+
+			vm_memory_high_watermark)
+				node_mem=$(free -b | grep Mem | awk '{ print $2 }')
+				# if cgroup is not enabled, use absolute ram
+				if [ -f /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+					cgroup_mem=$(< /sys/fs/cgroup/memory/memory.limit_in_bytes)
+				else
+					cgroup_mem=$node_mem
+				fi
+				# set default
+				if [ -z "$val" ]; then
+					# assume cgroup limit is set if cgroup is smaller than absolute RAM
+				if [ $cgroup_mem -lt $node_mem ]; then
+						val=0.85
+					else
+						val=0.4
+					fi
+				fi
+				# numeric values have additional calculations/checks
+				if [[ $val =~ ^[+-]?[0-9]+\.?[0-9]*$ ]]; then
+					mem_available=$([ $cgroup_mem -le $node_mem ] && echo "$cgroup_mem" || echo "$node_mem")
+
+					if [[ $val =~ ^[+-]?[0-9]+\.[0-9]*$ ]]; then
+						# float, calculate limit
+						mem_hwm=$(awk "BEGIN {printf \"%0.0f\", $mem_available * $val}")
+					else
+						mem_hwm=$val
+					fi
+					# mem hwm cannot be higher than available memory (cgroup or absolute mem)
+					mem_hwm=$([ $mem_hwm -le $mem_available ] && echo "$mem_hwm" || echo "$mem_available")
+					# mem hwm must be at least 128MB
+					mem_hwm=$([ $mem_hwm -le 134217728 ] && echo "134217728" || echo "$mem_hwm")
+				else
+					mem_hwm='"'"$val"'"'
+				fi
+
+                                rawVal="{ absolute, $mem_hwm }"
 				;;
 
 			*)
