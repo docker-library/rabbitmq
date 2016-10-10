@@ -254,6 +254,14 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$haveConfig" ]; then
 			)
 		fi
 
+		# If definitions file exists, then load it
+		definitions_file=/etc/rabbitmq/definitions.json
+		if [ -f "${definitions_file}" ]; then
+			fullConfig+=(
+				"{ rabbitmq_management, $(rabbit_array "{ listener, $(rabbit_array "${rabbitManagementListenerConfig[@]}") }, { load_definitions, \"${definitions_file}\" }") }"
+			)
+		fi
+
 		fullConfig+=(
 			"{ rabbitmq_management, $(rabbit_array "{ listener, $(rabbit_array "${rabbitManagementListenerConfig[@]}") }") }"
 		)
