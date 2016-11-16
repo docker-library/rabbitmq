@@ -13,6 +13,8 @@ script:
   - ~/official-images/test/run.sh "$image"
   - docker build -t "$image:management" management
   - ~/official-images/test/run.sh "$image:management"
+  - docker build -t "$image:rabbitmq-autocluster" rabbitmq-autocluster
+  - ~/official-images/test/run.sh "$image:rabbitmq-autocluster"
 
 after_script:
   - docker images
