@@ -66,7 +66,7 @@ ENV HOME /var/lib/rabbitmq
 
 RUN mkdir -p /var/lib/rabbitmq /etc/rabbitmq \
 	&& chown -R rabbitmq:rabbitmq /var/lib/rabbitmq /etc/rabbitmq \
-	&& chmod 777 /var/lib/rabbitmq /etc/rabbitmq
+	&& chmod -R 777 /var/lib/rabbitmq /etc/rabbitmq
 VOLUME /var/lib/rabbitmq
 
 # add a symlink to the .erlang.cookie in /root so we can "docker exec rabbitmqctl ..." without gosu
