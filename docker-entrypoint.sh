@@ -30,6 +30,13 @@ sslConfigKeys=(
 managementConfigKeys=(
 	"${sslConfigKeys[@]/#/ssl_}"
 )
+clustererConfigKeys=(
+    gospel_node
+    version
+)
+for var in $(compgen -A variable | awk -F'RABBITMQ_CLUSTERER_' '/^RABBITMQ_CLUSTERER_NODE_/ {print $1}'); do
+    clustererConfigKeys+=($var)
+done
 rabbitConfigKeys=(
 	default_pass
 	default_user
@@ -46,6 +53,7 @@ fileConfigKeys=(
 )
 allConfigKeys=(
 	"${managementConfigKeys[@]/#/management_}"
+	"${clustererConfigKeys[@]/#/clusterer_}"
 	"${rabbitConfigKeys[@]}"
 	"${sslConfigKeys[@]/#/ssl_}"
 )
@@ -256,6 +264,24 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$haveConfig" ]; then
 
 		fullConfig+=(
 			"{ rabbitmq_management, $(rabbit_array "{ listener, $(rabbit_array "${rabbitManagementListenerConfig[@]}") }") }"
+		)
+	fi
+
+	if [ "$(rabbitmq-plugins list -m -e rabbitmq_clusterer)" ]; then
+		rabbitmqClustererConfig+=( '{ version, '${RABBITMQ_CLUSTERER_CONFIG_VERSION:-1}' }' )
+		rabbitmqClustererConfig+=( "{ gospel, { node, rabbit@"$RABBITMQ_CLUSTERER_GOSPEL_NODE" } }" )
+		for node_info in $(compgen -A variable | grep ^RABBITMQ_CLUSTERER_NODE_*); do
+			IFS=$','
+			opts=(${!node_info})
+			unset IFS
+			rabbitmqClustererConfigNodes+=( "{ rabbit@"${opts[0]}", "${opts[1]}" }" )
+		done
+		rabbitmqClustererConfig+=( "{ nodes, $(rabbit_array "${rabbitmqClustererConfigNodes[@]}") }" )
+
+		export RABBITMQ_BOOT_MODULE=rabbit_clusterer
+
+		fullConfig+=(
+			"{ rabbitmq_clusterer, $(rabbit_array "{ config, $(rabbit_array "${rabbitmqClustererConfig[@]}") }") }"
 		)
 	fi
 
