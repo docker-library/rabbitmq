@@ -41,7 +41,7 @@ RUN set -ex; \
 	apk add --no-cache --virtual .build-deps \
 		ca-certificates \
 		gnupg \
-		openssl \
+		libressl \
 		tar \
 		xz \
 	; \
