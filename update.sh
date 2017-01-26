@@ -8,5 +8,7 @@ debianVersion="$(curl -sSL 'http://www.rabbitmq.com/debian/dists/testing/main/bi
 rabbitmqVersion="${debianVersion%%-*}"
 
 set -x
-sed -ri 's/^(ENV RABBITMQ_VERSION) .*/\1 '"$rabbitmqVersion"'/' debian/Dockerfile
-sed -ri 's/^(ENV RABBITMQ_DEBIAN_VERSION) .*/\1 '"$debianVersion"'/' debian/Dockerfile
+sed -ri \
+	-e 's/^(ENV RABBITMQ_VERSION) .*/\1 '"$rabbitmqVersion"'/' \
+	-e 's/^(ENV RABBITMQ_DEBIAN_VERSION) .*/\1 '"$debianVersion"'/' \
+	*/Dockerfile
