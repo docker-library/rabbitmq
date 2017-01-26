@@ -19,7 +19,9 @@ RUN apk add --no-cache \
 		erlang \
 		erlang-os-mon \
 		erlang-public-key \
+		erlang-sasl \
 		erlang-ssl \
+		erlang-syntax-tools \
 		erlang-xmerl
 
 # get logs to stdout (thanks @dumbbell for pushing this upstream! :D)
