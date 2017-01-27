@@ -1,18 +1,22 @@
 language: bash
 services: docker
 
+env:
+  - VARIANT=debian
+  - VARIANT=alpine
+
 install:
   - git clone https://github.com/docker-library/official-images.git ~/official-images
 
 before_script:
   - env | sort
-  - image='rabbitmq'
+  - image="rabbitmq:$VARIANT"
 
 script:
-  - docker build -t "$image" .
+  - docker build -t "$image" "$VARIANT"
   - ~/official-images/test/run.sh "$image"
-  - docker build -t "$image:management" management
-  - ~/official-images/test/run.sh "$image:management"
+  - docker build -t "${image}-management" "$VARIANT/management"
+  - ~/official-images/test/run.sh "${image}-management"
 
 after_script:
   - docker images

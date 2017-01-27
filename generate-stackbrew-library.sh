@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eu
 
+defaultVariant='debian'
+
 self="$(basename "$BASH_SOURCE")"
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
@@ -41,28 +43,27 @@ join() {
 	echo "${out#$sep}"
 }
 
-commit="$(dirCommit .)"
-
-fullVersion="$(git show "$commit":Dockerfile | awk '$1 == "ENV" && $2 == "RABBITMQ_VERSION" { print $3; exit }')"
-
-versionAliases=()
-while [ "${fullVersion%.*}" != "$fullVersion" ]; do
-	versionAliases+=( $fullVersion )
-	fullVersion="${fullVersion%.*}"
-done
-versionAliases+=( $fullVersion latest )
-
-echo
-cat <<-EOE
-	Tags: $(join ', ' "${versionAliases[@]}")
-	GitCommit: $commit
-EOE
-
-for variant in management; do
+for variant in debian alpine; do
 	commit="$(dirCommit "$variant")"
+
+	fullVersion="$(git show "$commit":"$variant/Dockerfile" | awk '$1 == "ENV" && $2 == "RABBITMQ_VERSION" { print $3; exit }')"
+
+	versionAliases=()
+	while [ "${fullVersion%.*}" != "$fullVersion" ]; do
+		versionAliases+=( $fullVersion )
+		fullVersion="${fullVersion%.*}"
+	done
+	versionAliases+=(
+		$fullVersion
+		latest
+	)
 
 	variantAliases=( "${versionAliases[@]/%/-$variant}" )
 	variantAliases=( "${variantAliases[@]//latest-/}" )
+
+	if [ "$variant" = "$defaultVariant" ]; then
+		variantAliases=( "${versionAliases[@]}" )
+	fi
 
 	echo
 	cat <<-EOE
@@ -70,4 +71,22 @@ for variant in management; do
 		GitCommit: $commit
 		Directory: $variant
 	EOE
+
+	for subVariant in management; do
+		commit="$(dirCommit "$variant/$subVariant")"
+
+		subVariantAliases=( "${versionAliases[@]/%/-$subVariant}" )
+		subVariantAliases=( "${subVariantAliases[@]//latest-/}" )
+
+		if [ "$variant" != "$defaultVariant" ]; then
+			subVariantAliases=( "${subVariantAliases[@]/%/-$variant}" )
+		fi
+
+		echo
+		cat <<-EOE
+			Tags: $(join ', ' "${subVariantAliases[@]}")
+			GitCommit: $commit
+			Directory: $variant/$subVariant
+		EOE
+	done
 done
