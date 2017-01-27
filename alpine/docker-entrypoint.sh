@@ -235,8 +235,11 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$haveConfig" ]; then
 
 	fullConfig+=( "{ rabbit, $(rabbit_array "${rabbitConfig[@]}") }" )
 
-	# If management plugin is installed, then generate config consider this
+	# if management plugin is installed, generate config for it
+	# https://www.rabbitmq.com/management.html#configuration
 	if [ "$(rabbitmq-plugins list -m -e rabbitmq_management)" ]; then
+		rabbitManagementConfig=()
+
 		if [ "$haveManagementSslConfig" ]; then
 			IFS=$'\n'
 			rabbitManagementSslOptions=( $(rabbit_env_config 'management_ssl' "${sslConfigKeys[@]}") )
@@ -253,9 +256,22 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$haveConfig" ]; then
 				'{ ssl, false }'
 			)
 		fi
+		rabbitManagementConfig+=(
+			"{ listener, $(rabbit_array "${rabbitManagementListenerConfig[@]}") }"
+		)
+
+		# if definitions file exists, then load it
+		# https://www.rabbitmq.com/management.html#load-definitions
+		managementDefinitionsFile='/etc/rabbitmq/definitions.json'
+		if [ -f "${managementDefinitionsFile}" ]; then
+			# see also https://github.com/docker-library/rabbitmq/pull/112#issuecomment-271485550
+			rabbitManagementConfig+=(
+				"{ load_definitions, \"$managementDefinitionsFile\" }"
+			)
+		fi
 
 		fullConfig+=(
-			"{ rabbitmq_management, $(rabbit_array "{ listener, $(rabbit_array "${rabbitManagementListenerConfig[@]}") }") }"
+			"{ rabbitmq_management, $(rabbit_array "${rabbitManagementConfig[@]}") }"
 		)
 	fi
 
