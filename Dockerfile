@@ -1,7 +1,7 @@
 FROM debian:jessie
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
-RUN groupadd -r rabbitmq && useradd -r -d /var/lib/rabbitmq -m -g rabbitmq rabbitmq
+RUN groupadd rabbitmq && useradd -d /var/lib/rabbitmq -m -g rabbitmq rabbitmq
 
 # grab gosu for easy step-down from root
 ENV GOSU_VERSION 1.7
