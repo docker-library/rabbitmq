@@ -23,6 +23,7 @@ file_env() {
 	unset "$fileVar"
 }
 
+file_env 'RABBITMQ_DEFAULT_USER'
 file_env 'RABBITMQ_DEFAULT_PASS'
 
 # allow the container to be started with `--user`
