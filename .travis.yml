@@ -13,9 +13,9 @@ before_script:
   - image="rabbitmq:$VARIANT"
 
 script:
-  - docker build -t "$image" "$VARIANT"
+  - travis_retry docker build -t "$image" "$VARIANT"
   - ~/official-images/test/run.sh "$image"
-  - docker build -t "${image}-management" "$VARIANT/management"
+  - travis_retry docker build -t "${image}-management" "$VARIANT/management"
   - ~/official-images/test/run.sh "${image}-management"
 
 after_script:
