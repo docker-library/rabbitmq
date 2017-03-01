@@ -23,8 +23,6 @@ file_env() {
 	unset "$fileVar"
 }
 
-file_env 'RABBITMQ_DEFAULT_PASS'
-
 # allow the container to be started with `--user`
 if [[ "$1" == rabbitmq* ]] && [ "$(id -u)" = '0' ]; then
 	if [ "$1" = 'rabbitmq-server' ]; then
@@ -42,6 +40,12 @@ fi
 : "${RABBITMQ_MANAGEMENT_SSL_CACERTFILE:=$RABBITMQ_SSL_CACERTFILE}"
 : "${RABBITMQ_MANAGEMENT_SSL_CERTFILE:=$RABBITMQ_SSL_CERTFILE}"
 : "${RABBITMQ_MANAGEMENT_SSL_KEYFILE:=$RABBITMQ_SSL_KEYFILE}"
+
+# Allowed env vars that will be read from mounted files (i.e. Docker Secrets):
+fileEnvKeys=(
+	default_user
+	default_pass
+)
 
 # https://www.rabbitmq.com/configure.html
 sslConfigKeys=(
@@ -85,6 +89,7 @@ declare -A configDefaults=(
 haveConfig=
 haveSslConfig=
 haveManagementSslConfig=
+for fileEnvKey in "${fileEnvKeys[@]}"; do file_env "RABBITMQ_${fileEnvKey^^}"; done
 for conf in "${allConfigKeys[@]}"; do
 	var="RABBITMQ_${conf^^}"
 	val="${!var:-}"
