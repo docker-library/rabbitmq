@@ -51,6 +51,7 @@ fileEnvKeys=(
 sslConfigKeys=(
 	cacertfile
 	certfile
+	depth
 	fail_if_no_peer_cert
 	keyfile
 	verify
@@ -207,7 +208,7 @@ rabbit_env_config() {
 
 		local rawVal=
 		case "$conf" in
-			verify|fail_if_no_peer_cert)
+			verify|fail_if_no_peer_cert|depth)
 				[ "$val" ] || continue
 				rawVal="$val"
 				;;
