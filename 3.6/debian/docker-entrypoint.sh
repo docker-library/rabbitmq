@@ -64,6 +64,7 @@ rabbitConfigKeys=(
 	default_user
 	default_vhost
 	hipe_compile
+	vm_memory_high_watermark
 )
 fileConfigKeys=(
 	management_ssl_cacertfile
@@ -95,6 +96,10 @@ for conf in "${allConfigKeys[@]}"; do
 	var="RABBITMQ_${conf^^}"
 	val="${!var:-}"
 	if [ "$val" ]; then
+		if [ "${configDefaults[$conf]:-}" ] && [ "${configDefaults[$conf]}" = "$val" ]; then
+			# if the value set is the same as the default, treat it as if it isn't set
+			continue
+		fi
 		haveConfig=1
 		case "$conf" in
 			ssl_*) haveSslConfig=1 ;;
@@ -235,12 +240,81 @@ rabbit_env_config() {
 	join $'\n' "${ret[@]}"
 }
 
-if [ "$1" = 'rabbitmq-server' ] && [ "$haveConfig" ]; then
+shouldWriteConfig="$haveConfig"
+if [ ! -f /etc/rabbitmq/rabbitmq.config ]; then
+	shouldWriteConfig=1
+fi
+
+if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 	fullConfig=()
 
 	rabbitConfig=(
 		"{ loopback_users, $(rabbit_array) }"
 	)
+
+	# determine whether to set "vm_memory_high_watermark" (based on cgroups)
+	if [ -r /sys/fs/cgroup/memory/memory.limit_in_bytes ] && [ -r /proc/meminfo ]; then
+		memLimitB="$(< /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+		memLimitKb="$(( memLimitB / 1024 ))"
+
+		memTotalKb="$(awk -F ':? +' '$1 == "MemTotal" { print $2; exit }' /proc/meminfo)"
+
+		if [ "$memLimitKb" -gt "$memTotalKb" ]; then
+			memLimitB=
+			memLimitKb=
+		fi
+
+		# https://github.com/docker-library/rabbitmq/pull/105#issuecomment-242165822
+		vmMemoryHighWatermark=
+		if [ "${RABBITMQ_VM_MEMORY_HIGH_WATERMARK:-}" ]; then
+			vmMemoryHighWatermark="$(
+				awk -v lim="$memLimitB" '
+					/^[0-9]*[.][0-9]+$|^[0-9]+([.][0-9]+)?%$/ {
+						perc = $0;
+						if (perc ~ /%$/) {
+							gsub(/%$/, "", perc);
+							perc = perc / 100;
+						}
+						if (perc > 1.0 || perc <= 0.0) {
+							printf "error: invalid percentage for vm_memory_high_watermark: %s (must be > 0%%, <= 100%%)\n", $0 > "/dev/stderr";
+							exit 1;
+						}
+						if (lim) {
+							printf "{ absolute, %d }\n", lim * perc;
+						} else {
+							printf "%0.03f\n", perc;
+						}
+						next;
+					}
+					/^[0-9]+$/ {
+						printf "{ absolute, %s }\n", $0;
+						next;
+					}
+					/^[0-9]+([.][0-9]+)?[a-zA-Z]+$/ {
+						printf "{ absolute, \"%s\" }\n", $0;
+						next;
+					}
+					{
+						printf "error: unexpected input for vm_memory_high_watermark: %s\n", $0;
+						exit 1;
+					}
+				' <(echo "$RABBITMQ_VM_MEMORY_HIGH_WATERMARK")
+			)"
+		elif [ -n "$memLimitB" ]; then
+			# if there is a cgroup limit, default to 40% of _that_ (as recommended by upstream)
+			vmMemoryHighWatermark="{ absolute, $(( $memLimitB * 40 / 100 )) }"
+			# otherwise let the default behavior win (40% of the total available)
+		fi
+		if [ "$vmMemoryHighWatermark" ]; then
+			# https://www.rabbitmq.com/memory.html#memsup-usage
+			rabbitConfig+=( "{ vm_memory_high_watermark, $vmMemoryHighWatermark }" )
+		fi
+	elif [ "${RABBITMQ_VM_MEMORY_HIGH_WATERMARK:-}" ]; then
+		echo >&2 'warning: RABBITMQ_VM_MEMORY_HIGH_WATERMARK was specified, but one of the following is not readable:'
+		echo >&2 '  - /sys/fs/cgroup/memory/memory.limit_in_bytes'
+		echo >&2 '  - /proc/meminfo'
+		echo >&2 '(so "vm_memory_high_watermark" will not be set)'
+	fi
 
 	if [ "$haveSslConfig" ]; then
 		IFS=$'\n'

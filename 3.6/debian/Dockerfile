@@ -75,7 +75,6 @@ ENV PATH /usr/lib/rabbitmq/bin:$PATH
 ENV HOME /var/lib/rabbitmq
 
 RUN mkdir -p /var/lib/rabbitmq /etc/rabbitmq \
-	&& echo '[ { rabbit, [ { loopback_users, [ ] } ] } ].' > /etc/rabbitmq/rabbitmq.config \
 	&& chown -R rabbitmq:rabbitmq /var/lib/rabbitmq /etc/rabbitmq \
 	&& chmod -R 777 /var/lib/rabbitmq /etc/rabbitmq
 VOLUME /var/lib/rabbitmq
