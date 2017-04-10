@@ -253,17 +253,23 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 	)
 
 	# determine whether to set "vm_memory_high_watermark" (based on cgroups)
-	if [ -r /sys/fs/cgroup/memory/memory.limit_in_bytes ] && [ -r /proc/meminfo ]; then
-		memLimitB="$(< /sys/fs/cgroup/memory/memory.limit_in_bytes)"
-		memLimitKb="$(( memLimitB / 1024 ))"
-
+	memTotalKb=
+	if [ -r /proc/meminfo ]; then
 		memTotalKb="$(awk -F ':? +' '$1 == "MemTotal" { print $2; exit }' /proc/meminfo)"
-
-		if [ "$memLimitKb" -gt "$memTotalKb" ]; then
-			memLimitB=
-			memLimitKb=
-		fi
-
+	fi
+	memLimitB=
+	if [ -r /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+		# "18446744073709551615" is a valid value for "memory.limit_in_bytes", which is too big for Bash math to handle
+		# "$(( 18446744073709551615 / 1024 ))" = 0; "$(( 18446744073709551615 * 40 / 100 ))" = 0
+		memLimitB="$(awk -v totKb="$memTotalKb" '{
+			limB = $0;
+			limKb = limB / 1024;
+			if (!totKb || limKb < totKb) {
+				printf "%.0f\n", limB;
+			}
+		}' /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+	fi
+	if [ -n "$memTotalKb" ] || [ -n "$memLimitB" ]; then
 		# https://github.com/docker-library/rabbitmq/pull/105#issuecomment-242165822
 		vmMemoryHighWatermark=
 		if [ "${RABBITMQ_VM_MEMORY_HIGH_WATERMARK:-}" ]; then
@@ -302,7 +308,7 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 			)"
 		elif [ -n "$memLimitB" ]; then
 			# if there is a cgroup limit, default to 40% of _that_ (as recommended by upstream)
-			vmMemoryHighWatermark="{ absolute, $(( $memLimitB * 40 / 100 )) }"
+			vmMemoryHighWatermark="{ absolute, $(awk -v lim="$memLimitB" 'BEGIN { printf "%.0f\n", lim * 0.4; exit }') }"
 			# otherwise let the default behavior win (40% of the total available)
 		fi
 		if [ "$vmMemoryHighWatermark" ]; then
@@ -310,10 +316,8 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 			rabbitConfig+=( "{ vm_memory_high_watermark, $vmMemoryHighWatermark }" )
 		fi
 	elif [ "${RABBITMQ_VM_MEMORY_HIGH_WATERMARK:-}" ]; then
-		echo >&2 'warning: RABBITMQ_VM_MEMORY_HIGH_WATERMARK was specified, but one of the following is not readable:'
-		echo >&2 '  - /sys/fs/cgroup/memory/memory.limit_in_bytes'
-		echo >&2 '  - /proc/meminfo'
-		echo >&2 '(so "vm_memory_high_watermark" will not be set)'
+		echo >&2 'warning: RABBITMQ_VM_MEMORY_HIGH_WATERMARK was specified, but current system memory or cgroup memory limit cannot be determined'
+		echo >&2 '  (so "vm_memory_high_watermark" will not be set)'
 	fi
 
 	if [ "$haveSslConfig" ]; then
