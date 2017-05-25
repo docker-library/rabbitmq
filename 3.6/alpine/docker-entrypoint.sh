@@ -64,6 +64,7 @@ rabbitConfigKeys=(
 	default_user
 	default_vhost
 	hipe_compile
+	log_levels
 	vm_memory_high_watermark
 )
 fileConfigKeys=(
@@ -213,7 +214,7 @@ rabbit_env_config() {
 
 		local rawVal=
 		case "$conf" in
-			verify|fail_if_no_peer_cert|depth)
+			verify|fail_if_no_peer_cert|depth|log_levels)
 				[ "$val" ] || continue
 				rawVal="$val"
 				;;
