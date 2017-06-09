@@ -9,6 +9,8 @@ RUN apk add --no-cache 'su-exec>=0.2'
 RUN apk add --no-cache \
 # Bash for docker-entrypoint
 		bash \
+# Procps for rabbitmqctl
+		procps \
 # Erlang for RabbitMQ
 		erlang-asn1 \
 		erlang-hipe \
