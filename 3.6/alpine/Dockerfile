@@ -1,4 +1,4 @@
-FROM alpine:3.5
+FROM alpine:3.6
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN addgroup -S rabbitmq && adduser -S -h /var/lib/rabbitmq -G rabbitmq rabbitmq
@@ -54,7 +54,7 @@ RUN set -ex; \
 	export GNUPGHOME="$(mktemp -d)"; \
 	gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$GPG_KEY"; \
 	gpg --batch --verify rabbitmq-server.tar.xz.asc rabbitmq-server.tar.xz; \
-	rm -r "$GNUPGHOME" rabbitmq-server.tar.xz.asc; \
+	rm -rf "$GNUPGHOME" rabbitmq-server.tar.xz.asc; \
 	\
 	mkdir -p "$RABBITMQ_HOME"; \
 	tar \
