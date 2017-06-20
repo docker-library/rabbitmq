@@ -26,10 +26,18 @@ RUN set -x \
 	&& apt-get purge -y --auto-remove ca-certificates wget
 
 # install Erlang
-RUN apt-get update \
-	&& apt-get install -y --no-install-recommends \
+RUN set -ex; \
+	apt-get update; \
+# "erlang-base-hipe" is optional (and only supported on a few arches)
+# so, only install it if it's available for our current arch
+	if apt-cache show erlang-base-hipe 2>/dev/null | grep -q 'Package: erlang-base-hipe'; then \
+		apt-get install -y --no-install-recommends \
+			erlang-base-hipe \
+		; \
+	fi; \
+# we start with "erlang-base-hipe" because it and "erlang-base" (non-hipe) are exclusive
+	apt-get install -y --no-install-recommends \
 		erlang-asn1 \
-		erlang-base-hipe \
 		erlang-crypto \
 		erlang-eldap \
 		erlang-inets \
@@ -39,7 +47,8 @@ RUN apt-get update \
 		erlang-public-key \
 		erlang-ssl \
 		erlang-xmerl \
-	&& rm -rf /var/lib/apt/lists/*
+	; \
+	rm -rf /var/lib/apt/lists/*
 
 # get logs to stdout (thanks @dumbbell for pushing this upstream! :D)
 ENV RABBITMQ_LOGS=- RABBITMQ_SASL_LOGS=-
