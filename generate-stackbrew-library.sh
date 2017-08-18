@@ -96,8 +96,7 @@ for version in "${versions[@]}"; do
 
 		if [ "$variant" = 'debian' ]; then
 			# no ppc64le for now: https://www.rabbitmq.com/debian/dists/testing/Release (no "ppc64el" in "Architectures")
-			# same with arm64
-			variantArches="$(echo " $variantArches " | sed -r -e 's/ (ppc64le|arm64v[^ ]+)//g')"
+			variantArches="$(echo " $variantArches " | sed -r -e 's/ ppc64le//g')"
 		fi
 
 		echo
