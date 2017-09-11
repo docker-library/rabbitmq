@@ -65,8 +65,8 @@ RUN set -ex; \
 	apt-key list
 RUN echo 'deb http://www.rabbitmq.com/debian testing main' > /etc/apt/sources.list.d/rabbitmq.list
 
-ENV RABBITMQ_VERSION 3.6.11
-ENV RABBITMQ_DEBIAN_VERSION 3.6.11-1
+ENV RABBITMQ_VERSION 3.6.12
+ENV RABBITMQ_DEBIAN_VERSION 3.6.12-1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		rabbitmq-server=$RABBITMQ_DEBIAN_VERSION \
