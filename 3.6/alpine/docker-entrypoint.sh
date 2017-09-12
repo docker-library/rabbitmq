@@ -65,6 +65,7 @@ rabbitConfigKeys=(
 	default_vhost
 	hipe_compile
 	vm_memory_high_watermark
+	log_levels
 )
 fileConfigKeys=(
 	management_ssl_cacertfile
@@ -218,10 +219,15 @@ rabbit_env_config() {
 				rawVal="$val"
 				;;
 
+			log_levels)
+				[ "$val" ] || continue
+				rawVal="[$val]"
+				;;
+
 			hipe_compile)
 				[ "$val" ] && rawVal='true' || rawVal='false'
 				;;
-
+				
 			cacertfile|certfile|keyfile)
 				[ "$val" ] || continue
 				rawVal='"'"$val"'"'
