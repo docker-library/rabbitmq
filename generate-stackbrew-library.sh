@@ -94,11 +94,6 @@ for version in "${versions[@]}"; do
 		variantParent="$(awk 'toupper($1) == "FROM" { print $2 }' "$version/$variant/Dockerfile")"
 		variantArches="${parentRepoToArches[$variantParent]}"
 
-		if [ "$variant" = 'debian' ]; then
-			# no ppc64le for now: https://www.rabbitmq.com/debian/dists/testing/Release (no "ppc64el" in "Architectures")
-			variantArches="$(echo " $variantArches " | sed -r -e 's/ ppc64le//g')"
-		fi
-
 		echo
 		cat <<-EOE
 			Tags: $(join ', ' "${variantAliases[@]}")
