@@ -58,7 +58,11 @@ for version in "${versions[@]}"; do
 				-e 's/^(ENV RABBITMQ_GITHUB_TAG) .*/\1 '"$githubTag"'/' \
 				-e 's/^(ENV RABBITMQ_DEBIAN_VERSION) .*/\1 '"$debianVersion"'/' \
 				"$version/$variant/Dockerfile"
+			cp -va "$version/docker-entrypoint.sh" "$version/$variant/"
 		)
+		if [ "$variant" = 'alpine' ]; then
+			sed -i 's/gosu/su-exec/g' "$version/$variant/docker-entrypoint.sh"
+		fi
 
 		travisEnv='\n  - VERSION='"$version"' VARIANT='"$variant$travisEnv"
 	done
