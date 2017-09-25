@@ -269,55 +269,46 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 			}
 		}' /sys/fs/cgroup/memory/memory.limit_in_bytes)"
 	fi
-	if [ -n "$memTotalKb" ] || [ -n "$memLimitB" ]; then
+	if [ -n "$memLimitB" ]; then
+		# if we have a cgroup memory limit, let's inform RabbitMQ of what it is (so it can calculate vm_memory_high_watermark properly)
+		# https://github.com/rabbitmq/rabbitmq-server/pull/1234
+		rabbitConfig+=( "{ total_memory_available_override_value, $memLimitB }" )
+	fi
+	if [ "${RABBITMQ_VM_MEMORY_HIGH_WATERMARK:-}" ]; then
 		# https://github.com/docker-library/rabbitmq/pull/105#issuecomment-242165822
-		vmMemoryHighWatermark=
-		if [ "${RABBITMQ_VM_MEMORY_HIGH_WATERMARK:-}" ]; then
-			vmMemoryHighWatermark="$(
-				awk -v lim="$memLimitB" '
-					/^[0-9]*[.][0-9]+$|^[0-9]+([.][0-9]+)?%$/ {
-						perc = $0;
-						if (perc ~ /%$/) {
-							gsub(/%$/, "", perc);
-							perc = perc / 100;
-						}
-						if (perc > 1.0 || perc <= 0.0) {
-							printf "error: invalid percentage for vm_memory_high_watermark: %s (must be > 0%%, <= 100%%)\n", $0 > "/dev/stderr";
-							exit 1;
-						}
-						if (lim) {
-							printf "{ absolute, %d }\n", lim * perc;
-						} else {
-							printf "%0.03f\n", perc;
-						}
-						next;
+		vmMemoryHighWatermark="$(
+			awk '
+				/^[0-9]*[.][0-9]+$|^[0-9]+([.][0-9]+)?%$/ {
+					perc = $0;
+					if (perc ~ /%$/) {
+						gsub(/%$/, "", perc);
+						perc = perc / 100;
 					}
-					/^[0-9]+$/ {
-						printf "{ absolute, %s }\n", $0;
-						next;
-					}
-					/^[0-9]+([.][0-9]+)?[a-zA-Z]+$/ {
-						printf "{ absolute, \"%s\" }\n", $0;
-						next;
-					}
-					{
-						printf "error: unexpected input for vm_memory_high_watermark: %s\n", $0;
+					if (perc > 1.0 || perc <= 0.0) {
+						printf "error: invalid percentage for vm_memory_high_watermark: %s (must be > 0%%, <= 100%%)\n", $0 > "/dev/stderr";
 						exit 1;
 					}
-				' <(echo "$RABBITMQ_VM_MEMORY_HIGH_WATERMARK")
-			)"
-		elif [ -n "$memLimitB" ]; then
-			# if there is a cgroup limit, default to 40% of _that_ (as recommended by upstream)
-			vmMemoryHighWatermark="{ absolute, $(awk -v lim="$memLimitB" 'BEGIN { printf "%.0f\n", lim * 0.4; exit }') }"
-			# otherwise let the default behavior win (40% of the total available)
-		fi
+					printf "%0.03f\n", perc;
+					next;
+				}
+				/^[0-9]+$/ {
+					printf "{ absolute, %s }\n", $0;
+					next;
+				}
+				/^[0-9]+([.][0-9]+)?[a-zA-Z]+$/ {
+					printf "{ absolute, \"%s\" }\n", $0;
+					next;
+				}
+				{
+					printf "error: unexpected input for vm_memory_high_watermark: %s\n", $0;
+					exit 1;
+				}
+			' <(echo "$RABBITMQ_VM_MEMORY_HIGH_WATERMARK")
+		)"
 		if [ "$vmMemoryHighWatermark" ]; then
 			# https://www.rabbitmq.com/memory.html#memsup-usage
 			rabbitConfig+=( "{ vm_memory_high_watermark, $vmMemoryHighWatermark }" )
 		fi
-	elif [ "${RABBITMQ_VM_MEMORY_HIGH_WATERMARK:-}" ]; then
-		echo >&2 'warning: RABBITMQ_VM_MEMORY_HIGH_WATERMARK was specified, but current system memory or cgroup memory limit cannot be determined'
-		echo >&2 '  (so "vm_memory_high_watermark" will not be set)'
 	fi
 
 	if [ "$haveSslConfig" ]; then
