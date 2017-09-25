@@ -171,8 +171,8 @@ if [ "${RABBITMQ_ERLANG_COOKIE:-}" ]; then
 		fi
 	else
 		echo "$RABBITMQ_ERLANG_COOKIE" > "$cookieFile"
-		chmod 600 "$cookieFile"
 	fi
+	chmod 600 "$cookieFile"
 fi
 
 # prints "$2$1$3$1...$N"
