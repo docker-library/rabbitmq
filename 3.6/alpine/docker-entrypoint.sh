@@ -169,14 +169,10 @@ if [ "${RABBITMQ_ERLANG_COOKIE:-}" ]; then
 			echo >&2 "warning: $cookieFile contents do not match RABBITMQ_ERLANG_COOKIE"
 			echo >&2
 		fi
-		# If we're here, the original container wsa deleted and a new one
-		# was created pointing to the seame mount.
-		# At this point the permission is 777 so we must change it
-		chmod 600 "$cookieFile"
 	else
 		echo "$RABBITMQ_ERLANG_COOKIE" > "$cookieFile"
-		chmod 600 "$cookieFile"
 	fi
+	chmod 600 "$cookieFile"
 fi
 
 # prints "$2$1$3$1...$N"
