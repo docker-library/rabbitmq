@@ -54,26 +54,36 @@ RUN set -ex; \
 ENV RABBITMQ_LOGS=- RABBITMQ_SASL_LOGS=-
 # https://github.com/rabbitmq/rabbitmq-server/commit/53af45bf9a162dec849407d114041aad3d84feaf
 
-# http://www.rabbitmq.com/install-debian.html
-# "Please note that the word testing in this line refers to the state of our release of RabbitMQ, not any particular Debian distribution."
-RUN set -ex; \
-	key='0A9AF2115F4687BD29803A206B73A36E6026DFCA'; \
-	export GNUPGHOME="$(mktemp -d)"; \
-	gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
-	gpg --export "$key" > /etc/apt/trusted.gpg.d/rabbitmq.gpg; \
-	rm -rf "$GNUPGHOME"; \
-	apt-key list
-RUN echo 'deb http://www.rabbitmq.com/debian testing main' > /etc/apt/sources.list.d/rabbitmq.list
-
-ENV RABBITMQ_VERSION 3.6.12
-ENV RABBITMQ_DEBIAN_VERSION 3.6.12-1
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-		rabbitmq-server=$RABBITMQ_DEBIAN_VERSION \
-	&& rm -rf /var/lib/apt/lists/*
-
 # /usr/sbin/rabbitmq-server has some irritating behavior, and only exists to "su - rabbitmq /usr/lib/rabbitmq/bin/rabbitmq-server ..."
 ENV PATH /usr/lib/rabbitmq/bin:$PATH
+
+# gpg: key 6026DFCA: public key "RabbitMQ Release Signing Key <info@rabbitmq.com>" imported
+ENV RABBITMQ_GPG_KEY 0A9AF2115F4687BD29803A206B73A36E6026DFCA
+
+ENV RABBITMQ_VERSION 3.6.12
+ENV RABBITMQ_GITHUB_TAG rabbitmq_v3_6_12
+ENV RABBITMQ_DEBIAN_VERSION 3.6.12-1
+
+RUN set -ex; \
+	\
+	apt-get update; \
+	apt-get install -y --no-install-recommends ca-certificates wget; \
+	\
+	wget -O rabbitmq-server.deb.asc "https://github.com/rabbitmq/rabbitmq-server/releases/download/$RABBITMQ_GITHUB_TAG/rabbitmq-server_${RABBITMQ_DEBIAN_VERSION}_all.deb.asc"; \
+	wget -O rabbitmq-server.deb     "https://github.com/rabbitmq/rabbitmq-server/releases/download/$RABBITMQ_GITHUB_TAG/rabbitmq-server_${RABBITMQ_DEBIAN_VERSION}_all.deb"; \
+	\
+	apt-get purge -y --auto-remove ca-certificates wget; \
+	\
+	export GNUPGHOME="$(mktemp -d)"; \
+	gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$RABBITMQ_GPG_KEY"; \
+	gpg --batch --verify rabbitmq-server.deb.asc rabbitmq-server.deb; \
+	rm -rf "$GNUPGHOME"; \
+	\
+	apt install -y --no-install-recommends ./rabbitmq-server.deb; \
+	dpkg -l | grep rabbitmq-server; \
+	rm -f rabbitmq-server.deb*; \
+	\
+	rm -rf /var/lib/apt/lists/*
 
 # set home so that any `--user` knows where to put the erlang cookie
 ENV HOME /var/lib/rabbitmq
@@ -86,7 +96,7 @@ VOLUME /var/lib/rabbitmq
 # add a symlink to the .erlang.cookie in /root so we can "docker exec rabbitmqctl ..." without gosu
 RUN ln -sf /var/lib/rabbitmq/.erlang.cookie /root/
 
-RUN ln -sf /usr/lib/rabbitmq/lib/rabbitmq_server-$RABBITMQ_VERSION/plugins /plugins
+RUN ln -sf "/usr/lib/rabbitmq/lib/rabbitmq_server-$RABBITMQ_VERSION/plugins" /plugins
 
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN ln -s usr/local/bin/docker-entrypoint.sh / # backwards compat
