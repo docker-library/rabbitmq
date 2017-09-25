@@ -11,22 +11,51 @@ versions=( "${versions[@]%/}" )
 
 travisEnv=
 for version in "${versions[@]}"; do
-	# TODO figure out what multi-version looks like here? :(
-	debianVersion="$(curl -sSL 'http://www.rabbitmq.com/debian/dists/testing/main/binary-amd64/Packages' | grep -m1 -A10 '^Package: rabbitmq-server$' | grep -m1 '^Version: ' | cut -d' ' -f2)"
-	# https://github.com/docker-library/rabbitmq/pull/121#issuecomment-271816323
+	rcVersion="${version%-rc}"
+	rcGrepV='-v'
+	if [ "$rcVersion" != "$version" ]; then
+		rcGrepV=
+	fi
+	rcGrepV+=' -E'
+	rcGrepExpr='beta|milestone|rc'
 
-	rabbitmqVersion="${debianVersion%%-*}"
+	githubTag="$(
+		git ls-remote --tags https://github.com/rabbitmq/rabbitmq-server.git \
+			"refs/tags/rabbitmq_v${rcVersion//./_}_*" \
+			"refs/tags/v${rcVersion}.*" \
+		| cut -d'/' -f3- \
+		| grep $rcGrepV -- "$rcGrepExpr" \
+		| sort -V \
+		| tail -1
+	)"
 
-	if [[ "$rabbitmqVersion" != "$version".* ]]; then
-		echo >&2 "warning: $rabbitmqVersion doesn't appear to be $version -- skipping for now"
+	githubReleaseUrl="https://github.com/rabbitmq/rabbitmq-server/releases/tag/$githubTag"
+	fullVersion="$(
+		curl -fsSL "$githubReleaseUrl" \
+			| grep -o "/rabbitmq-server-generic-unix-${rcVersion}[.].*[.]tar[.]xz" \
+			| head -1 \
+			| sed -r "s/^.*(${rcVersion}.*)[.]tar[.]xz/\1/"
+	)"
+	debianVersion="$(
+		curl -fsSL "$githubReleaseUrl" \
+			| grep -o "/rabbitmq-server_${rcVersion}[.].*_all[.]deb" \
+			| head -1 \
+			| sed -r "s/^.*(${rcVersion}.*)_all[.]deb/\1/"
+	)"
+
+	if [ -z "$fullVersion" ] || [ -z "$debianVersion" ]; then
+		echo >&2 "warning: failed to get full ('$fullVersion') or Debian ('$debianVersion') version for '$version'; skipping"
 		continue
 	fi
 
 	for variant in alpine debian; do
+		[ -f "$version/$variant/Dockerfile" ] || continue
+
 		(
 			set -x
 			sed -ri \
-				-e 's/^(ENV RABBITMQ_VERSION) .*/\1 '"$rabbitmqVersion"'/' \
+				-e 's/^(ENV RABBITMQ_VERSION) .*/\1 '"$fullVersion"'/' \
+				-e 's/^(ENV RABBITMQ_GITHUB_TAG) .*/\1 '"$githubTag"'/' \
 				-e 's/^(ENV RABBITMQ_DEBIAN_VERSION) .*/\1 '"$debianVersion"'/' \
 				"$version/$variant/Dockerfile"
 		)
