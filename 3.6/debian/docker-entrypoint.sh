@@ -200,6 +200,11 @@ rabbit_array() {
 	esac
 	echo -n ']'
 }
+rabbit_string() {
+	local val="$1"; shift
+	# fire up erlang directly to have it do the proper escaping for us
+	erl -noinput -eval 'io:format("~p\n", init:get_plain_arguments()), init:stop().' -- "$val"
+}
 rabbit_env_config() {
 	local prefix="$1"; shift
 
@@ -224,12 +229,12 @@ rabbit_env_config() {
 
 			cacertfile|certfile|keyfile)
 				[ "$val" ] || continue
-				rawVal='"'"$val"'"'
+				rawVal="$(rabbit_string "$val")"
 				;;
 
 			*)
 				[ "$val" ] || continue
-				rawVal='<<"'"$val"'">>'
+				rawVal="<<$(rabbit_string "$val")>>"
 				;;
 		esac
 		[ "$rawVal" ] || continue
