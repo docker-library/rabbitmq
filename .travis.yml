@@ -10,13 +10,13 @@ install:
 
 before_script:
   - env | sort
-  - cd "$VERSION"
-  - image="rabbitmq:$VERSION-$VARIANT"
+  - cd "$VERSION/$VARIANT"
+  - image="$(awk 'toupper($1) == "FROM" { print $2; exit }' management/Dockerfile)"
 
 script:
-  - travis_retry docker build -t "$image" "$VARIANT"
+  - travis_retry docker build -t "$image" .
   - ~/official-images/test/run.sh "$image"
-  - travis_retry docker build -t "${image}-management" "$VARIANT/management"
+  - travis_retry docker build -t "${image}-management" management
   - ~/official-images/test/run.sh "${image}-management"
 
 after_script:
