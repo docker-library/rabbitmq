@@ -175,87 +175,92 @@ if [ "${RABBITMQ_ERLANG_COOKIE:-}" ]; then
 	chmod 600 "$cookieFile"
 fi
 
-# prints "$2$1$3$1...$N"
-join() {
-	local sep="$1"; shift
-	local out; printf -v out "${sep//%/%%}%s" "$@"
-	echo "${out#$sep}"
+configBase="${RABBITMQ_CONFIG_FILE:-/etc/rabbitmq/rabbitmq}"
+oldConfigFile="$configBase.config"
+newConfigFile="$configBase.conf"
+
+shouldWriteConfig="$haveConfig"
+if [ -n "$shouldWriteConfig" ] && [ -f "$oldConfigFile" ]; then
+	{
+		echo "error: Docker configuration environment variables specified, but old-style (Erlang syntax) configuration file '$oldConfigFile' exists"
+		echo "  Suggested fixes: (choose one)"
+		echo "   - remove '$oldConfigFile'"
+		echo "   - remove any Docker-specific 'RABBITMQ_...' environment variables"
+		echo "   - convert '$oldConfigFile' to the newer sysctl format ('$newConfigFile'); see https://www.rabbitmq.com/configure.html#config-file"
+	} >&2
+	exit 1
+fi
+if [ -z "$shouldWriteConfig" ] && [ ! -f "$oldConfigFile" ] && [ ! -f "$newConfigFile" ]; then
+	# no config files, we should write one
+	shouldWriteConfig=1
+fi
+
+# http://stackoverflow.com/a/2705678/433558
+sed_escape_lhs() {
+	echo "$@" | sed -e 's/[]\/$*.^|[]/\\&/g'
 }
-indent() {
-	if [ "$#" -gt 0 ]; then
-		echo "$@"
-	else
-		cat
-	fi | sed 's/^/\t/g'
+sed_escape_rhs() {
+	echo "$@" | sed -e 's/[\/&]/\\&/g'
 }
-rabbit_array() {
-	echo -n '['
-	case "$#" in
-		0) echo -n ' ' ;;
-		1) echo -n " $1 " ;;
-		*)
-			local vals="$(join $',\n' "$@")"
-			echo
-			indent "$vals"
-	esac
-	echo -n ']'
-}
-rabbit_string() {
+rabbit_set_config() {
+	local key="$1"; shift
 	local val="$1"; shift
-	# fire up erlang directly to have it do the proper escaping for us
-	erl -noinput -eval 'io:format("~p\n", init:get_plain_arguments()), init:stop().' -- "$val"
+
+	[ -e "$newConfigFile" ] || touch "$newConfigFile"
+
+	local sedKey="$(sed_escape_lhs "$key")"
+	local sedVal="$(sed_escape_rhs "$val")"
+	sed -ri \
+		"s/^[[:space:]]*(${sedKey}[[:space:]]*=[[:space:]]*)\S.*\$/\1${sedVal}/" \
+		"$newConfigFile"
+	if ! grep -qE "^${sedKey}[[:space:]]*=" "$newConfigFile"; then
+		echo "$key = $val" >> "$newConfigFile"
+	fi
+}
+rabbit_comment_config() {
+	local key="$1"; shift
+
+	[ -e "$newConfigFile" ] || touch "$newConfigFile"
+
+	local sedKey="$(sed_escape_lhs "$key")"
+	sed -ri \
+		"s/^[[:space:]]*#?[[:space:]]*(${sedKey}[[:space:]]*=[[:space:]]*\S.*)\$/# \1/" \
+		"$newConfigFile"
 }
 rabbit_env_config() {
 	local prefix="$1"; shift
 
-	local ret=()
 	local conf
 	for conf; do
 		local var="rabbitmq${prefix:+_$prefix}_$conf"
 		var="${var^^}"
 
-		local val="${!var:-}"
-
-		local rawVal=
-		case "$conf" in
-			verify|fail_if_no_peer_cert|depth)
-				[ "$val" ] || continue
-				rawVal="$val"
-				;;
-
-			hipe_compile)
-				[ "$val" ] && rawVal='true' || rawVal='false'
-				;;
-
-			cacertfile|certfile|keyfile)
-				[ "$val" ] || continue
-				rawVal="$(rabbit_string "$val")"
-				;;
-
-			*)
-				[ "$val" ] || continue
-				rawVal="<<$(rabbit_string "$val")>>"
-				;;
+		local key="$conf"
+		case "$prefix" in
+			ssl) key="ssl_options.$key" ;;
+			management_ssl) key="management.listener.ssl_opts.$key" ;;
 		esac
-		[ "$rawVal" ] || continue
 
-		ret+=( "{ $conf, $rawVal }" )
+		local val="${!var:-}"
+		local rawVal="$val"
+		case "$conf" in
+			verify|fail_if_no_peer_cert|depth|hipe_compile)
+				[ -n "$val" ] && rawVal='true' || rawVal='false'
+				;;
+
+			vm_memory_high_watermark) continue ;; # handled separately
+		esac
+
+		if [ -n "$rawVal" ]; then
+			rabbit_set_config "$key" "$rawVal"
+		else
+			rabbit_comment_config "$key"
+		fi
 	done
-
-	join $'\n' "${ret[@]}"
 }
 
-shouldWriteConfig="$haveConfig"
-if [ ! -f /etc/rabbitmq/rabbitmq.config ]; then
-	shouldWriteConfig=1
-fi
-
 if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
-	fullConfig=()
-
-	rabbitConfig=(
-		"{ loopback_users, $(rabbit_array) }"
-	)
+	rabbit_set_config 'loopback_users.guest' 'false'
 
 	# determine whether to set "vm_memory_high_watermark" (based on cgroups)
 	memTotalKb=
@@ -277,12 +282,14 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 	if [ -n "$memLimitB" ]; then
 		# if we have a cgroup memory limit, let's inform RabbitMQ of what it is (so it can calculate vm_memory_high_watermark properly)
 		# https://github.com/rabbitmq/rabbitmq-server/pull/1234
-		rabbitConfig+=( "{ total_memory_available_override_value, $memLimitB }" )
+		:# TODO rabbit_set_config 'total_memory_available_override_value' "$memLimitB"
+		# TODO https://github.com/rabbitmq/rabbitmq-server/issues/1445 (missing in 3.7.0)
 	fi
+	# https://www.rabbitmq.com/memory.html#memsup-usage
 	if [ "${RABBITMQ_VM_MEMORY_HIGH_WATERMARK:-}" ]; then
 		# https://github.com/docker-library/rabbitmq/pull/105#issuecomment-242165822
 		vmMemoryHighWatermark="$(
-			awk '
+			echo "$RABBITMQ_VM_MEMORY_HIGH_WATERMARK" | awk '
 				/^[0-9]*[.][0-9]+$|^[0-9]+([.][0-9]+)?%$/ {
 					perc = $0;
 					if (perc ~ /%$/) {
@@ -293,93 +300,64 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 						printf "error: invalid percentage for vm_memory_high_watermark: %s (must be > 0%%, <= 100%%)\n", $0 > "/dev/stderr";
 						exit 1;
 					}
-					printf "%0.03f\n", perc;
+					printf "vm_memory_high_watermark.relative %0.03f\n", perc;
 					next;
 				}
 				/^[0-9]+$/ {
-					printf "{ absolute, %s }\n", $0;
+					printf "vm_memory_high_watermark.absolute %s\n", $0;
 					next;
 				}
 				/^[0-9]+([.][0-9]+)?[a-zA-Z]+$/ {
-					printf "{ absolute, \"%s\" }\n", $0;
+					printf "vm_memory_high_watermark.absolute %s\n", $0;
 					next;
 				}
 				{
 					printf "error: unexpected input for vm_memory_high_watermark: %s\n", $0;
 					exit 1;
 				}
-			' <(echo "$RABBITMQ_VM_MEMORY_HIGH_WATERMARK")
+			'
 		)"
 		if [ "$vmMemoryHighWatermark" ]; then
-			# https://www.rabbitmq.com/memory.html#memsup-usage
-			rabbitConfig+=( "{ vm_memory_high_watermark, $vmMemoryHighWatermark }" )
+			vmMemoryHighWatermarkKey="${vmMemoryHighWatermark%% *}"
+			vmMemoryHighWatermarkVal="${vmMemoryHighWatermark#$vmMemoryHighWatermarkKey }"
+			rabbit_set_config "$vmMemoryHighWatermarkKey" "$vmMemoryHighWatermarkVal"
+			case "$vmMemoryHighWatermarkKey" in
+				# make sure we only set one or the other
+				'vm_memory_high_watermark.absolute') rabbit_comment_config 'vm_memory_high_watermark.relative' ;;
+				'vm_memory_high_watermark.relative') rabbit_comment_config 'vm_memory_high_watermark.absolute' ;;
+			esac
 		fi
 	fi
 
 	if [ "$haveSslConfig" ]; then
-		IFS=$'\n'
-		rabbitSslOptions=( $(rabbit_env_config 'ssl' "${sslConfigKeys[@]}") )
-		unset IFS
-
-		rabbitConfig+=(
-			"{ tcp_listeners, $(rabbit_array) }"
-			"{ ssl_listeners, $(rabbit_array 5671) }"
-			"{ ssl_options, $(rabbit_array "${rabbitSslOptions[@]}") }"
-		)
+		rabbit_set_config 'listeners.ssl.default' 5671
+		rabbit_env_config 'ssl' "${sslConfigKeys[@]}"
 	else
-		rabbitConfig+=(
-			"{ tcp_listeners, $(rabbit_array 5672) }"
-			"{ ssl_listeners, $(rabbit_array) }"
-		)
+		rabbit_set_config 'listeners.tcp.default' 5672
 	fi
 
-	IFS=$'\n'
-	rabbitConfig+=( $(rabbit_env_config '' "${rabbitConfigKeys[@]}") )
-	unset IFS
-
-	fullConfig+=( "{ rabbit, $(rabbit_array "${rabbitConfig[@]}") }" )
+	rabbit_env_config '' "${rabbitConfigKeys[@]}"
 
 	# if management plugin is installed, generate config for it
 	# https://www.rabbitmq.com/management.html#configuration
 	if [ "$(rabbitmq-plugins list -m -e rabbitmq_management)" ]; then
-		rabbitManagementConfig=()
-
 		if [ "$haveManagementSslConfig" ]; then
-			IFS=$'\n'
-			rabbitManagementSslOptions=( $(rabbit_env_config 'management_ssl' "${sslConfigKeys[@]}") )
-			unset IFS
-
-			rabbitManagementListenerConfig+=(
-				'{ port, 15671 }'
-				'{ ssl, true }'
-				"{ ssl_opts, $(rabbit_array "${rabbitManagementSslOptions[@]}") }"
-			)
+			rabbit_set_config 'management.listener.port' 15671
+			rabbit_set_config 'management.listener.ssl' 'true'
+			rabbit_env_config 'management_ssl' "${sslConfigKeys[@]}"
 		else
-			rabbitManagementListenerConfig+=(
-				'{ port, 15672 }'
-				'{ ssl, false }'
-			)
+			rabbit_set_config 'management.listener.port' 15672
+			rabbit_set_config 'management.listener.ssl' 'false'
 		fi
-		rabbitManagementConfig+=(
-			"{ listener, $(rabbit_array "${rabbitManagementListenerConfig[@]}") }"
-		)
 
 		# if definitions file exists, then load it
 		# https://www.rabbitmq.com/management.html#load-definitions
 		managementDefinitionsFile='/etc/rabbitmq/definitions.json'
-		if [ -f "${managementDefinitionsFile}" ]; then
+		if [ -f "$managementDefinitionsFile" ]; then
 			# see also https://github.com/docker-library/rabbitmq/pull/112#issuecomment-271485550
-			rabbitManagementConfig+=(
-				"{ load_definitions, \"$managementDefinitionsFile\" }"
-			)
+			rabbit_set_config 'management.load_definitions' "$managementDefinitionsFile"
 		fi
-
-		fullConfig+=(
-			"{ rabbitmq_management, $(rabbit_array "${rabbitManagementConfig[@]}") }"
-		)
 	fi
-
-	echo "$(rabbit_array "${fullConfig[@]}")." > /etc/rabbitmq/rabbitmq.config
 fi
 
 combinedSsl='/tmp/combined.pem'
