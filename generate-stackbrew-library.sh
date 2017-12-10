@@ -2,7 +2,7 @@
 set -eu
 
 declare -A aliases=(
-	[3.6]='3 latest'
+	[3.7]='3 latest'
 )
 defaultVariant='debian'
 
