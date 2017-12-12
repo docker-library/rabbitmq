@@ -60,9 +60,12 @@ for version in "${versions[@]}"; do
 				"$version/$variant/Dockerfile"
 			cp -va "$version/docker-entrypoint.sh" "$version/$variant/"
 		)
+		managementFrom="rabbitmq:$version"
 		if [ "$variant" = 'alpine' ]; then
+			managementFrom+='-alpine'
 			sed -i 's/gosu/su-exec/g' "$version/$variant/docker-entrypoint.sh"
 		fi
+		sed -ri 's/^(FROM) .*$/FROM '"$managementFrom"'/' "$version/$variant/management/Dockerfile"
 
 		travisEnv='\n  - VERSION='"$version"' VARIANT='"$variant$travisEnv"
 	done
