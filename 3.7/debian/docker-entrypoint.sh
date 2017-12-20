@@ -245,7 +245,10 @@ rabbit_env_config() {
 		local rawVal="$val"
 		case "$conf" in
 			fail_if_no_peer_cert|hipe_compile)
-				[ -n "$val" ] && rawVal='true' || rawVal='false'
+				case "${val,,}" in
+					false|no|0|'') rawVal='false' ;;
+					true|yes|1|*) rawVal='true' ;;
+				esac
 				;;
 
 			vm_memory_high_watermark) continue ;; # handled separately
