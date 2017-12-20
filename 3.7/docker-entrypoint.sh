@@ -244,7 +244,7 @@ rabbit_env_config() {
 		local val="${!var:-}"
 		local rawVal="$val"
 		case "$conf" in
-			verify|fail_if_no_peer_cert|depth|hipe_compile)
+			fail_if_no_peer_cert|hipe_compile)
 				[ -n "$val" ] && rawVal='true' || rawVal='false'
 				;;
 
