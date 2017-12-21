@@ -285,8 +285,7 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 	if [ -n "$memLimitB" ]; then
 		# if we have a cgroup memory limit, let's inform RabbitMQ of what it is (so it can calculate vm_memory_high_watermark properly)
 		# https://github.com/rabbitmq/rabbitmq-server/pull/1234
-		: # TODO rabbit_set_config 'total_memory_available_override_value' "$memLimitB"
-		# TODO https://github.com/rabbitmq/rabbitmq-server/issues/1445 (missing in 3.7.0)
+		rabbit_set_config 'total_memory_available_override_value' "$memLimitB"
 	fi
 	# https://www.rabbitmq.com/memory.html#memsup-usage
 	if [ "${RABBITMQ_VM_MEMORY_HIGH_WATERMARK:-}" ]; then
