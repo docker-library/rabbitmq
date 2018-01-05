@@ -48,18 +48,18 @@ for version in "${versions[@]}"; do
 		continue
 	fi
 
+	echo "$version: $fullVersion"
+
 	for variant in alpine debian; do
 		[ -f "$version/$variant/Dockerfile" ] || continue
 
-		(
-			set -x
-			sed -ri \
-				-e 's/^(ENV RABBITMQ_VERSION) .*/\1 '"$fullVersion"'/' \
-				-e 's/^(ENV RABBITMQ_GITHUB_TAG) .*/\1 '"$githubTag"'/' \
-				-e 's/^(ENV RABBITMQ_DEBIAN_VERSION) .*/\1 '"$debianVersion"'/' \
-				"$version/$variant/Dockerfile"
-			cp -va "$version/docker-entrypoint.sh" "$version/$variant/"
-		)
+		sed -ri \
+			-e 's/^(ENV RABBITMQ_VERSION) .*/\1 '"$fullVersion"'/' \
+			-e 's/^(ENV RABBITMQ_GITHUB_TAG) .*/\1 '"$githubTag"'/' \
+			-e 's/^(ENV RABBITMQ_DEBIAN_VERSION) .*/\1 '"$debianVersion"'/' \
+			"$version/$variant/Dockerfile"
+		cp -a "$version/docker-entrypoint.sh" "$version/$variant/"
+
 		managementFrom="rabbitmq:$version"
 		if [ "$variant" = 'alpine' ]; then
 			managementFrom+='-alpine'
