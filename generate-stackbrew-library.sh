@@ -69,16 +69,22 @@ join() {
 }
 
 for version in "${versions[@]}"; do
+	rcVersion="${version%-rc}"
+
 	for variant in debian alpine; do
 		commit="$(dirCommit "$version/$variant")"
 
 		fullVersion="$(git show "$commit":"$version/$variant/Dockerfile" | awk '$1 == "ENV" && $2 == "RABBITMQ_VERSION" { print $3; exit }')"
 
 		versionAliases=()
-		while [ "$fullVersion" != "$version" -a "${fullVersion%[.-]*}" != "$fullVersion" ]; do
+		if [ "$version" = "$rcVersion" ]; then
+			while [ "$fullVersion" != "$version" -a "${fullVersion%[.-]*}" != "$fullVersion" ]; do
+				versionAliases+=( $fullVersion )
+				fullVersion="${fullVersion%[.-]*}"
+			done
+		else
 			versionAliases+=( $fullVersion )
-			fullVersion="${fullVersion%[.-]*}"
-		done
+		fi
 		versionAliases+=(
 			$version
 			${aliases[$version]:-}
