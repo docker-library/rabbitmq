@@ -38,7 +38,7 @@ for version in "${versions[@]}"; do
 	)"
 	debianVersion="$(
 		curl -fsSL "$githubReleaseUrl" \
-			| grep -o "/rabbitmq-server_${rcVersion}[.].*_all[.]deb" \
+			| grep -o "/rabbitmq-server_${fullVersion//-/.}.*_all[.]deb" \
 			| head -1 \
 			| sed -r "s/^.*(${rcVersion}.*)_all[.]deb/\1/"
 	)"
