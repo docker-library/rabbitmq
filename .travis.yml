@@ -2,8 +2,6 @@ language: bash
 services: docker
 
 env:
-  - VERSION=3.7-rc VARIANT=debian
-  - VERSION=3.7-rc VARIANT=alpine
   - VERSION=3.7 VARIANT=debian
   - VERSION=3.7 VARIANT=alpine
   - VERSION=3.6 VARIANT=debian
