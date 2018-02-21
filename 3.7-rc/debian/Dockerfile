@@ -18,7 +18,6 @@ RUN set -eux; \
 	fetchDeps=' \
 		ca-certificates \
 		wget \
-		apt-utils \
 	'; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends $fetchDeps; \
@@ -30,7 +29,7 @@ RUN set -eux; \
 	\
 # verify the signature
 	export GNUPGHOME="$(mktemp -d)"; \
-	gpg --keyserver pgp.mit.edu --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
+	gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
 	gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
 	rm -rf "$GNUPGHOME" /usr/local/bin/gosu.asc; \
 	\
@@ -111,7 +110,7 @@ RUN set -eux; \
 	apt-get purge -y --auto-remove ca-certificates wget; \
 	\
 	export GNUPGHOME="$(mktemp -d)"; \
-	gpg --keyserver pgp.mit.edu --recv-keys "$RABBITMQ_GPG_KEY"; \
+	gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$RABBITMQ_GPG_KEY"; \
 	gpg --batch --verify rabbitmq-server.deb.asc rabbitmq-server.deb; \
 	rm -rf "$GNUPGHOME"; \
 	\

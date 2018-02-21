@@ -24,9 +24,9 @@ for version in "${versions[@]}"; do
 			"refs/tags/rabbitmq_v${rcVersion//./_}_*" \
 			"refs/tags/v${rcVersion}.*" \
 		| cut -d'/' -f3- \
-		| grep -v "\^{}$" \
+		| cut -d'^' -f1 \
 		| grep $rcGrepV -- "$rcGrepExpr" \
-		| sort -V \
+		| sort -uV \
 		| tail -1
 	)"
 
