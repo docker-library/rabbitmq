@@ -18,6 +18,7 @@ RUN set -eux; \
 	fetchDeps=' \
 		ca-certificates \
 		wget \
+		apt-utils \
 	'; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends $fetchDeps; \
