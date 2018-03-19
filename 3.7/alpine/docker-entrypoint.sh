@@ -64,6 +64,7 @@ rabbitConfigKeys=(
 	default_user
 	default_vhost
 	hipe_compile
+	queue_master_locator
 	vm_memory_high_watermark
 )
 fileConfigKeys=(
