@@ -49,7 +49,7 @@ RUN set -eux; \
 	{ \
 		echo 'Package: *'; \
 		echo 'Pin: release n=buster*'; \
-		echo 'Pin-Priority: -10'; \
+		echo 'Pin-Priority: 1'; \
 		echo; \
 		echo 'Package: erlang*'; \
 		echo 'Pin: release n=buster*'; \
