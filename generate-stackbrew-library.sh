@@ -76,6 +76,15 @@ for version in "${versions[@]}"; do
 
 		fullVersion="$(git show "$commit":"$version/$variant/Dockerfile" | awk '$1 == "ENV" && $2 == "RABBITMQ_VERSION" { print $3; exit }')"
 
+		if [ "$rcVersion" != "$version" ] && [ -e "$rcVersion/$variant/Dockerfile" ]; then
+			# if this is a "-rc" release, let's make sure the release it contains isn't already GA (and thus something we should not publish anymore)
+			rcFullVersion="$(git show HEAD:"$rcVersion/$variant/Dockerfile" | awk '$1 == "ENV" && $2 == "RABBITMQ_VERSION" { print $3; exit }')"
+			if [[ "$fullVersion" == "$rcFullVersion"* ]]; then
+				# "x.y.z-rc1" == x.y.z*
+				continue
+			fi
+		fi
+
 		versionAliases=()
 		if [ "$version" = "$rcVersion" ]; then
 			while [ "$fullVersion" != "$version" -a "${fullVersion%[.-]*}" != "$fullVersion" ]; do
