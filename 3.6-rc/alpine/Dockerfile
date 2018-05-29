@@ -45,6 +45,7 @@ RUN set -ex; \
 		ca-certificates \
 		gnupg \
 		libressl \
+		wget \
 		xz \
 	; \
 	\
