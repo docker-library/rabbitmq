@@ -55,6 +55,7 @@ RUN set -ex; \
 	export GNUPGHOME="$(mktemp -d)"; \
 	gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$RABBITMQ_GPG_KEY"; \
 	gpg --batch --verify rabbitmq-server.tar.xz.asc rabbitmq-server.tar.xz; \
+	command -v gpgconf && gpgconf --kill all || :; \
 	rm -rf "$GNUPGHOME"; \
 	\
 	mkdir -p "$RABBITMQ_HOME"; \

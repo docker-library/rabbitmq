@@ -112,6 +112,7 @@ RUN set -eux; \
 	export GNUPGHOME="$(mktemp -d)"; \
 	gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$RABBITMQ_GPG_KEY"; \
 	gpg --batch --verify rabbitmq-server.deb.asc rabbitmq-server.deb; \
+	command -v gpgconf && gpgconf --kill all || :; \
 	rm -rf "$GNUPGHOME"; \
 	\
 	apt install -y --no-install-recommends ./rabbitmq-server.deb; \

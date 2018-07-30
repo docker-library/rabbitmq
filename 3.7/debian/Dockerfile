@@ -31,6 +31,7 @@ RUN set -eux; \
 	export GNUPGHOME="$(mktemp -d)"; \
 	gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
 	gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
+	command -v gpgconf && gpgconf --kill all || :; \
 	rm -rf "$GNUPGHOME" /usr/local/bin/gosu.asc; \
 	\
 	chmod +x /usr/local/bin/gosu; \
@@ -112,6 +113,7 @@ RUN set -eux; \
 	export GNUPGHOME="$(mktemp -d)"; \
 	gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$RABBITMQ_GPG_KEY"; \
 	gpg --batch --verify rabbitmq-server.deb.asc rabbitmq-server.deb; \
+	command -v gpgconf && gpgconf --kill all || :; \
 	rm -rf "$GNUPGHOME"; \
 	\
 	apt install -y --no-install-recommends ./rabbitmq-server.deb; \
