@@ -16,14 +16,20 @@ install:
 
 before_script:
   - env | sort
+  - wget -qO- 'https://github.com/tianon/pgp-happy-eyeballs/raw/master/hack-my-builds.sh' | bash
   - cd "$VERSION/$VARIANT"
   - image="$(awk 'toupper($1) == "FROM" { print $2; exit }' management/Dockerfile)"
 
 script:
-  - travis_retry docker build -t "$image" .
-  - ~/official-images/test/run.sh "$image"
-  - travis_retry docker build -t "${image}-management" management
-  - ~/official-images/test/run.sh "${image}-management"
+  - |
+    (
+      set -Eeuo pipefail
+      set -x
+      docker build -t "$image" .
+      ~/official-images/test/run.sh "$image"
+      docker build -t "${image}-management" management
+      ~/official-images/test/run.sh "${image}-management"
+    )
 
 after_script:
   - docker images
