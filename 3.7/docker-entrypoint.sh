@@ -45,6 +45,7 @@ fi
 fileEnvKeys=(
 	default_user
 	default_pass
+	erlang_cookie
 )
 
 # https://www.rabbitmq.com/configure.html
