@@ -156,7 +156,7 @@ for conf in "${!configDefaults[@]}"; do
 	eval "export $var=\"\$default\""
 done
 
-# If long & short hostnames are not the same, use long hostnames
+# if long and short hostnames are not the same, use long hostnames
 if [ "$(hostname)" != "$(hostname -s)" ]; then
 	: "${RABBITMQ_USE_LONGNAME:=true}"
 fi
