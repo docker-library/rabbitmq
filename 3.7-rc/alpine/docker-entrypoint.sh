@@ -26,7 +26,7 @@ file_env() {
 # allow the container to be started with `--user`
 if [[ "$1" == rabbitmq* ]] && [ "$(id -u)" = '0' ]; then
 	if [ "$1" = 'rabbitmq-server' ]; then
-		chown -R rabbitmq /var/lib/rabbitmq
+		find /var/lib/rabbitmq \! -user rabbitmq -exec chown rabbitmq '{}' +
 	fi
 	exec su-exec rabbitmq "$BASH_SOURCE" "$@"
 fi
