@@ -23,14 +23,6 @@ file_env() {
 	unset "$fileVar"
 }
 
-# allow the container to be started with `--user`
-if [[ "$1" == rabbitmq* ]] && [ "$(id -u)" = '0' ]; then
-	if [ "$1" = 'rabbitmq-server' ]; then
-		find /var/lib/rabbitmq \! -user rabbitmq -exec chown rabbitmq '{}' +
-	fi
-	exec su-exec rabbitmq "$BASH_SOURCE" "$@"
-fi
-
 # backwards compatibility for old environment variables
 : "${RABBITMQ_SSL_CERTFILE:=${RABBITMQ_SSL_CERT_FILE:-}}"
 : "${RABBITMQ_SSL_KEYFILE:=${RABBITMQ_SSL_KEY_FILE:-}}"
@@ -87,6 +79,37 @@ declare -A configDefaults=(
 	[ssl_fail_if_no_peer_cert]='true'
 	[ssl_verify]='verify_peer'
 )
+
+# allow the container to be started with `--user`
+if [[ "$1" == rabbitmq* ]] && [ "$(id -u)" = '0' ]; then
+	# this needs to happen late enough that we have the SSL config
+	# https://github.com/docker-library/rabbitmq/issues/283
+	for conf in "${allConfigKeys[@]}"; do
+		var="RABBITMQ_${conf^^}"
+		val="${!var:-}"
+		[ -n "$val" ] || continue
+		case "$conf" in
+			*_ssl_*file | ssl_*file )
+				if [ -f "$val" ] && ! su-exec rabbitmq test -r "$val"; then
+					newFile="/tmp/rabbitmq-ssl/$conf.pem"
+					echo >&2
+					echo >&2 "WARNING: '$val' ($var) is not readable by rabbitmq ($(id rabbitmq)); copying to '$newFile'"
+					echo >&2
+					cat "$val" > "$newFile"
+					chown rabbitmq "$newFile"
+					chmod 0400 "$newFile"
+					eval 'export '$var'="$newFile"'
+				fi
+				;;
+		esac
+	done
+
+	if [ "$1" = 'rabbitmq-server' ]; then
+		find /var/lib/rabbitmq \! -user rabbitmq -exec chown rabbitmq '{}' +
+	fi
+
+	exec su-exec rabbitmq "$BASH_SOURCE" "$@"
+fi
 
 haveConfig=
 haveSslConfig=
@@ -362,7 +385,7 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 	fi
 fi
 
-combinedSsl='/tmp/combined.pem'
+combinedSsl='/tmp/rabbitmq-ssl/combined.pem'
 if [ "$haveSslConfig" ] && [[ "$1" == rabbitmq* ]] && [ ! -f "$combinedSsl" ]; then
 	# Create combined cert
 	cat "$RABBITMQ_SSL_CERTFILE" "$RABBITMQ_SSL_KEYFILE" > "$combinedSsl"
