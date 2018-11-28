@@ -41,25 +41,29 @@ RUN set -eux; \
 	apt-get purge -y --auto-remove $fetchDeps
 
 # RabbitMQ 3.6.15+ requires Erlang 19.3+ (and Stretch only has 19.2); https://www.rabbitmq.com/which-erlang.html
-# so we'll pull Erlang from Buster instead (not using Erlang Solutions since their multiarch support is extremely limited)
+#          3.7.9+ requres libssl 1.1.1+ (and Stretch only has 1.1.0);
+# so we'll pull Erlang, libssl and dependencies from Buster instead (not using Erlang Solutions since their multiarch support is extremely limited)
 RUN set -eux; \
 # add buster sources.list
 	sed 's/stretch/buster/g' /etc/apt/sources.list \
 		| tee /etc/apt/sources.list.d/buster.list; \
-# update apt-preferences such that we get only erlang* from buster (and erlang* only from buster)
+# update apt-preferences such that we get only required packages from buster
 	{ \
 		echo 'Package: *'; \
 		echo 'Pin: release n=buster*'; \
 		echo 'Pin-Priority: 1'; \
-		echo; \
-		echo 'Package: erlang*'; \
-		echo 'Pin: release n=buster*'; \
-		echo 'Pin-Priority: 999'; \
-		echo; \
-		echo 'Package: erlang*'; \
-		echo 'Pin: release n=stretch*'; \
-		echo 'Pin-Priority: -10'; \
-	} | tee /etc/apt/preferences.d/buster-erlang
+		for package in erlang libssl1.1 libc6 libc-bin;\
+		do\
+			echo; \
+			echo "Package: $package*"; \
+			echo 'Pin: release n=buster*'; \
+			echo 'Pin-Priority: 999'; \
+			echo; \
+			echo "Package: $package*"; \
+			echo 'Pin: release n=stretch*'; \
+			echo 'Pin-Priority: -10'; \
+		done\
+	} | tee /etc/apt/preferences.d/buster
 
 # install Erlang
 RUN set -eux; \
