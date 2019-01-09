@@ -2,9 +2,6 @@
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
 FROM ubuntu:18.04 as openssl-otp
 
-# I might be optimistic here, but this makes sense to me
-LABEL maintainer="RabbitMQ <team@rabbitmq.com>"
-
 ARG OTP_VERSION="21.2.2"
 # It would be nice if the Ericsson team published these checksums somewhere, will ask on the Erlang mailing list
 ARG OTP_SOURCE_SHA256="41b1c3a8343218157a683776e71d80a05ac4eb4019a90a760846608d78817690"
