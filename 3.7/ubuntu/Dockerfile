@@ -1,6 +1,8 @@
 # The official Canonical Ubuntu Bionic image is ideal from a security perspective,
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
-FROM ubuntu:18.04 as openssl-otp
+FROM ubuntu:18.04 AS release
+
+FROM release AS openssl-otp
 
 ARG OTP_VERSION="21.2.2"
 # It would be nice if the Ericsson team published these checksums somewhere, will ask on the Erlang mailing list
@@ -116,8 +118,21 @@ RUN du -skh $OTP_INSTALL_DIR >> /BUILD_ARTEFACTS
 # Check that Erlang/OTP crypto & ssl were compiled against OpenSSL correctly
 RUN $OTP_INSTALL_DIR/bin/erl -noshell -eval 'io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
 
+# Start with the unmodified release image
+FROM release
+# Only copy the build artefacts required by RabbitMQ
+COPY --from=openssl-otp /opt /opt
+COPY --from=openssl-otp /usr/local/ssl /usr/local/ssl
+# Add OpenSSL to PATH
+ENV PATH=/opt/openssl/bin:$PATH
+ENV LD_LIBRARY_PATH=/opt/openssl/lib
+# Ensure OpenSSL works by listing all commands
+RUN openssl help
+# Add Erlang/OTP to PATH
+ENV PATH=/opt/otp/bin:$PATH
+# Ensure Erlang/OTP works by listing all loaded modules
+RUN erl -noshell -eval 'io:format("~p~n", [code:all_loaded()]), init:stop().'
+
 # TODO
-# Start with new FROM
-# Copy necessary artefacts from openssl-otp
 # Install RabbitMQ
 # Ensure RabbitMQ starts & rabbitmqctl works correctly
