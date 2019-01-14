@@ -269,3 +269,11 @@ ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 4369 5671 5672 25672
 CMD ["rabbitmq-server"]
+
+# A RabbitMQ node is considered healthy if all the below are true:
+# * rabbitmqctl can connect to the Erlang VM where RabbitMQ runs
+# * the rabbit app finished booting & it's running
+# * there are no alarms
+# * there is at least 1 active listener
+HEALTHCHECK --start-period=30s --interval=30s --timeout=3s --retries=3 \
+  CMD rabbitmqctl eval '{true, rabbit_app_booted_and_is_running} = {rabbit:is_booted(node()), rabbit_app_booted_and_is_running}, {[], no_alarms} = {rabbit:alarms(), no_alarms}, [] /= rabbit_networking:active_listeners(), node_healthy.'
