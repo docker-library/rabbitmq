@@ -220,6 +220,9 @@ VOLUME $RABBITMQ_CONF_DIR
 VOLUME $RABBITMQ_LOG_DIR
 VOLUME $RABBITMQ_DATA_DIR
 
+# Keep the VOLUME & EXPOSE declarations together, both are outside-of-this-container concerns
+EXPOSE 4369 5671 5672 25672
+
 # Add RabbitMQ to PATH, send all logs to TTY
 # TODO @tianon is sbin a problem? Notice that I'm installing generic-unix, not the Debian package
 ENV PATH=$RABBITMQ_INSTALL_DIR/sbin:$PATH RABBITMQ_LOGS=-
@@ -262,12 +265,9 @@ RUN set -eux; \
       \
       apt-get purge -y --auto-remove $fetchDeps
 
-
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN ln -s /usr/local/bin/docker-entrypoint.sh / # backwards compat
 ENTRYPOINT ["docker-entrypoint.sh"]
-
-EXPOSE 4369 5671 5672 25672
 CMD ["rabbitmq-server"]
 
 # A RabbitMQ node is considered healthy if all the below are true:
