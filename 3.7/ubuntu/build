@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+(time docker build -t rabbitmq .) 2>&1 | tee "build.$(date -u +'%Y-%m-%d.%H%M%S').log"
