@@ -49,7 +49,7 @@ RUN apt-get update && \
 
 # Sometimes keys fail to return from PGP keyservers
 # Chose a PGP keyserver that uses multiple TLDs and has the highest SRV score in Europe, North America & Oceania - https://sks-keyservers.net/status/
-ARG PGP_KEYSERVER=pgpkeys.co.uk
+ARG PGP_KEYSERVER=pgpkeys.eu
 
 # Required to uncompress xz files, such as rabbitmq-server-generic-unix-3.7.10.tar.xz
 RUN apt-get update && \
@@ -188,6 +188,7 @@ ARG RABBITMQ_INSTALL_DIR=/opt/rabbitmq
 ARG RABBITMQ_DATA_DIR=/var/lib/rabbitmq
 ARG RABBITMQ_LOG_DIR=/var/log/rabbitmq
 ARG RABBITMQ_CONF_DIR=/etc/rabbitmq
+ARG RABBITMQ_TMP_SSL_DIR=/tmp/rabbitmq-ssl
 # Only copy the build artefacts required to run RabbitMQ
 COPY --from=builder $OPENSSL_INSTALL_DIR $OPENSSL_INSTALL_DIR
 COPY --from=builder $OPENSSL_CONFIG_DIR $OPENSSL_CONFIG_DIR
@@ -207,9 +208,12 @@ RUN erl -noshell -eval 'io:format("~p~n", [code:all_loaded()]), init:stop().'
 # Create rabbitmq system user & group, fix permissions & allow root user to connect to the RabbitMQ Erlang VM
 RUN groupadd --system rabbitmq && \
     useradd --system --home-dir $RABBITMQ_DATA_DIR --create-home --gid rabbitmq rabbitmq && \
-    mkdir -p $RABBITMQ_CONF_DIR $RABBITMQ_LOG_DIR $RABBITMQ_DATA_DIR && \
+    mkdir -p $RABBITMQ_CONF_DIR $RABBITMQ_LOG_DIR $RABBITMQ_DATA_DIR $RABBITMQ_TMP_SSL_DIR $RABBITMQ_TMP_SSL_DIR && \
     chown -fR rabbitmq:rabbitmq $RABBITMQ_INSTALL_DIR $RABBITMQ_CONF_DIR $RABBITMQ_LOG_DIR $RABBITMQ_DATA_DIR && \
     ln -sf $RABBITMQ_DATA_DIR/.erlang.cookie /root/.erlang.cookie
+
+# TODO @tianon why is this necessary?
+# RUN ln -sf "/usr/lib/rabbitmq/lib/rabbitmq_server-$RABBITMQ_VERSION/plugins" /plugins
 
 # Hint that the config, log & data (a.k.a. home dir) dirs should be separate volumes
 VOLUME $RABBITMQ_CONF_DIR
@@ -217,18 +221,51 @@ VOLUME $RABBITMQ_LOG_DIR
 VOLUME $RABBITMQ_DATA_DIR
 
 # Add RabbitMQ to PATH, send all logs to TTY
+# TODO @tianon is sbin a problem? Notice that I'm installing generic-unix, not the Debian package
 ENV PATH=$RABBITMQ_INSTALL_DIR/sbin:$PATH RABBITMQ_LOGS=-
 
 # Improve default locale: locale -a
 # https://docs.docker.com/samples/library/ubuntu/#locales
 ENV LANG=C.UTF-8 LANGUAGE=C.UTF-8 LC_ALL=C.UTF-8
-
-EXPOSE 4369 5671 25672
-
-USER rabbitmq
-
+#
 # Ensure RabbitMQ was installed correctly by running a few commands that do not depend on a running server, as the rabbitmq user
 # If they all succeed, it's safe to assume that things have been set up correctly
 RUN rabbitmqctl help && rabbitmqctl list_ciphers && rabbitmq-plugins list
 
-CMD rabbitmq-server
+# grab gosu for easy step-down from root
+ENV GOSU_VERSION 1.10
+RUN set -eux; \
+      \
+      fetchDeps=' \
+        ca-certificates \
+        curl \
+        gnupg \
+      '; \
+      apt-get update; \
+      apt-get install -y --no-install-recommends $fetchDeps; \
+      rm -rf /var/lib/apt/lists/*; \
+      \
+      dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')"; \
+      curl --verbose --location --silent --fail --fail-early --output /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch" ; \
+      curl --verbose --location --silent --fail --fail-early --output /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc" ; \
+      \
+# verify the signature
+      export GNUPGHOME="$(mktemp -d)"; \
+      gpg --batch --keyserver pgpkeys.eu --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
+      gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
+      command -v gpgconf && gpgconf --kill all || :; \
+      rm -rf "$GNUPGHOME" /usr/local/bin/gosu.asc; \
+      \
+      chmod +x /usr/local/bin/gosu; \
+# verify that the binary works
+      gosu nobody true; \
+      \
+      apt-get purge -y --auto-remove $fetchDeps
+
+
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN ln -s /usr/local/bin/docker-entrypoint.sh / # backwards compat
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+EXPOSE 4369 5671 5672 25672
+CMD ["rabbitmq-server"]
