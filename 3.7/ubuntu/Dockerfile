@@ -221,7 +221,6 @@ VOLUME $RABBITMQ_LOG_DIR
 VOLUME $RABBITMQ_DATA_DIR
 
 # Add RabbitMQ to PATH, send all logs to TTY
-# TODO @tianon is sbin a problem? Notice that I'm installing generic-unix, not the Debian package
 ENV PATH=$RABBITMQ_INSTALL_DIR/sbin:$PATH RABBITMQ_LOGS=-
 
 # Improve default locale: locale -a
