@@ -223,10 +223,11 @@ VOLUME $RABBITMQ_DATA_DIR
 # Add RabbitMQ to PATH, send all logs to TTY
 ENV PATH=$RABBITMQ_INSTALL_DIR/sbin:$PATH RABBITMQ_LOGS=-
 
-# Improve default locale: locale -a
+# warning: the VM is running with native name encoding of latin1 which may cause Elixir to malfunction as it expects utf8. Please ensure your locale is set to UTF-8 (which can be verified by running "locale" in your shell)
+# Setting all environment variables that control language preferences, behaviour differs - https://www.gnu.org/software/gettext/manual/html_node/The-LANGUAGE-variable.html#The-LANGUAGE-variable
 # https://docs.docker.com/samples/library/ubuntu/#locales
 ENV LANG=C.UTF-8 LANGUAGE=C.UTF-8 LC_ALL=C.UTF-8
-#
+
 # Ensure RabbitMQ was installed correctly by running a few commands that do not depend on a running server, as the rabbitmq user
 # If they all succeed, it's safe to assume that things have been set up correctly
 RUN rabbitmqctl help && rabbitmqctl list_ciphers && rabbitmq-plugins list
