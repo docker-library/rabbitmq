@@ -163,7 +163,7 @@ ARG RABBITMQ_PATH=/usr/local/src/rabbitmq-$RABBITMQ_VERSION
 ARG RABBITMQ_INSTALL_DIR=/opt/rabbitmq
 RUN mkdir -p $RABBITMQ_INSTALL_DIR
 # https://www.rabbitmq.com/signatures.html#importing-gpg
-ENV RABBITMQ_PGP_KEY_ID="0x6B73A36E6026DFCA"
+ENV RABBITMQ_PGP_KEY_ID="0x0A9AF2115F4687BD29803A206B73A36E6026DFCA"
 
 # Install RabbitMQ
 # Fail fast if SOURCE URL returns HTTP errors
