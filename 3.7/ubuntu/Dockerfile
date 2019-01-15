@@ -47,10 +47,6 @@ RUN apt-get update && \
     apt-get install --yes --no-install-recommends gnupg && \
     gpg --version
 
-# Sometimes keys fail to return from PGP keyservers
-# Chose a PGP keyserver that uses multiple TLDs and has the highest SRV score in Europe, North America & Oceania - https://sks-keyservers.net/status/
-ARG PGP_KEYSERVER=pgpkeys.eu
-
 # Required to uncompress xz files, such as rabbitmq-server-generic-unix-3.7.10.tar.xz
 RUN apt-get update && \
     apt-get install --yes --no-install-recommends xz-utils && \
@@ -66,13 +62,17 @@ RUN mkdir -p $OPENSSL_PATH $OPENSSL_INSTALL_DIR
 # https://www.openssl.org/community/omc.html
 ARG OPENSSL_PGP_KEY_ID=0x8657ABB260F056B1E5190839D9C4D26D0E604491
 
+# Let pgp-happy-eyeballs handle PGP-keyserver-related issues
+# https://github.com/docker-library/official-images/issues/4252
+
 # Required by the crypto & ssl Erlang/OTP applications
 # Fail fast if SOURCE URL returns HTTP errors
 RUN curl --verbose --head --fail --fail-early $OPENSSL_SOURCE_URL 1>/dev/null && \
     curl --verbose --location --silent --fail --fail-early --output $OPENSSL_PATH.tar.gz $OPENSSL_SOURCE_URL && \
     curl --verbose --location --silent --fail --fail-early --output $OPENSSL_PATH.tar.gz.asc $OPENSSL_SOURCE_URL.asc && \
-    gpg --batch --keyserver $PGP_KEYSERVER --recv-keys $OPENSSL_PGP_KEY_ID && \
+    gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys $OPENSSL_PGP_KEY_ID && \
     gpg --batch --verify $OPENSSL_PATH.tar.gz.asc $OPENSSL_PATH.tar.gz && \
+    command -v gpgconf > /dev/null && gpgconf --kill all && \
     tar -xvf $OPENSSL_PATH.tar.gz --directory $OPENSSL_PATH --strip-components=1
 # Configure OpenSSL for compilation
 RUN cd $OPENSSL_PATH && \
@@ -170,8 +170,9 @@ ENV RABBITMQ_PGP_KEY_ID="0x6B73A36E6026DFCA"
 RUN curl --verbose --head --fail --fail-early $RABBITMQ_SOURCE_URL 1>/dev/null && \
     curl --verbose --location --silent --fail --fail-early --output $RABBITMQ_PATH.tar.xz $RABBITMQ_SOURCE_URL && \
     curl --verbose --location --silent --fail --fail-early --output $RABBITMQ_PATH.tar.xz.asc $RABBITMQ_SOURCE_URL.asc && \
-    gpg --batch --keyserver $PGP_KEYSERVER --recv-keys "$RABBITMQ_PGP_KEY_ID" && \
+    gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$RABBITMQ_PGP_KEY_ID" && \
     gpg --batch --verify $RABBITMQ_PATH.tar.xz.asc $RABBITMQ_PATH.tar.xz && \
+    command -v gpgconf > /dev/null && gpgconf --kill all && \
     tar -xvf $RABBITMQ_PATH.tar.xz --directory $RABBITMQ_INSTALL_DIR --strip-components=1
 
 # Do not default SYS_PREFIX to RABBITMQ_HOME, leave it empty
