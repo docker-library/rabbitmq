@@ -216,9 +216,7 @@ RUN groupadd --system rabbitmq && \
 # Added for backwards compatibility - users can simply COPY custom plugins to /plugins
 RUN ln -sf /opt/rabbitmq/plugins /plugins
 
-# Hint that the config, log & data (a.k.a. home dir) dirs should be separate volumes
-VOLUME $RABBITMQ_CONF_DIR
-VOLUME $RABBITMQ_LOG_DIR
+# Hint that the data (a.k.a. home dir) dir should be separate volume
 VOLUME $RABBITMQ_DATA_DIR
 
 # Add RabbitMQ to PATH, send all logs to TTY
