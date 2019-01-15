@@ -147,8 +147,8 @@ RUN cd $OTP_PATH && \
 RUN cd $OTP_PATH && export ERL_TOP=$OTP_PATH && make -j "$(getconf _NPROCESSORS_ONLN)" GEN_OPT_FLGS="-O2 -fno-strict-aliasing" && make install
 
 # Delete all src dirs to keep the final image size down, they add an extra 19MB
-# TODO Could this be done better?
-RUN find $OTP_INSTALL_DIR/lib/erlang/lib -maxdepth 2 -mindepth 2 -name "src" -exec rm -fr {} \;
+# TODO @dumbbell could this be done better, in the build/install phases?
+RUN rm -fr $OTP_INSTALL_DIR/lib/erlang/lib/*/src
 
 # Record Erlang/OTP artefacts size
 RUN du -kh -d 1 $OTP_INSTALL_DIR/lib/erlang >> /OTP_BUILD_ARTEFACTS
