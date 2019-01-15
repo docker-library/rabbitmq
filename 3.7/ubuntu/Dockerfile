@@ -87,7 +87,7 @@ RUN cd $OPENSSL_PATH && \
     make -j $(getconf _NPROCESSORS_ONLN) && \
     make test install uninstall_docs && \
     $OPENSSL_INSTALL_DIR/bin/openssl help && \
-    ls $OPENSSL_INSTALL_DIR/lib/libcrypto.so $OPENSSL_INSTALL_DIR/include/*.h
+    ls $OPENSSL_INSTALL_DIR/lib/libcrypto.so $OPENSSL_INSTALL_DIR/include/openssl/*.h
 # Record OpenSSL artefacts size
 RUN du -kh -d 1 $OPENSSL_INSTALL_DIR $OPENSSL_CONFIG_DIR >> /OPENSSL_BUILD_ARTEFACTS
 
