@@ -81,9 +81,13 @@ RUN curl --verbose --head --fail --fail-early $OPENSSL_SOURCE_URL 1>/dev/null &&
 # Configure OpenSSL for compilation
 RUN cd $OPENSSL_PATH && \
     ./config --prefix=$OPENSSL_INSTALL_DIR --openssldir=$OPENSSL_CONFIG_DIR
-# Compile & install OpenSSL
+# Compile, install OpenSSL, verify that the command-line works & development headers are present
 # Remove docs & man pages to keep the artefact small (saves ~11MB)
-RUN cd $OPENSSL_PATH && make -j $(getconf _NPROCESSORS_ONLN) && make test install uninstall_docs
+RUN cd $OPENSSL_PATH && \
+    make -j $(getconf _NPROCESSORS_ONLN) && \
+    make test install uninstall_docs && \
+    $OPENSSL_INSTALL_DIR/bin/openssl help && \
+    ls $OPENSSL_INSTALL_DIR/lib/libcrypto.so $OPENSSL_INSTALL_DIR/include/*.h
 # Record OpenSSL artefacts size
 RUN du -kh -d 1 $OPENSSL_INSTALL_DIR $OPENSSL_CONFIG_DIR >> /OPENSSL_BUILD_ARTEFACTS
 
