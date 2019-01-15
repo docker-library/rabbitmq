@@ -235,33 +235,11 @@ RUN rabbitmqctl help && rabbitmqctl list_ciphers && rabbitmq-plugins list
 # grab gosu for easy step-down from root
 ENV GOSU_VERSION 1.10
 RUN set -eux; \
-      \
-      fetchDeps=' \
-        ca-certificates \
-        curl \
-        gnupg \
-      '; \
       apt-get update; \
-      apt-get install -y --no-install-recommends $fetchDeps; \
+      apt-get install -y --no-install-recommends gosu; \
       rm -rf /var/lib/apt/lists/*; \
-      \
-      dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')"; \
-      curl --verbose --location --silent --fail --fail-early --output /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch" ; \
-      curl --verbose --location --silent --fail --fail-early --output /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc" ; \
-      \
-# verify the signature
-      export GNUPGHOME="$(mktemp -d)"; \
-      gpg --batch --keyserver pgpkeys.eu --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
-      gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
-      command -v gpgconf && gpgconf --kill all || :; \
-      rm -rf "$GNUPGHOME" /usr/local/bin/gosu.asc; \
-      \
-      chmod +x /usr/local/bin/gosu; \
 # verify that the binary works
-      gosu nobody true; \
-      \
-      apt-get purge -y --auto-remove $fetchDeps
-
+      gosu nobody true
 
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN ln -s /usr/local/bin/docker-entrypoint.sh / # backwards compat
