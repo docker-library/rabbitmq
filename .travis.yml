@@ -6,10 +6,6 @@ env:
   - VERSION=3.7-rc VARIANT=alpine
   - VERSION=3.7 VARIANT=debian
   - VERSION=3.7 VARIANT=alpine
-  - VERSION=3.6-rc VARIANT=debian
-  - VERSION=3.6-rc VARIANT=alpine
-  - VERSION=3.6 VARIANT=debian
-  - VERSION=3.6 VARIANT=alpine
 
 install:
   - git clone https://github.com/docker-library/official-images.git ~/official-images
