@@ -212,8 +212,8 @@ RUN groupadd --system rabbitmq && \
     chown -fR rabbitmq:rabbitmq $RABBITMQ_INSTALL_DIR $RABBITMQ_CONF_DIR $RABBITMQ_LOG_DIR $RABBITMQ_DATA_DIR && \
     ln -sf $RABBITMQ_DATA_DIR/.erlang.cookie /root/.erlang.cookie
 
-# TODO @tianon why is this necessary?
-# RUN ln -sf "/usr/lib/rabbitmq/lib/rabbitmq_server-$RABBITMQ_VERSION/plugins" /plugins
+# Added for backwards compatibility - users can simply COPY custom plugins to /plugins
+RUN ln -sf /opt/rabbitmq/plugins /plugins
 
 # Hint that the config, log & data (a.k.a. home dir) dirs should be separate volumes
 VOLUME $RABBITMQ_CONF_DIR
