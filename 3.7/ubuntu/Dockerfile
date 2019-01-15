@@ -52,6 +52,13 @@ RUN apt-get update && \
     apt-get install --yes --no-install-recommends xz-utils && \
     xz --version
 
+# Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
+# https://github.com/docker-library/official-images/issues/4252
+# If you are building this image locally and are getting `gpg: keyserver receive failed: No data` errors,
+# run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.7 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.7/ubuntu
+# For context, see
+ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
+
 # Using the latest OpenSSL LTS release, with support until September 2023 - https://www.openssl.org/source/
 ARG OPENSSL_VERSION="1.1.1a"
 ARG OPENSSL_SOURCE_URL="https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz"
@@ -62,15 +69,12 @@ RUN mkdir -p $OPENSSL_PATH $OPENSSL_INSTALL_DIR
 # https://www.openssl.org/community/omc.html
 ARG OPENSSL_PGP_KEY_ID=0x8657ABB260F056B1E5190839D9C4D26D0E604491
 
-# Let pgp-happy-eyeballs handle PGP-keyserver-related issues
-# https://github.com/docker-library/official-images/issues/4252
-
 # Required by the crypto & ssl Erlang/OTP applications
 # Fail fast if SOURCE URL returns HTTP errors
 RUN curl --verbose --head --fail --fail-early $OPENSSL_SOURCE_URL 1>/dev/null && \
     curl --verbose --location --silent --fail --fail-early --output $OPENSSL_PATH.tar.gz $OPENSSL_SOURCE_URL && \
     curl --verbose --location --silent --fail --fail-early --output $OPENSSL_PATH.tar.gz.asc $OPENSSL_SOURCE_URL.asc && \
-    gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys $OPENSSL_PGP_KEY_ID && \
+    gpg --batch --keyserver $PGP_KEYSERVER --recv-keys $OPENSSL_PGP_KEY_ID && \
     gpg --batch --verify $OPENSSL_PATH.tar.gz.asc $OPENSSL_PATH.tar.gz && \
     command -v gpgconf > /dev/null && gpgconf --kill all && \
     tar -xvf $OPENSSL_PATH.tar.gz --directory $OPENSSL_PATH --strip-components=1
@@ -170,7 +174,7 @@ ENV RABBITMQ_PGP_KEY_ID="0x0A9AF2115F4687BD29803A206B73A36E6026DFCA"
 RUN curl --verbose --head --fail --fail-early $RABBITMQ_SOURCE_URL 1>/dev/null && \
     curl --verbose --location --silent --fail --fail-early --output $RABBITMQ_PATH.tar.xz $RABBITMQ_SOURCE_URL && \
     curl --verbose --location --silent --fail --fail-early --output $RABBITMQ_PATH.tar.xz.asc $RABBITMQ_SOURCE_URL.asc && \
-    gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$RABBITMQ_PGP_KEY_ID" && \
+    gpg --batch --keyserver $PGP_KEYSERVER --recv-keys "$RABBITMQ_PGP_KEY_ID" && \
     gpg --batch --verify $RABBITMQ_PATH.tar.xz.asc $RABBITMQ_PATH.tar.xz && \
     command -v gpgconf > /dev/null && gpgconf --kill all && \
     tar -xvf $RABBITMQ_PATH.tar.xz --directory $RABBITMQ_INSTALL_DIR --strip-components=1
