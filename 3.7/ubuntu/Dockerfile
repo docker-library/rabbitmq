@@ -92,14 +92,14 @@ RUN cd $OPENSSL_PATH && \
 RUN du -kh -d 1 $OPENSSL_INSTALL_DIR $OPENSSL_CONFIG_DIR >> /OPENSSL_BUILD_ARTEFACTS
 
 # Use the latest stable Erlang/OTP release
-ARG OTP_VERSION="21.2.2"
+ARG OTP_VERSION="21.2.3"
+# TODO add PGP checking when the feature will be added to Erlang/OTP's build system
+# http://erlang.org/pipermail/erlang-questions/2019-January/097067.html
+ARG OTP_SOURCE_SHA256="109a5722e398bdcd3aeb4f4833cde90bf441a9c014006439643aab550a770923"
 ARG OTP_SOURCE_URL="https://github.com/erlang/otp/archive/OTP-$OTP_VERSION.tar.gz"
 ARG OTP_PATH=/usr/local/src/otp-$OTP_VERSION
 ARG OTP_INSTALL_DIR=/opt/otp
 RUN mkdir -p $OTP_PATH $OTP_INSTALL_DIR
-# TODO add PGP checking when the feature will be added to Erlang/OTP's build system
-# http://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ARG OTP_SOURCE_SHA256="41b1c3a8343218157a683776e71d80a05ac4eb4019a90a760846608d78817690"
 
 # Download, verify & extract OTP_SOURCE
 # Fail fast if SOURCE URL returns HTTP errors
