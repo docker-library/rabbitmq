@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM alpine:edge
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN addgroup -S rabbitmq && adduser -S -h /var/lib/rabbitmq -G rabbitmq rabbitmq
@@ -36,8 +36,7 @@ ENV PATH $RABBITMQ_HOME/sbin:$PATH
 # gpg: key 6026DFCA: public key "RabbitMQ Release Signing Key <info@rabbitmq.com>" imported
 ENV RABBITMQ_GPG_KEY 0A9AF2115F4687BD29803A206B73A36E6026DFCA
 
-ENV RABBITMQ_VERSION 3.7.8-rc.4
-ENV RABBITMQ_GITHUB_TAG v3.7.8-rc.4
+ENV RABBITMQ_VERSION 3.7.11-alpha.21
 
 RUN set -ex; \
 	\
@@ -49,8 +48,8 @@ RUN set -ex; \
 		xz \
 	; \
 	\
-	wget -O rabbitmq-server.tar.xz.asc "https://github.com/rabbitmq/rabbitmq-server/releases/download/$RABBITMQ_GITHUB_TAG/rabbitmq-server-generic-unix-${RABBITMQ_VERSION}.tar.xz.asc"; \
-	wget -O rabbitmq-server.tar.xz     "https://github.com/rabbitmq/rabbitmq-server/releases/download/$RABBITMQ_GITHUB_TAG/rabbitmq-server-generic-unix-${RABBITMQ_VERSION}.tar.xz"; \
+	wget -O rabbitmq-server.tar.xz.asc "https://dl.bintray.com/rabbitmq/all-dev/rabbitmq-server/$RABBITMQ_VERSION/rabbitmq-server-generic-unix-${RABBITMQ_VERSION}.tar.xz.asc"; \
+	wget -O rabbitmq-server.tar.xz     "https://dl.bintray.com/rabbitmq/all-dev/rabbitmq-server/$RABBITMQ_VERSION/rabbitmq-server-generic-unix-${RABBITMQ_VERSION}.tar.xz"; \
 	\
 	export GNUPGHOME="$(mktemp -d)"; \
 	gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$RABBITMQ_GPG_KEY"; \
