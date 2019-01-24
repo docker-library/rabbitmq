@@ -4,7 +4,7 @@ set -eu
 declare -A aliases=(
 	[3.7]='3 latest'
 )
-defaultVariant='debian'
+defaultVariant='ubuntu'
 
 self="$(basename "$BASH_SOURCE")"
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
@@ -71,7 +71,7 @@ join() {
 for version in "${versions[@]}"; do
 	rcVersion="${version%-rc}"
 
-	for variant in debian alpine; do
+	for variant in ubuntu alpine; do
 		commit="$(dirCommit "$version/$variant")"
 
 		fullVersion="$(git show "$commit":"$version/$variant/Dockerfile" | awk '$1 == "ENV" && $2 == "RABBITMQ_VERSION" { print $3; exit }')"

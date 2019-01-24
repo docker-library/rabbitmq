@@ -51,7 +51,7 @@ for version in "${versions[@]}"; do
 
 	echo "$version: $fullVersion"
 
-	for variant in alpine debian; do
+	for variant in alpine ubuntu; do
 		[ -f "$version/$variant/Dockerfile" ] || continue
 
 		sed -ri \
@@ -59,7 +59,7 @@ for version in "${versions[@]}"; do
 			-e 's/^(ENV RABBITMQ_GITHUB_TAG) .*/\1 '"$githubTag"'/' \
 			-e 's/^(ENV RABBITMQ_DEBIAN_VERSION) .*/\1 '"$debianVersion"'/' \
 			"$version/$variant/Dockerfile"
-		cp -a "$version/docker-entrypoint.sh" "$version/$variant/"
+		cp -a docker-entrypoint.sh "$version/$variant/"
 
 		managementFrom="rabbitmq:$version"
 		if [ "$variant" = 'alpine' ]; then
