@@ -15,7 +15,7 @@ ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
 ENV OPENSSL_VERSION="1.1.1a"
 ENV OPENSSL_SOURCE_SHA256="fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41"
 # https://www.openssl.org/community/omc.html
-ENV OPENSSL_PGP_KEY_ID=0x8657ABB260F056B1E5190839D9C4D26D0E604491
+ENV OPENSSL_PGP_KEY_ID="0x8657ABB260F056B1E5190839D9C4D26D0E604491"
 
 # Use the latest stable Erlang/OTP release (https://github.com/erlang/otp/tags)
 ENV OTP_VERSION="21.2.3"
@@ -150,12 +150,11 @@ RUN set -eux; \
 # Check that Erlang/OTP crypto & ssl were compiled against OpenSSL correctly
 	erl -noshell -eval 'io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
 
-# add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
 # Create rabbitmq system user & group, fix permissions & allow root user to connect to the RabbitMQ Erlang VM
 RUN set -eux; \
 	addgroup -g 101 -S rabbitmq; \
-	adduser -u 100 -S -h /var/lib/rabbitmq -G rabbitmq rabbitmq; \
+	adduser -u 100 -S -h "$RABBITMQ_DATA_DIR" -G rabbitmq rabbitmq; \
 	mkdir -p "$RABBITMQ_DATA_DIR" /etc/rabbitmq /tmp/rabbitmq-ssl /var/log/rabbitmq; \
 	chown -fR rabbitmq:rabbitmq "$RABBITMQ_DATA_DIR" /etc/rabbitmq /tmp/rabbitmq-ssl /var/log/rabbitmq; \
 	chmod 777 "$RABBITMQ_DATA_DIR" /etc/rabbitmq /tmp/rabbitmq-ssl /var/log/rabbitmq; \

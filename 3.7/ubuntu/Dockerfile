@@ -20,7 +20,7 @@ ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
 ENV OPENSSL_VERSION="1.1.1a"
 ENV OPENSSL_SOURCE_SHA256="fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41"
 # https://www.openssl.org/community/omc.html
-ENV OPENSSL_PGP_KEY_ID=0x8657ABB260F056B1E5190839D9C4D26D0E604491
+ENV OPENSSL_PGP_KEY_ID="0x8657ABB260F056B1E5190839D9C4D26D0E604491"
 
 # Use the latest stable Erlang/OTP release (https://github.com/erlang/otp/tags)
 ENV OTP_VERSION="21.2.3"

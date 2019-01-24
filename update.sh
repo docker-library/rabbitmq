@@ -1,5 +1,5 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
@@ -8,6 +8,14 @@ if [ ${#versions[@]} -eq 0 ]; then
 	versions=( */ )
 fi
 versions=( "${versions[@]%/}" )
+
+# TODO auto-scrape updates -- maybe pick a stable release track from OpenSSL/OTP to pin each RabbitMQ release to?
+opensslVersion='1.1.1a'
+otpVersion='21.2.3'
+otpSourceSha256='109a5722e398bdcd3aeb4f4833cde90bf441a9c014006439643aab550a770923' # TODO these aren't published anywhere (nor is the tarball we download even provided by Erlang -- it's simply a "git archive" tar provided by GitHub)...
+
+opensslPgpKey='0x8657ABB260F056B1E5190839D9C4D26D0E604491'
+opensslSourceSha256="$(wget -qO- "https://www.openssl.org/source/openssl-$opensslVersion.tar.gz.sha256")"
 
 travisEnv=
 for version in "${versions[@]}"; do
@@ -21,31 +29,23 @@ for version in "${versions[@]}"; do
 
 	githubTag="$(
 		git ls-remote --tags https://github.com/rabbitmq/rabbitmq-server.git \
-			"refs/tags/rabbitmq_v${rcVersion//./_}_*" \
 			"refs/tags/v${rcVersion}.*" \
-		| cut -d'/' -f3- \
-		| cut -d'^' -f1 \
-		| grep $rcGrepV -- "$rcGrepExpr" \
-		| sort -uV \
-		| tail -1
+			| cut -d'/' -f3- \
+			| cut -d'^' -f1 \
+			| grep $rcGrepV -- "$rcGrepExpr" \
+			| sort -uV \
+			| tail -1
 	)"
 
-	githubReleaseUrl="https://github.com/rabbitmq/rabbitmq-server/releases/tag/$githubTag"
 	fullVersion="$(
-		curl -fsSL "$githubReleaseUrl" \
+		wget -qO- "https://github.com/rabbitmq/rabbitmq-server/releases/tag/$githubTag" \
 			| grep -o "/rabbitmq-server-generic-unix-${rcVersion}[.].*[.]tar[.]xz" \
 			| head -1 \
 			| sed -r "s/^.*(${rcVersion}.*)[.]tar[.]xz/\1/"
 	)"
-	debianVersion="$(
-		curl -fsSL "$githubReleaseUrl" \
-			| grep -o "/rabbitmq-server_${fullVersion//-/.}.*_all[.]deb" \
-			| head -1 \
-			| sed -r "s/^.*(${rcVersion}.*)_all[.]deb/\1/"
-	)"
 
-	if [ -z "$fullVersion" ] || [ -z "$debianVersion" ]; then
-		echo >&2 "warning: failed to get full ('$fullVersion') or Debian ('$debianVersion') version for '$version'; skipping"
+	if [ -z "$fullVersion" ]; then
+		echo >&2 "warning: failed to get full version for '$version'; skipping"
 		continue
 	fi
 
@@ -54,19 +54,28 @@ for version in "${versions[@]}"; do
 	for variant in alpine ubuntu; do
 		[ -f "$version/$variant/Dockerfile" ] || continue
 
-		sed -ri \
-			-e 's/^(ENV RABBITMQ_VERSION) .*/\1 '"$fullVersion"'/' \
-			-e 's/^(ENV RABBITMQ_GITHUB_TAG) .*/\1 '"$githubTag"'/' \
-			-e 's/^(ENV RABBITMQ_DEBIAN_VERSION) .*/\1 '"$debianVersion"'/' \
-			"$version/$variant/Dockerfile"
+		sed -e "s!%%OPENSSL_VERSION%%!$opensslVersion!g" \
+			-e "s!%%OPENSSL_SOURCE_SHA256%%!$opensslSourceSha256!g" \
+			-e "s!%%OPENSSL_PGP_KEY_ID%%!$opensslPgpKey!g" \
+			-e "s!%%OTP_VERSION%%!$otpVersion!g" \
+			-e "s!%%OTP_SOURCE_SHA256%%!$otpSourceSha256!g" \
+			-e "s!%%RABBITMQ_VERSION%%!$fullVersion!g" \
+			"Dockerfile-$variant.template" \
+			> "$version/$variant/Dockerfile"
+
 		cp -a docker-entrypoint.sh "$version/$variant/"
 
 		managementFrom="rabbitmq:$version"
+		installPython='apt-get update; apt-get install -y --no-install-recommends python; rm -rf /var/lib/apt/lists/*'
 		if [ "$variant" = 'alpine' ]; then
 			managementFrom+='-alpine'
+			installPython='apk add --no-cache python'
 			sed -i 's/gosu/su-exec/g' "$version/$variant/docker-entrypoint.sh"
 		fi
-		sed -ri 's/^(FROM) .*$/FROM '"$managementFrom"'/' "$version/$variant/management/Dockerfile"
+		sed -e "s!%%FROM%%!$managementFrom!g" \
+			-e "s!%%INSTALL_PYTHON%%!$installPython!g" \
+			Dockerfile-management.template \
+			> "$version/$variant/management/Dockerfile"
 
 		travisEnv='\n  - VERSION='"$version"' VARIANT='"$variant$travisEnv"
 	done
