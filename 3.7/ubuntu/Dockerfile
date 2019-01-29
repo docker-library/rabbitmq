@@ -17,13 +17,13 @@ ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
 # Using the latest OpenSSL LTS release, with support until September 2023 - https://www.openssl.org/source/
-ENV OPENSSL_VERSION="1.1.1a"
+ENV OPENSSL_VERSION 1.1.1a
 ENV OPENSSL_SOURCE_SHA256="fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41"
 # https://www.openssl.org/community/omc.html
 ENV OPENSSL_PGP_KEY_ID="0x8657ABB260F056B1E5190839D9C4D26D0E604491"
 
 # Use the latest stable Erlang/OTP release (https://github.com/erlang/otp/tags)
-ENV OTP_VERSION="21.2.3"
+ENV OTP_VERSION 21.2.3
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # http://erlang.org/pipermail/erlang-questions/2019-January/097067.html
 ENV OTP_SOURCE_SHA256="109a5722e398bdcd3aeb4f4833cde90bf441a9c014006439643aab550a770923"
@@ -169,7 +169,7 @@ RUN set -eux; \
 	ln -sf "$RABBITMQ_DATA_DIR/.erlang.cookie" /root/.erlang.cookie
 
 # Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
-ENV RABBITMQ_VERSION="3.7.10"
+ENV RABBITMQ_VERSION 3.7.10
 # https://www.rabbitmq.com/signatures.html#importing-gpg
 ENV RABBITMQ_PGP_KEY_ID="0x0A9AF2115F4687BD29803A206B73A36E6026DFCA"
 ENV RABBITMQ_HOME=/opt/rabbitmq
