@@ -1,9 +1,14 @@
-# Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
-FROM alpine:3.8
+# The official Canonical Ubuntu Bionic image is ideal from a security perspective,
+# especially for the enterprises that we, the RabbitMQ team, have to deal with
+FROM ubuntu:18.04
 
-# grab su-exec for easy step-down from root
-# bash for docker-entrypoint.sh
-RUN apk add --no-cache 'su-exec>=0.2' bash
+# grab gosu for easy step-down from root
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends gosu; \
+	rm -rf /var/lib/apt/lists/*; \
+# verify that the binary works
+	gosu nobody true
 
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
 ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
@@ -32,26 +37,24 @@ ENV OTP_SOURCE_SHA256="109a5722e398bdcd3aeb4f4833cde90bf441a9c014006439643aab550
 # m4: Required for Erlang/OTP HiPE support
 RUN set -eux; \
 	\
-	apk add --no-cache --virtual .build-deps \
+	savedAptMark="$(apt-mark showmanual)"; \
+	apt-get update; \
+	apt-get install --yes --no-install-recommends \
 		autoconf \
 		ca-certificates \
-		dpkg-dev dpkg \
+		dpkg-dev \
 		gcc \
 		gnupg \
-		libc-dev \
-		linux-headers \
+		libncurses5-dev \
 		m4 \
 		make \
-		ncurses-dev \
 		wget \
 	; \
+	rm -rf /var/lib/apt/lists/*; \
 	\
 	OPENSSL_SOURCE_URL="https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz"; \
 	OPENSSL_PATH="/usr/local/src/openssl-$OPENSSL_VERSION"; \
 	OPENSSL_CONFIG_DIR=/usr/local/etc/ssl; \
-	\
-# /usr/local/src doesn't exist in Alpine by default
-	mkdir /usr/local/src; \
 	\
 # Required by the crypto & ssl Erlang/OTP applications
 	wget --progress dot:giga --output-document "$OPENSSL_PATH.tar.gz.asc" "$OPENSSL_SOURCE_URL.asc"; \
@@ -61,7 +64,7 @@ RUN set -eux; \
 	gpg --batch --verify "$OPENSSL_PATH.tar.gz.asc" "$OPENSSL_PATH.tar.gz"; \
 	gpgconf --kill all; \
 	rm -rf "$GNUPGHOME"; \
-	echo "$OPENSSL_SOURCE_SHA256 *$OPENSSL_PATH.tar.gz" | sha256sum -c -; \
+	echo "$OPENSSL_SOURCE_SHA256 *$OPENSSL_PATH.tar.gz" | sha256sum --check --strict -; \
 	mkdir -p "$OPENSSL_PATH"; \
 	tar --extract --file "$OPENSSL_PATH.tar.gz" --directory "$OPENSSL_PATH" --strip-components 1; \
 	\
@@ -73,7 +76,8 @@ RUN set -eux; \
 	make install_sw install_ssldirs; \
 	cd ..; \
 	rm -rf "$OPENSSL_PATH"*; \
-# use Alpine's CA certificates
+	ldconfig; \
+# use Debian's CA certificates
 	rmdir "$OPENSSL_CONFIG_DIR/certs" "$OPENSSL_CONFIG_DIR/private"; \
 	ln -sf /etc/ssl/certs /etc/ssl/private "$OPENSSL_CONFIG_DIR"; \
 # smoke test
@@ -85,7 +89,7 @@ RUN set -eux; \
 # Download, verify & extract OTP_SOURCE
 	mkdir -p "$OTP_PATH"; \
 	wget --progress dot:giga --output-document "$OTP_PATH.tar.gz" "$OTP_SOURCE_URL"; \
-	echo "$OTP_SOURCE_SHA256 *$OTP_PATH.tar.gz" | sha256sum -c -; \
+	echo "$OTP_SOURCE_SHA256 *$OTP_PATH.tar.gz" | sha256sum --check --strict -; \
 	tar --extract --file "$OTP_PATH.tar.gz" --directory "$OTP_PATH" --strip-components 1; \
 	\
 # Configure Erlang/OTP for compilation, disable unused features & applications
@@ -136,14 +140,18 @@ RUN set -eux; \
 	cd ..; \
 	rm -rf "$OTP_PATH"* /usr/local/lib/erlang/lib/*/src; \
 	\
-	runDeps="$( \
-		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
-			| tr ',' '\n' \
-			| sort -u \
-			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-	)"; \
-	apk add --no-cache --virtual .otp-run-deps $runDeps; \
-	apk del --no-network .build-deps; \
+# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
+	apt-mark auto '.*' > /dev/null; \
+	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
+	find /usr/local -type f -executable -exec ldd '{}' ';' \
+		| awk '/=>/ { print $(NF-1) }' \
+		| sort -u \
+		| xargs -r dpkg-query --search \
+		| cut -d: -f1 \
+		| sort -u \
+		| xargs -r apt-mark manual \
+	; \
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
 	\
 # Check that OpenSSL still works after purging build dependencies
 	openssl version; \
@@ -153,8 +161,8 @@ RUN set -eux; \
 ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
 # Create rabbitmq system user & group, fix permissions & allow root user to connect to the RabbitMQ Erlang VM
 RUN set -eux; \
-	addgroup -g 101 -S rabbitmq; \
-	adduser -u 100 -S -h "$RABBITMQ_DATA_DIR" -G rabbitmq rabbitmq; \
+	groupadd --gid 999 --system rabbitmq; \
+	useradd --uid 999 --system --home-dir "$RABBITMQ_DATA_DIR" --gid rabbitmq rabbitmq; \
 	mkdir -p "$RABBITMQ_DATA_DIR" /etc/rabbitmq /tmp/rabbitmq-ssl /var/log/rabbitmq; \
 	chown -fR rabbitmq:rabbitmq "$RABBITMQ_DATA_DIR" /etc/rabbitmq /tmp/rabbitmq-ssl /var/log/rabbitmq; \
 	chmod 777 "$RABBITMQ_DATA_DIR" /etc/rabbitmq /tmp/rabbitmq-ssl /var/log/rabbitmq; \
@@ -173,12 +181,15 @@ ENV PATH=$RABBITMQ_HOME/sbin:$PATH \
 # Install RabbitMQ
 RUN set -eux; \
 	\
-	apk add --no-cache --virtual .build-deps \
+	savedAptMark="$(apt-mark showmanual)"; \
+	apt-get update; \
+	apt-get install --yes --no-install-recommends \
 		ca-certificates \
 		gnupg \
 		wget \
-		xz \
+		xz-utils \
 	; \
+	rm -rf /var/lib/apt/lists/*; \
 	\
 	RABBITMQ_SOURCE_URL="https://github.com/rabbitmq/rabbitmq-server/releases/download/v$RABBITMQ_VERSION/rabbitmq-server-generic-unix-$RABBITMQ_VERSION.tar.xz"; \
 	RABBITMQ_PATH="/usr/local/src/rabbitmq-$RABBITMQ_VERSION"; \
@@ -201,15 +212,17 @@ RUN set -eux; \
 	grep -qE '^SYS_PREFIX=$' "$RABBITMQ_HOME/sbin/rabbitmq-defaults"; \
 	chown -R rabbitmq:rabbitmq "$RABBITMQ_HOME"; \
 	\
-	apk del .build-deps; \
+	apt-mark auto '.*' > /dev/null; \
+	apt-mark manual $savedAptMark; \
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
 	\
 # verify assumption of no stale cookies
 	[ ! -e "$RABBITMQ_DATA_DIR/.erlang.cookie" ]; \
 # Ensure RabbitMQ was installed correctly by running a few commands that do not depend on a running server, as the rabbitmq user
 # If they all succeed, it's safe to assume that things have been set up correctly
-	su-exec rabbitmq rabbitmqctl help; \
-	su-exec rabbitmq rabbitmqctl list_ciphers; \
-	su-exec rabbitmq rabbitmq-plugins list; \
+	gosu rabbitmq rabbitmqctl help; \
+	gosu rabbitmq rabbitmqctl list_ciphers; \
+	gosu rabbitmq rabbitmq-plugins list; \
 # no stale cookies
 	rm "$RABBITMQ_DATA_DIR/.erlang.cookie"
 
