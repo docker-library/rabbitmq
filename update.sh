@@ -9,13 +9,19 @@ if [ ${#versions[@]} -eq 0 ]; then
 fi
 versions=( "${versions[@]%/}" )
 
-# TODO auto-scrape updates -- maybe pick a stable release track from OpenSSL/OTP to pin each RabbitMQ release to?
-opensslVersion='1.1.1a'
-otpVersion='21.2.3'
-otpSourceSha256='109a5722e398bdcd3aeb4f4833cde90bf441a9c014006439643aab550a770923' # TODO these aren't published anywhere (nor is the tarball we download even provided by Erlang -- it's simply a "git archive" tar provided by GitHub)...
+# https://www.rabbitmq.com/which-erlang.html ("Maximum supported Erlang/OTP")
+declare -A otpMajors=(
+	[3.7]='21'
+)
 
+# https://www.openssl.org/policies/releasestrat.html
+# https://www.openssl.org/source/
+declare -A opensslMajors=(
+	[3.7]='1.1'
+)
+
+# TODO will these always be signed by Matt Caswell? (https://www.openssl.org/community/omc.html)
 opensslPgpKey='0x8657ABB260F056B1E5190839D9C4D26D0E604491'
-opensslSourceSha256="$(wget -qO- "https://www.openssl.org/source/openssl-$opensslVersion.tar.gz.sha256")"
 
 travisEnv=
 for version in "${versions[@]}"; do
@@ -48,6 +54,37 @@ for version in "${versions[@]}"; do
 		echo >&2 "warning: failed to get full version for '$version'; skipping"
 		continue
 	fi
+
+	otpMajor="${otpMajors[$rcVersion]}"
+	otpVersion="$(
+		git ls-remote --tags https://github.com/erlang/otp.git \
+			"refs/tags/OTP-$otpMajor.*"\
+			| cut -d'/' -f3- \
+			| cut -d'^' -f1 \
+			| cut -d- -f2- \
+			| sort -uV \
+			| tail -1
+	)"
+	if [ -z "$otpVersion" ]; then
+		echo >&2 "warning: failed to get Erlang/OTP version for '$version' ($fullVersion); skipping"
+		continue
+	fi
+	# TODO these aren't published anywhere (nor is the tarball we download even provided by Erlang -- it's simply a "git archive" tar provided by GitHub)...
+	otpSourceSha256="$(wget -qO- "https://github.com/erlang/otp/archive/OTP-$otpVersion.tar.gz" | sha256sum | cut -d' ' -f1)"
+
+	opensslMajor="${opensslMajors[$rcVersion]}"
+	opensslVersion="$(
+		wget -qO- 'https://www.openssl.org/source/' \
+			| grep -oE 'href="openssl-'"$opensslMajor"'[^"]+[.]tar[.]gz"' \
+			| sed -e 's/^href="openssl-//' -e 's/[.]tar[.]gz"//' \
+			| sort -uV \
+			| tail -1
+	)"
+	if [ -z "$opensslVersion" ]; then
+		echo >&2 "warning: failed to get OpenSSL version for '$version' ($fullVersion); skipping"
+		continue
+	fi
+	opensslSourceSha256="$(wget -qO- "https://www.openssl.org/source/openssl-$opensslVersion.tar.gz.sha256")"
 
 	echo "$version: $fullVersion"
 
