@@ -2,12 +2,16 @@
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
 FROM ubuntu:18.04
 
-# grab gosu for easy step-down from root
 RUN set -eux; \
 	apt-get update; \
-	apt-get install -y --no-install-recommends gosu; \
+	apt-get install -y --no-install-recommends \
+# grab gosu for easy step-down from root
+		gosu \
+# grab "ps" for "rabbitmqctl wait" (https://github.com/docker-library/rabbitmq/issues/162)
+		procps \
+	; \
 	rm -rf /var/lib/apt/lists/*; \
-# verify that the binary works
+# verify that the "gosu" binary works
 	gosu nobody true
 
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
