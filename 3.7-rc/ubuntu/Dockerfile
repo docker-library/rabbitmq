@@ -80,6 +80,9 @@ RUN set -eux; \
 	make install_sw install_ssldirs; \
 	cd ..; \
 	rm -rf "$OPENSSL_PATH"*; \
+# this is included in "/etc/ld.so.conf.d/libc.conf", but on arm64, it gets overshadowed by "/etc/ld.so.conf.d/aarch64-linux-gnu.conf" (vs "/etc/ld.so.conf.d/x86_64-linux-gnu.conf") so the precedence isn't correct -- we install our own file to overcome that and ensure any .so files in /usr/local/lib (especially OpenSSL's libssl.so) are preferred appropriately regardless of the target architecture
+# see https://bugs.debian.org/685706
+	echo '/usr/local/lib' > /etc/ld.so.conf.d/000-openssl-libc.conf; \
 	ldconfig; \
 # use Debian's CA certificates
 	rmdir "$OPENSSL_CONFIG_DIR/certs" "$OPENSSL_CONFIG_DIR/private"; \
