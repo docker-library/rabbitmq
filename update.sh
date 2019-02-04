@@ -116,6 +116,7 @@ for version in "${versions[@]}"; do
 			Dockerfile-management.template \
 			> "$version/$variant/management/Dockerfile"
 
+		travisEnv='\n  - VERSION='"$version"' VARIANT='"$variant ARCH=i386$travisEnv"
 		travisEnv='\n  - VERSION='"$version"' VARIANT='"$variant$travisEnv"
 	done
 done

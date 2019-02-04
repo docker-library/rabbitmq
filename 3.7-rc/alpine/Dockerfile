@@ -67,6 +67,11 @@ RUN set -eux; \
 	\
 # Configure OpenSSL for compilation
 	cd "$OPENSSL_PATH"; \
+# OpenSSL's "config" script uses a lot of "uname"-based target detection...
+	MACHINE="$(dpkg-architecture --query DEB_BUILD_GNU_CPU)" \
+	RELEASE="4.x.y-z" \
+	SYSTEM='Linux' \
+	BUILD='???' \
 	./config --openssldir="$OPENSSL_CONFIG_DIR"; \
 # Compile, install OpenSSL, verify that the command-line works & development headers are present
 	make -j "$(getconf _NPROCESSORS_ONLN)"; \
