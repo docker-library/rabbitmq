@@ -1,9 +1,13 @@
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
 FROM alpine:3.8
 
+RUN apk add --no-cache \
 # grab su-exec for easy step-down from root
+		'su-exec>=0.2' \
 # bash for docker-entrypoint.sh
-RUN apk add --no-cache 'su-exec>=0.2' bash
+		bash \
+# "ps" for "rabbitmqctl wait" (https://github.com/docker-library/rabbitmq/issues/162)
+		procps
 
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
 ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
