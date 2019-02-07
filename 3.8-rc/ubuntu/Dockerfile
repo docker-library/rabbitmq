@@ -7,8 +7,6 @@ RUN set -eux; \
 	apt-get install -y --no-install-recommends \
 # grab gosu for easy step-down from root
 		gosu \
-# grab "ps" for "rabbitmqctl wait" (https://github.com/docker-library/rabbitmq/issues/162)
-		procps \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 # verify that the "gosu" binary works
