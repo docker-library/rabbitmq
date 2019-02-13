@@ -13,6 +13,9 @@ versions=( "${versions[@]%/}" )
 declare -A otpMajors=(
 	[3.7]='21'
 	[3.8]='21'
+
+	# temporary
+	[3.7.9]='21'
 )
 
 # https://www.openssl.org/policies/releasestrat.html
@@ -20,6 +23,9 @@ declare -A otpMajors=(
 declare -A opensslMajors=(
 	[3.7]='1.1'
 	[3.8]='1.1'
+
+	# temporary
+	[3.7.9]='1.1'
 )
 
 # TODO will these always be signed by Matt Caswell? (https://www.openssl.org/community/omc.html)
@@ -37,7 +43,7 @@ for version in "${versions[@]}"; do
 
 	githubTag="$(
 		git ls-remote --tags https://github.com/rabbitmq/rabbitmq-server.git \
-			"refs/tags/v${rcVersion}.*" \
+			"refs/tags/v${rcVersion}"{'','.*','-*','^*'} \
 			| cut -d'/' -f3- \
 			| cut -d'^' -f1 \
 			| grep $rcGrepV -- "$rcGrepExpr" \
@@ -47,7 +53,7 @@ for version in "${versions[@]}"; do
 
 	fullVersion="$(
 		wget -qO- "https://github.com/rabbitmq/rabbitmq-server/releases/tag/$githubTag" \
-			| grep -o "/rabbitmq-server-generic-unix-${rcVersion}[.].*[.]tar[.]xz" \
+			| grep -oE "/rabbitmq-server-generic-unix-${rcVersion}([.-].+)?[.]tar[.]xz" \
 			| head -1 \
 			| sed -r "s/^.*(${rcVersion}.*)[.]tar[.]xz/\1/"
 	)"
