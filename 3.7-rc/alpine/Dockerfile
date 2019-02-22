@@ -22,10 +22,10 @@ ENV OPENSSL_SOURCE_SHA256="fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d
 ENV OPENSSL_PGP_KEY_ID="0x8657ABB260F056B1E5190839D9C4D26D0E604491"
 
 # Use the latest stable Erlang/OTP release (https://github.com/erlang/otp/tags)
-ENV OTP_VERSION 21.2.5
+ENV OTP_VERSION 21.2.6
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # http://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="3ff578ab020a714be25d6787b81938df016db375692d4126a28f1303e6e9c165"
+ENV OTP_SOURCE_SHA256="aa0b95031e7c01af8a7042a00974ab16ed8fec305a68d7dbaa4185e5d58ef4d5"
 
 # Install dependencies required to build Erlang/OTP from source
 # http://erlang.org/doc/installation_guide/INSTALL.html
@@ -170,7 +170,7 @@ RUN set -eux; \
 	ln -sf "$RABBITMQ_DATA_DIR/.erlang.cookie" /root/.erlang.cookie
 
 # Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
-ENV RABBITMQ_VERSION 3.7.12-rc.2
+ENV RABBITMQ_VERSION 3.7.13-beta.1
 # https://www.rabbitmq.com/signatures.html#importing-gpg
 ENV RABBITMQ_PGP_KEY_ID="0x0A9AF2115F4687BD29803A206B73A36E6026DFCA"
 ENV RABBITMQ_HOME=/opt/rabbitmq
