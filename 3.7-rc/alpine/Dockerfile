@@ -16,8 +16,8 @@ ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
 # Using the latest OpenSSL LTS release, with support until September 2023 - https://www.openssl.org/source/
-ENV OPENSSL_VERSION 1.1.1a
-ENV OPENSSL_SOURCE_SHA256="fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41"
+ENV OPENSSL_VERSION 1.1.1b
+ENV OPENSSL_SOURCE_SHA256="5c557b023230413dfb0756f3137a13e6d726838ccd1430888ad15bfb2b43ea4b"
 # https://www.openssl.org/community/omc.html
 ENV OPENSSL_PGP_KEY_ID="0x8657ABB260F056B1E5190839D9C4D26D0E604491"
 
