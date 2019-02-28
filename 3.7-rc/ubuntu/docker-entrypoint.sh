@@ -321,8 +321,8 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 						gsub(/%$/, "", perc);
 						perc = perc / 100;
 					}
-					if (perc > 1.0 || perc <= 0.0) {
-						printf "error: invalid percentage for vm_memory_high_watermark: %s (must be > 0%%, <= 100%%)\n", $0 > "/dev/stderr";
+					if (perc > 1.0 || perc < 0.0) {
+						printf "error: invalid percentage for vm_memory_high_watermark: %s (must be >= 0%%, <= 100%%)\n", $0 > "/dev/stderr";
 						exit 1;
 					}
 					printf "vm_memory_high_watermark.relative %0.03f\n", perc;
