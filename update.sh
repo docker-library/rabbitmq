@@ -13,9 +13,6 @@ versions=( "${versions[@]%/}" )
 declare -A otpMajors=(
 	[3.7]='21'
 	[3.8]='21'
-
-	# temporary
-	[3.7.9]='21'
 )
 
 # https://www.openssl.org/policies/releasestrat.html
@@ -23,9 +20,6 @@ declare -A otpMajors=(
 declare -A opensslMajors=(
 	[3.7]='1.1'
 	[3.8]='1.1'
-
-	# temporary
-	[3.7.9]='1.1'
 )
 
 # TODO will these always be signed by Matt Caswell? (https://www.openssl.org/community/omc.html)
@@ -41,24 +35,31 @@ for version in "${versions[@]}"; do
 	rcGrepV+=' -E'
 	rcGrepExpr='beta|milestone|rc'
 
-	githubTag="$(
+	githubTags=( $(
 		git ls-remote --tags https://github.com/rabbitmq/rabbitmq-server.git \
 			"refs/tags/v${rcVersion}"{'','.*','-*','^*'} \
 			| cut -d'/' -f3- \
 			| cut -d'^' -f1 \
 			| grep $rcGrepV -- "$rcGrepExpr" \
-			| sort -uV \
-			| tail -1
-	)"
+			| sort -urV
+	) )
 
-	fullVersion="$(
-		wget -qO- "https://github.com/rabbitmq/rabbitmq-server/releases/tag/$githubTag" \
-			| grep -oE "/rabbitmq-server-generic-unix-${rcVersion}([.-].+)?[.]tar[.]xz" \
-			| head -1 \
-			| sed -r "s/^.*(${rcVersion}.*)[.]tar[.]xz/\1/"
-	)"
-
-	if [ -z "$fullVersion" ]; then
+	fullVersion=
+	githubTag=
+	for possibleTag in "${githubTags[@]}"; do
+		fullVersion="$(
+			wget -qO- "https://github.com/rabbitmq/rabbitmq-server/releases/tag/$possibleTag" \
+				| grep -oE "/rabbitmq-server-generic-unix-${rcVersion}([.-].+)?[.]tar[.]xz" \
+				| head -1 \
+				| sed -r "s/^.*(${rcVersion}.*)[.]tar[.]xz/\1/" \
+				|| :
+		)"
+		if [ -n "$fullVersion" ]; then
+			githubTag="$possibleTag"
+			break
+		fi
+	done
+	if [ -z "$fullVersion" ] || [ -z "$githubTag" ]; then
 		echo >&2 "warning: failed to get full version for '$version'; skipping"
 		continue
 	fi
