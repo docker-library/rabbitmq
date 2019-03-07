@@ -14,6 +14,7 @@ declare -A otpMajors=(
 	[3.7]='21'
 	[3.8]='21'
 )
+declare -A otpHashCache=()
 
 # https://www.openssl.org/policies/releasestrat.html
 # https://www.openssl.org/source/
@@ -78,8 +79,12 @@ for version in "${versions[@]}"; do
 		echo >&2 "warning: failed to get Erlang/OTP version for '$version' ($fullVersion); skipping"
 		continue
 	fi
-	# TODO these aren't published anywhere (nor is the tarball we download even provided by Erlang -- it's simply a "git archive" tar provided by GitHub)...
-	otpSourceSha256="$(wget -qO- "https://github.com/erlang/otp/archive/OTP-$otpVersion.tar.gz" | sha256sum | cut -d' ' -f1)"
+	otpSourceSha256="${otpHashCache[$otpVersion]:-}"
+	if [ -z "$otpSourceSha256" ]; then
+		# TODO these aren't published anywhere (nor is the tarball we download even provided by Erlang -- it's simply a "git archive" tar provided by GitHub)...
+		otpSourceSha256="$(wget -qO- "https://github.com/erlang/otp/archive/OTP-$otpVersion.tar.gz" | sha256sum | cut -d' ' -f1)"
+		otpHashCache[$otpVersion]="$otpSourceSha256"
+	fi
 
 	opensslMajor="${opensslMajors[$rcVersion]}"
 	opensslVersion="$(
