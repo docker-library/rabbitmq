@@ -1,6 +1,20 @@
 #!/bin/bash
 set -eu
 
+#
+# modified from source: https://github.com/docker-library/rabbitmq/blob/master/3.7/alpine/docker-entrypoint.sh
+#
+# - add ability to map environment variables to config file entries
+#
+
+readonly envToConfigMap=(       
+	'default_user|default_user'
+	'default_pass|default_pass'
+	'peer_discovery|cluster_formation.peer_discovery_backend'
+	'aws_region|cluster_formation.aws.region'
+	'aws_autoscaling|cluster_formation.aws.use_autoscaling_group'
+)
+
 # usage: file_env VAR [DEFAULT]
 #    ie: file_env 'XYZ_DB_PASSWORD' 'example'
 # (will allow for "$XYZ_DB_PASSWORD_FILE" to fill in the value of
@@ -284,6 +298,22 @@ rabbit_env_config() {
 		fi
 	done
 }
+function set_config_map_values(){
+    local envName confName
+    for fields in ${envToConfigMap@]}
+    do
+		IFS=$'|' read -r envName confName <<< "$fields"
+		local var="rabbitmq_$envName"
+		var="${var^^}"
+
+		local val="${!var:-}"
+		local rawVal="$val"
+
+		if [ -n "$rawVal" ]; then
+			rabbit_set_config "$confName" "$rawVal"
+		fi
+    done
+}
 
 if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 	rabbit_set_config 'loopback_users.guest' 'false'
@@ -362,6 +392,7 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 	fi
 
 	rabbit_env_config '' "${rabbitConfigKeys[@]}"
+	set_config_map_values
 
 	# if management plugin is installed, generate config for it
 	# https://www.rabbitmq.com/management.html#configuration
