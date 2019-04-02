@@ -111,14 +111,20 @@ RUN set -eux; \
 	CFLAGS="$(dpkg-buildflags --get CFLAGS)"; export CFLAGS; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
+	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
+	case "$dpkgArch" in \
+# https://salsa.debian.org/erlang-team/packages/erlang/blob/9e3466473f1c75f6f6866c9957f6c4f535c12c70/debian/control#L40 (HiPE supports a limited set of architectures)
+		amd64 | i386 | ppc64el) hipe='--enable-hipe' ;; \
+		*) hipe='--disable-hipe' ;; \
+	esac; \
 	./configure \
 		--host="$hostArch" \
 		--build="$buildArch" \
+		$hipe \
 		--disable-dynamic-ssl-lib \
 		--disable-sctp \
 		--disable-silent-rules \
 		--enable-clock-gettime \
-		--enable-hipe \
 		--enable-hybrid-heap \
 		--enable-kernel-poll \
 		--enable-shared-zlib \
