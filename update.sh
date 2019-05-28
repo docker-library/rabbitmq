@@ -23,8 +23,27 @@ declare -A opensslMajors=(
 	[3.8]='1.1'
 )
 
-# TODO will these always be signed by Matt Caswell? (https://www.openssl.org/community/omc.html)
-opensslPgpKey='0x8657ABB260F056B1E5190839D9C4D26D0E604491'
+# https://www.openssl.org/community/omc.html
+opensslPgpKeys=(
+	# Matt Caswell
+	0x8657ABB260F056B1E5190839D9C4D26D0E604491
+
+	# Mark J. Cox
+	0x5B2545DAB21995F4088CEFAA36CEE4DEB00CFE33
+
+	# Paul Dale
+	0xED230BEC4D4F2518B9D7DF41F0DB4D21C1D35231
+
+	# Tim Hudson
+	0xC1F33DD8CE1D4CC613AF14DA9195C48241FBF7DD
+
+	# Richard Levitte
+	0x7953AC1FBC3DC8B3B292393ED5E9E43F7DF9EE8C
+
+	# Kurt Roeckx
+	0xE5E52560DD91C556DDBDA5D02064C53641C25E5D
+)
+# TODO auto-generate / scrape this list from the canonical upstream source instead
 
 travisEnv=
 for version in "${versions[@]}"; do
@@ -107,7 +126,7 @@ for version in "${versions[@]}"; do
 
 		sed -e "s!%%OPENSSL_VERSION%%!$opensslVersion!g" \
 			-e "s!%%OPENSSL_SOURCE_SHA256%%!$opensslSourceSha256!g" \
-			-e "s!%%OPENSSL_PGP_KEY_ID%%!$opensslPgpKey!g" \
+			-e "s!%%OPENSSL_PGP_KEY_IDS%%!${opensslPgpKeys[*]}!g" \
 			-e "s!%%OTP_VERSION%%!$otpVersion!g" \
 			-e "s!%%OTP_SOURCE_SHA256%%!$otpSourceSha256!g" \
 			-e "s!%%RABBITMQ_VERSION%%!$fullVersion!g" \
