@@ -25,10 +25,10 @@ ENV OPENSSL_SOURCE_SHA256="f6fb3079ad15076154eda9413fed42877d668e7069d9b87396d08
 ENV OPENSSL_PGP_KEY_IDS="0x8657ABB260F056B1E5190839D9C4D26D0E604491 0x5B2545DAB21995F4088CEFAA36CEE4DEB00CFE33 0xED230BEC4D4F2518B9D7DF41F0DB4D21C1D35231 0xC1F33DD8CE1D4CC613AF14DA9195C48241FBF7DD 0x7953AC1FBC3DC8B3B292393ED5E9E43F7DF9EE8C 0xE5E52560DD91C556DDBDA5D02064C53641C25E5D"
 
 # Use the latest stable Erlang/OTP release (https://github.com/erlang/otp/tags)
-ENV OTP_VERSION 21.3.8.2
+ENV OTP_VERSION 22.0.1
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # http://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="a45bc309b40c507934606723187cb6cdbae547a677d7c52168849864d1ea1c68"
+ENV OTP_SOURCE_SHA256="694f133abfca3c7fb8376b223ea484413bcd16b82354f178fba798f37335f163"
 
 # Install dependencies required to build Erlang/OTP from source
 # http://erlang.org/doc/installation_guide/INSTALL.html
@@ -36,7 +36,6 @@ ENV OTP_SOURCE_SHA256="a45bc309b40c507934606723187cb6cdbae547a677d7c52168849864d
 # dpkg-dev: Required to set up host & build type when compiling Erlang/OTP
 # gnupg: Required to verify OpenSSL artefacts
 # libncurses5-dev: Required for Erlang/OTP new shell & observer_cli - https://github.com/zhongwencool/observer_cli
-# m4: Required for Erlang/OTP HiPE support
 RUN set -eux; \
 	\
 	savedAptMark="$(apt-mark showmanual)"; \
@@ -48,7 +47,6 @@ RUN set -eux; \
 		gcc \
 		gnupg \
 		libncurses5-dev \
-		m4 \
 		make \
 		wget \
 	; \
@@ -114,16 +112,11 @@ RUN set -eux; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
-	case "$dpkgArch" in \
-# https://salsa.debian.org/erlang-team/packages/erlang/blob/9e3466473f1c75f6f6866c9957f6c4f535c12c70/debian/control#L40 (HiPE supports a limited set of architectures)
-		amd64 | i386 | ppc64el) hipe='--enable-hipe' ;; \
-		*) hipe='--disable-hipe' ;; \
-	esac; \
 	./configure \
 		--host="$hostArch" \
 		--build="$buildArch" \
-		$hipe \
 		--disable-dynamic-ssl-lib \
+		--disable-hipe \
 		--disable-sctp \
 		--disable-silent-rules \
 		--enable-clock-gettime \
@@ -143,6 +136,7 @@ RUN set -eux; \
 		--without-et \
 		--without-eunit \
 		--without-ftp \
+		--without-hipe \
 		--without-jinterface \
 		--without-megaco \
 		--without-observer \

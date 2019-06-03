@@ -36,7 +36,6 @@ ENV OTP_SOURCE_SHA256="%%OTP_SOURCE_SHA256%%"
 # dpkg-dev: Required to set up host & build type when compiling Erlang/OTP
 # gnupg: Required to verify OpenSSL artefacts
 # libncurses5-dev: Required for Erlang/OTP new shell & observer_cli - https://github.com/zhongwencool/observer_cli
-# m4: Required for Erlang/OTP HiPE support
 RUN set -eux; \
 	\
 	savedAptMark="$(apt-mark showmanual)"; \
@@ -48,7 +47,6 @@ RUN set -eux; \
 		gcc \
 		gnupg \
 		libncurses5-dev \
-		m4 \
 		make \
 		wget \
 	; \
@@ -114,16 +112,11 @@ RUN set -eux; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
-	case "$dpkgArch" in \
-# https://salsa.debian.org/erlang-team/packages/erlang/blob/9e3466473f1c75f6f6866c9957f6c4f535c12c70/debian/control#L40 (HiPE supports a limited set of architectures)
-		amd64 | i386 | ppc64el) hipe='--enable-hipe' ;; \
-		*) hipe='--disable-hipe' ;; \
-	esac; \
 	./configure \
 		--host="$hostArch" \
 		--build="$buildArch" \
-		$hipe \
 		--disable-dynamic-ssl-lib \
+		--disable-hipe \
 		--disable-sctp \
 		--disable-silent-rules \
 		--enable-clock-gettime \
@@ -143,6 +136,7 @@ RUN set -eux; \
 		--without-et \
 		--without-eunit \
 		--without-ftp \
+		--without-hipe \
 		--without-jinterface \
 		--without-megaco \
 		--without-observer \
