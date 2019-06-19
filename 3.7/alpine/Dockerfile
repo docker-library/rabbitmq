@@ -45,7 +45,6 @@ RUN set -eux; \
 		linux-headers \
 		make \
 		ncurses-dev \
-		wget \
 	; \
 	\
 	OPENSSL_SOURCE_URL="https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz"; \
@@ -56,8 +55,8 @@ RUN set -eux; \
 	mkdir /usr/local/src; \
 	\
 # Required by the crypto & ssl Erlang/OTP applications
-	wget --progress dot:giga --output-document "$OPENSSL_PATH.tar.gz.asc" "$OPENSSL_SOURCE_URL.asc"; \
-	wget --progress dot:giga --output-document "$OPENSSL_PATH.tar.gz" "$OPENSSL_SOURCE_URL"; \
+	wget --output-document "$OPENSSL_PATH.tar.gz.asc" "$OPENSSL_SOURCE_URL.asc"; \
+	wget --output-document "$OPENSSL_PATH.tar.gz" "$OPENSSL_SOURCE_URL"; \
 	export GNUPGHOME="$(mktemp -d)"; \
 	for key in $OPENSSL_PGP_KEY_IDS; do \
 		gpg --batch --keyserver "$PGP_KEYSERVER" --recv-keys "$key"; \
@@ -93,7 +92,7 @@ RUN set -eux; \
 	\
 # Download, verify & extract OTP_SOURCE
 	mkdir -p "$OTP_PATH"; \
-	wget --progress dot:giga --output-document "$OTP_PATH.tar.gz" "$OTP_SOURCE_URL"; \
+	wget --output-document "$OTP_PATH.tar.gz" "$OTP_SOURCE_URL"; \
 	echo "$OTP_SOURCE_SHA256 *$OTP_PATH.tar.gz" | sha256sum -c -; \
 	tar --extract --file "$OTP_PATH.tar.gz" --directory "$OTP_PATH" --strip-components 1; \
 	\
@@ -187,15 +186,14 @@ RUN set -eux; \
 	apk add --no-cache --virtual .build-deps \
 		ca-certificates \
 		gnupg \
-		wget \
 		xz \
 	; \
 	\
 	RABBITMQ_SOURCE_URL="https://github.com/rabbitmq/rabbitmq-server/releases/download/v$RABBITMQ_VERSION/rabbitmq-server-generic-unix-$RABBITMQ_VERSION.tar.xz"; \
 	RABBITMQ_PATH="/usr/local/src/rabbitmq-$RABBITMQ_VERSION"; \
 	\
-	wget --progress dot:giga --output-document "$RABBITMQ_PATH.tar.xz.asc" "$RABBITMQ_SOURCE_URL.asc"; \
-	wget --progress dot:giga --output-document "$RABBITMQ_PATH.tar.xz" "$RABBITMQ_SOURCE_URL"; \
+	wget --output-document "$RABBITMQ_PATH.tar.xz.asc" "$RABBITMQ_SOURCE_URL.asc"; \
+	wget --output-document "$RABBITMQ_PATH.tar.xz" "$RABBITMQ_SOURCE_URL"; \
 	\
 	export GNUPGHOME="$(mktemp -d)"; \
 	gpg --batch --keyserver "$PGP_KEYSERVER" --recv-keys "$RABBITMQ_PGP_KEY_ID"; \
