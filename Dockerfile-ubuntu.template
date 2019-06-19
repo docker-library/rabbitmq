@@ -60,8 +60,17 @@ RUN set -eux; \
 	wget --progress dot:giga --output-document "$OPENSSL_PATH.tar.gz.asc" "$OPENSSL_SOURCE_URL.asc"; \
 	wget --progress dot:giga --output-document "$OPENSSL_PATH.tar.gz" "$OPENSSL_SOURCE_URL"; \
 	export GNUPGHOME="$(mktemp -d)"; \
+	echo "disable-ipv6" >> "$GNUPGHOME"/dirmngr.conf; \
 	for key in $OPENSSL_PGP_KEY_IDS; do \
-		gpg --batch --keyserver "$PGP_KEYSERVER" --recv-keys "$key"; \
+		tries=0; \
+		while [ $tries -ne 5 ]; do \
+			if gpg --batch --keyserver "$PGP_KEYSERVER" --recv-keys "$key"; then \
+				break; \
+			else \
+				tries=$(( tries + 1)); \
+				sleep 5; \
+			fi; \
+		done; \
 	done; \
 	gpg --batch --verify "$OPENSSL_PATH.tar.gz.asc" "$OPENSSL_PATH.tar.gz"; \
 	gpgconf --kill all; \
@@ -156,6 +165,7 @@ RUN set -eux; \
 	apt-mark auto '.*' > /dev/null; \
 	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
 	find /usr/local -type f -executable -exec ldd '{}' ';' \
+		| grep -v '/usr/local' \
 		| awk '/=>/ { print $(NF-1) }' \
 		| sort -u \
 		| xargs -r dpkg-query --search \
@@ -210,7 +220,16 @@ RUN set -eux; \
 	wget --progress dot:giga --output-document "$RABBITMQ_PATH.tar.xz" "$RABBITMQ_SOURCE_URL"; \
 	\
 	export GNUPGHOME="$(mktemp -d)"; \
-	gpg --batch --keyserver "$PGP_KEYSERVER" --recv-keys "$RABBITMQ_PGP_KEY_ID"; \
+	echo "disable-ipv6" >> "$GNUPGHOME"/dirmngr.conf; \
+	tries=0; \
+	while [ $tries -ne 5 ]; do \
+		if gpg --batch --keyserver "$PGP_KEYSERVER" --recv-keys "$RABBITMQ_PGP_KEY_ID"; then \
+			break; \
+		else \
+			tries=$(( tries + 1)); \
+			sleep 5; \
+		fi; \
+	done; \
 	gpg --batch --verify "$RABBITMQ_PATH.tar.xz.asc" "$RABBITMQ_PATH.tar.xz"; \
 	gpgconf --kill all; \
 	rm -rf "$GNUPGHOME"; \
