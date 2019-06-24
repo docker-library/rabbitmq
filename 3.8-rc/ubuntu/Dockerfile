@@ -152,7 +152,11 @@ RUN set -eux; \
 	make -j "$(getconf _NPROCESSORS_ONLN)" GEN_OPT_FLGS="-O2 -fno-strict-aliasing"; \
 	make install; \
 	cd ..; \
-	rm -rf "$OTP_PATH"* /usr/local/lib/erlang/lib/*/src; \
+	rm -rf \
+		"$OTP_PATH"* \
+		/usr/local/lib/erlang/lib/*/examples \
+		/usr/local/lib/erlang/lib/*/src \
+	; \
 	\
 # reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
 	apt-mark auto '.*' > /dev/null; \
