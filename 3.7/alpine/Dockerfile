@@ -1,6 +1,8 @@
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
 FROM alpine:3.8
 
+RUN mkdir ~/.gnupg
+RUN echo "disable-ipv6" >> ~/.gnupg/dirmngr.conf
 RUN apk add --no-cache \
 # grab su-exec for easy step-down from root
 		'su-exec>=0.2' \
@@ -58,9 +60,11 @@ RUN set -eux; \
 	wget --output-document "$OPENSSL_PATH.tar.gz.asc" "$OPENSSL_SOURCE_URL.asc"; \
 	wget --output-document "$OPENSSL_PATH.tar.gz" "$OPENSSL_SOURCE_URL"; \
 	export GNUPGHOME="$(mktemp -d)"; \
-	for key in $OPENSSL_PGP_KEY_IDS; do \
-		gpg --batch --keyserver "$PGP_KEYSERVER" --recv-keys "$key"; \
-	done; \
+        for key in $OPENSSL_PGP_KEY_IDS; do \
+                gpg --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys "$key" || \
+                gpg --keyserver hkp://ipv4.pool.sks-keyservers.net --recv-keys "$key" || \
+                gpg --keyserver hkp://pgp.mit.edu:80 --recv-keys "$key" ; \
+        done; \
 	gpg --batch --verify "$OPENSSL_PATH.tar.gz.asc" "$OPENSSL_PATH.tar.gz"; \
 	gpgconf --kill all; \
 	rm -rf "$GNUPGHOME"; \
@@ -200,7 +204,9 @@ RUN set -eux; \
 	wget --output-document "$RABBITMQ_PATH.tar.xz" "$RABBITMQ_SOURCE_URL"; \
 	\
 	export GNUPGHOME="$(mktemp -d)"; \
-	gpg --batch --keyserver "$PGP_KEYSERVER" --recv-keys "$RABBITMQ_PGP_KEY_ID"; \
+        gpg --batch --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys "$RABBITMQ_PGP_KEY_ID" || \
+        gpg --batch --keyserver hkp://ipv4.pool.sks-keyservers.net --recv-keys "$RABBITMQ_PGP_KEY_ID" || \
+        gpg --batch --keyserver hkp://pgp.mit.edu:80 --recv-keys "$RABBITMQ_PGP_KEY_ID" ; \
 	gpg --batch --verify "$RABBITMQ_PATH.tar.xz.asc" "$RABBITMQ_PATH.tar.xz"; \
 	gpgconf --kill all; \
 	rm -rf "$GNUPGHOME"; \
