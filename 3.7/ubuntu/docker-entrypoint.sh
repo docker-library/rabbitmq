@@ -387,7 +387,11 @@ fi
 combinedSsl='/tmp/rabbitmq-ssl/combined.pem'
 if [ "$haveSslConfig" ] && [[ "$1" == rabbitmq* ]] && [ ! -f "$combinedSsl" ]; then
 	# Create combined cert
-	cat "$RABBITMQ_SSL_CERTFILE" "$RABBITMQ_SSL_KEYFILE" > "$combinedSsl"
+	{
+		cat "$RABBITMQ_SSL_CERTFILE"
+		echo # https://github.com/docker-library/rabbitmq/issues/357#issuecomment-517755647
+		cat "$RABBITMQ_SSL_KEYFILE"
+	} > "$combinedSsl"
 	chmod 0400 "$combinedSsl"
 fi
 if [ "$haveSslConfig" ] && [ -f "$combinedSsl" ]; then
