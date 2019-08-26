@@ -1,5 +1,5 @@
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
-FROM alpine:3.8
+FROM alpine:3.10
 
 RUN apk add --no-cache \
 # grab su-exec for easy step-down from root
@@ -14,6 +14,9 @@ ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
 # If you are building this image locally and are getting `gpg: keyserver receive failed: No data` errors,
 # run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.7 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.7/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
+
+# avoid conflicts between our OpenSSL's "libssl.so" and Alpine's by making sure /usr/local/lib is searched first
+ENV LD_LIBRARY_PATH /usr/local/lib
 
 # Using the latest OpenSSL LTS release, with support until September 2023 - https://www.openssl.org/source/
 ENV OPENSSL_VERSION 1.1.1c
@@ -102,7 +105,7 @@ RUN set -eux; \
 	cd "$OTP_PATH"; \
 	export ERL_TOP="$OTP_PATH"; \
 	./otp_build autoconf; \
-	CFLAGS="$(dpkg-buildflags --get CFLAGS)"; export CFLAGS; \
+	export CFLAGS='-g -O2'; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
