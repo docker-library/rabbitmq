@@ -15,9 +15,6 @@ ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
 # run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.7 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.7/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
-# avoid conflicts between our OpenSSL's "libssl.so" and Alpine's by making sure /usr/local/lib is searched first
-ENV LD_LIBRARY_PATH /usr/local/lib
-
 # Using the latest OpenSSL LTS release, with support until September 2023 - https://www.openssl.org/source/
 ENV OPENSSL_VERSION 1.1.1c
 ENV OPENSSL_SOURCE_SHA256="f6fb3079ad15076154eda9413fed42877d668e7069d9b87396d0804fdb3f4c90"
@@ -78,7 +75,11 @@ RUN set -eux; \
 	RELEASE="4.x.y-z" \
 	SYSTEM='Linux' \
 	BUILD='???' \
-	./config --openssldir="$OPENSSL_CONFIG_DIR"; \
+	./config \
+		--openssldir="$OPENSSL_CONFIG_DIR" \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+		-Wl,-rpath=/usr/local/lib \
+	; \
 # Compile, install OpenSSL, verify that the command-line works & development headers are present
 	make -j "$(getconf _NPROCESSORS_ONLN)"; \
 	make install_sw install_ssldirs; \
@@ -106,6 +107,8 @@ RUN set -eux; \
 	export ERL_TOP="$OTP_PATH"; \
 	./otp_build autoconf; \
 	export CFLAGS='-g -O2'; \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+	export CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib"; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
