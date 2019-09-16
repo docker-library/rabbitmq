@@ -202,6 +202,13 @@ oldConfigFile="$configBase.config"
 newConfigFile="$configBase.conf"
 
 shouldWriteConfig="$haveConfig"
+if [ -n "$shouldWriteConfig" ] && [ -f "$newConfigFile" ] && [ ! -w "$newConfigFile" ]; then
+	# config file exist but it isn't writeable (e.g. Kubernetes v1.9.4+ configMap mount)
+	tmp="/tmp/rabbitmq.conf"
+	cat "$newConfigFile" > "${tmp}"
+	newConfigFile="${tmp}"
+	export RABBITMQ_CONFIG_FILE="${tmp}"
+fi
 if [ -n "$shouldWriteConfig" ] && [ -f "$oldConfigFile" ]; then
 	{
 		echo "error: Docker configuration environment variables specified, but old-style (Erlang syntax) configuration file '$oldConfigFile' exists"
