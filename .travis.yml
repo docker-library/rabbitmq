@@ -6,6 +6,10 @@ env:
   - VERSION=3.8-rc VARIANT=ubuntu ARCH=i386
   - VERSION=3.8-rc VARIANT=alpine
   - VERSION=3.8-rc VARIANT=alpine ARCH=i386
+  - VERSION=3.8 VARIANT=ubuntu
+  - VERSION=3.8 VARIANT=ubuntu ARCH=i386
+  - VERSION=3.8 VARIANT=alpine
+  - VERSION=3.8 VARIANT=alpine ARCH=i386
   - VERSION=3.7-rc VARIANT=ubuntu
   - VERSION=3.7-rc VARIANT=ubuntu ARCH=i386
   - VERSION=3.7-rc VARIANT=alpine
