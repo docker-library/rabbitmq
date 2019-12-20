@@ -1,5 +1,5 @@
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
-FROM alpine:3.10
+FROM alpine:3.11
 
 RUN apk add --no-cache \
 # grab su-exec for easy step-down from root
