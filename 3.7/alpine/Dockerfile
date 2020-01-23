@@ -188,7 +188,7 @@ ENV RABBITMQ_HOME=/opt/rabbitmq
 
 # Add RabbitMQ to PATH, send all logs to TTY
 ENV PATH=$RABBITMQ_HOME/sbin:$PATH \
-	RABBITMQ_LOGS=- RABBITMQ_SASL_LOGS=-
+	RABBITMQ_LOGS=-
 
 # Install RabbitMQ
 RUN set -eux; \
