@@ -119,6 +119,15 @@ for version in "${versions[@]}"; do
 	fi
 	opensslSourceSha256="$(wget -qO- "https://www.openssl.org/source/openssl-$opensslVersion.tar.gz.sha256")"
 
+# https://github.com/rabbitmq/rabbitmq-management/issues/786
+	python='python3'
+	case "$fullVersion" in
+		3.7.24* | 3.8.3*)
+			# TODO delete after these versions are gone
+			python='python'
+			;;
+	esac
+
 	echo "$version: $fullVersion"
 
 	for variant in alpine ubuntu; do
@@ -136,10 +145,10 @@ for version in "${versions[@]}"; do
 		cp -a docker-entrypoint.sh "$version/$variant/"
 
 		managementFrom="rabbitmq:$version"
-		installPython='apt-get update; apt-get install -y --no-install-recommends python; rm -rf /var/lib/apt/lists/*'
+		installPython='apt-get update; apt-get install -y --no-install-recommends '"$python"'; rm -rf /var/lib/apt/lists/*'
 		if [ "$variant" = 'alpine' ]; then
 			managementFrom+='-alpine'
-			installPython='apk add --no-cache python'
+			installPython="apk add --no-cache $python"
 			sed -i 's/gosu/su-exec/g' "$version/$variant/docker-entrypoint.sh"
 		fi
 		sed -e "s!%%FROM%%!$managementFrom!g" \
