@@ -264,5 +264,7 @@ ENV LANG=C.UTF-8 LANGUAGE=C.UTF-8 LC_ALL=C.UTF-8
 COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
+USER 999
+
 EXPOSE 4369 5671 5672 25672
 CMD ["rabbitmq-server"]

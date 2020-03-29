@@ -24,4 +24,6 @@ RUN set -eux; \
 	apk add --no-cache python; \
 	rabbitmqadmin --version
 
+USER 999
+
 EXPOSE 15671 15672

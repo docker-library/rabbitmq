@@ -24,4 +24,6 @@ RUN set -eux; \
 	%%INSTALL_PYTHON%%; \
 	rabbitmqadmin --version
 
+USER 999
+
 EXPOSE 15671 15672
