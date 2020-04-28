@@ -45,7 +45,6 @@ opensslPgpKeys=(
 )
 # TODO auto-generate / scrape this list from the canonical upstream source instead
 
-travisEnv=
 for version in "${versions[@]}"; do
 	rcVersion="${version%-rc}"
 	rcGrepV='-v'
@@ -155,11 +154,5 @@ for version in "${versions[@]}"; do
 			-e "s!%%INSTALL_PYTHON%%!$installPython!g" \
 			Dockerfile-management.template \
 			> "$version/$variant/management/Dockerfile"
-
-		travisEnv='\n  - VERSION='"$version"' VARIANT='"$variant ARCH=i386$travisEnv"
-		travisEnv='\n  - VERSION='"$version"' VARIANT='"$variant$travisEnv"
 	done
 done
-
-travis="$(awk -v 'RS=\n\n' '$1 == "env:" { $0 = "env:'"$travisEnv"'" } { printf "%s%s", $0, RS }' .travis.yml)"
-echo "$travis" > .travis.yml
