@@ -12,7 +12,7 @@ versions=( "${versions[@]%/}" )
 # https://www.rabbitmq.com/which-erlang.html ("Maximum supported Erlang/OTP")
 declare -A otpMajors=(
 	[3.7]='22'
-	[3.8]='22'
+	[3.8]='23'
 )
 declare -A otpHashCache=()
 
