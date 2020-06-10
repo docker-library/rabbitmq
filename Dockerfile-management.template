@@ -25,3 +25,6 @@ RUN set -eux; \
 	rabbitmqadmin --version
 
 EXPOSE 15671 15672
+
+# Hint that the data (a.k.a. home dir) dir should be separate volume
+VOLUME $RABBITMQ_DATA_DIR

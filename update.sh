@@ -139,11 +139,16 @@ for version in "${versions[@]}"; do
 			-e "s!%%OTP_SOURCE_SHA256%%!$otpSourceSha256!g" \
 			-e "s!%%RABBITMQ_VERSION%%!$fullVersion!g" \
 			"Dockerfile-$variant.template" \
+			> "$version/$variant/volumeless/Dockerfile"
+
+		cp -a docker-entrypoint.sh "$version/$variant/volumeless/"
+
+		standardFrom="rabbitmq:$version-volumeless"
+		sed -e "s!%%FROM%%!$standardFrom!g" \
+			Dockerfile-volume.template \
 			> "$version/$variant/Dockerfile"
 
-		cp -a docker-entrypoint.sh "$version/$variant/"
-
-		managementFrom="rabbitmq:$version"
+		managementFrom="rabbitmq:$version-volumeless"
 		installPython='apt-get update; apt-get install -y --no-install-recommends '"$python"'; rm -rf /var/lib/apt/lists/*'
 		if [ "$variant" = 'alpine' ]; then
 			managementFrom+='-alpine'

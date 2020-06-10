@@ -1,0 +1,4 @@
+FROM %%FROM%%
+
+# Hint that the data (a.k.a. home dir) dir should be separate volume
+VOLUME $RABBITMQ_DATA_DIR
