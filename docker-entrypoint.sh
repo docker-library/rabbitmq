@@ -202,7 +202,7 @@ oldConfigFile="$configBase.config"
 newConfigFile="$configBase.conf"
 
 shouldWriteConfig="$haveConfig"
-if [ -n "$shouldWriteConfig" ] && [ -f "$newConfigFile" ] && [ ! -w "$newConfigFile" ]; then
+if [ -n "$shouldWriteConfig" ] && [ -f "$newConfigFile" ] && { [ ! -w "$newConfigFile" ] || [ "$(grep -sq "$newConfigFile" /proc/mounts; echo $?)" -eq 0 ]; }; then
 	# config file exist but it isn't writeable (e.g. Kubernetes v1.9.4+ configMap mount)
 	tmp="/tmp/rabbitmq.conf"
 	cat "$newConfigFile" > "${tmp}"
