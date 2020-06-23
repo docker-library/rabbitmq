@@ -202,12 +202,15 @@ oldConfigFile="$configBase.config"
 newConfigFile="$configBase.conf"
 
 shouldWriteConfig="$haveConfig"
-if [ -n "$shouldWriteConfig" ] && [ -f "$newConfigFile" ] && { [ ! -w "$newConfigFile" ] || [ "$(grep -sq "$newConfigFile" /proc/mounts; echo $?)" -eq 0 ]; }; then
-	# config file exist but it isn't writeable (e.g. Kubernetes v1.9.4+ configMap mount)
-	tmp="/tmp/rabbitmq.conf"
-	cat "$newConfigFile" > "${tmp}"
-	newConfigFile="${tmp}"
-	export RABBITMQ_CONFIG_FILE="${tmp}"
+if [ -n "$shouldWriteConfig" ] && ! touch "$newConfigFile"; then
+	# config file exists but it isn't writeable (likely read-only mount, such as Kubernetes configMap)
+	export RABBITMQ_CONFIG_FILE='/tmp/rabbitmq.conf'
+	cp "$newConfigFile" "$RABBITMQ_CONFIG_FILE"
+	echo >&2
+	echo >&2 "WARNING: '$newConfigFile' is not writable, but environment variables have been provided which request that we write to it"
+	echo >&2 "  We have copied it to '$RABBITMQ_CONFIG_FILE' so it can be amended to work around the problem, but it is recommended that the read-only source file should be modified and the environment variables removed instead."
+	echo >&2
+	newConfigFile="$RABBITMQ_CONFIG_FILE"
 fi
 if [ -n "$shouldWriteConfig" ] && [ -f "$oldConfigFile" ]; then
 	{
