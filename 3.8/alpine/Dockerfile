@@ -1,5 +1,5 @@
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
-FROM alpine:3.11
+FROM alpine:3.12
 
 RUN apk add --no-cache \
 # grab su-exec for easy step-down from root
@@ -37,7 +37,6 @@ RUN set -eux; \
 	\
 	apk add --no-cache --virtual .build-deps \
 		autoconf \
-		ca-certificates \
 		dpkg-dev dpkg \
 		gcc \
 		gnupg \
@@ -194,7 +193,6 @@ ENV PATH=$RABBITMQ_HOME/sbin:$PATH \
 RUN set -eux; \
 	\
 	apk add --no-cache --virtual .build-deps \
-		ca-certificates \
 		gnupg \
 		xz \
 	; \
