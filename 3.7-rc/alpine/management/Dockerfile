@@ -21,7 +21,7 @@ RUN set -eux; \
 	' -- /plugins/rabbitmq_management-*.ez > /usr/local/bin/rabbitmqadmin; \
 	[ -s /usr/local/bin/rabbitmqadmin ]; \
 	chmod +x /usr/local/bin/rabbitmqadmin; \
-	apk add --no-cache python; \
+	apk add --no-cache python3; \
 	rabbitmqadmin --version
 
 EXPOSE 15671 15672
