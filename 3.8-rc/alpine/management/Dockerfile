@@ -2,6 +2,9 @@ FROM rabbitmq:3.8-rc-alpine
 
 RUN rabbitmq-plugins enable --offline rabbitmq_management
 
+# make sure the metrics collector is re-enabled (disabled in the base image for Prometheus-style metrics by default)
+RUN rm -f /etc/rabbitmq/conf.d/management_agent.disable_metrics_collector.conf
+
 # extract "rabbitmqadmin" from inside the "rabbitmq_management-X.Y.Z.ez" plugin zipfile
 # see https://github.com/docker-library/rabbitmq/issues/207
 RUN set -eux; \
