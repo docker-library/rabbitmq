@@ -179,7 +179,7 @@ for conf in "${!configDefaults[@]}"; do
 done
 
 # if long and short hostnames are not the same, use long hostnames
-if [ "$(hostname)" != "$(hostname -s)" ]; then
+if [ -z "${RABBITMQ_USE_LONGNAME:-}" ] && [ "$(hostname)" != "$(hostname -s)" ]; then
 	: "${RABBITMQ_USE_LONGNAME:=true}"
 fi
 
@@ -195,6 +195,8 @@ if [ "${RABBITMQ_ERLANG_COOKIE:-}" ]; then
 		echo "$RABBITMQ_ERLANG_COOKIE" > "$cookieFile"
 	fi
 	chmod 600 "$cookieFile"
+
+	echo >&2 "WARNING: '$cookieFile' was populated from '\$RABBITMQ_ERLANG_COOKIE', which will no longer happen in a future release! (https://github.com/docker-library/rabbitmq/pull/424)"
 fi
 
 configBase="${RABBITMQ_CONFIG_FILE:-/etc/rabbitmq/rabbitmq}"
@@ -393,6 +395,13 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 			rabbit_set_config 'load_definitions' "$managementDefinitionsFile"
 		fi
 	fi
+
+	echo >&2 "WARNING: 'docker-entrypoint.sh' generated/modified the RabbitMQ configuration file, which will no longer happen in a future release! (https://github.com/docker-library/rabbitmq/pull/424)"
+	echo >&2
+	echo >&2 "Generated end result, for reference:"
+	echo >&2 "------------------------------------"
+	cat >&2 "$newConfigFile"
+	echo >&2 "------------------------------------"
 fi
 
 combinedSsl='/tmp/rabbitmq-ssl/combined.pem'
@@ -404,6 +413,8 @@ if [ "$haveSslConfig" ] && [[ "$1" == rabbitmq* ]] && [ ! -f "$combinedSsl" ]; t
 		cat "$RABBITMQ_SSL_KEYFILE"
 	} > "$combinedSsl"
 	chmod 0400 "$combinedSsl"
+
+	echo >&2 "WARNING: relying on 'docker-entrypoint.sh' generating a combined PEM certificate file, which will no longer happen in a future release! (https://github.com/docker-library/rabbitmq/pull/424)"
 fi
 if [ "$haveSslConfig" ] && [ -f "$combinedSsl" ]; then
 	# More ENV vars for make clustering happiness
@@ -413,6 +424,8 @@ if [ "$haveSslConfig" ] && [ -f "$combinedSsl" ]; then
 	sslErlArgs="-pa $ERL_SSL_PATH -proto_dist inet_tls -ssl_dist_opt server_certfile $combinedSsl -ssl_dist_opt server_secure_renegotiate true client_secure_renegotiate true"
 	export RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="${RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS:-} $sslErlArgs"
 	export RABBITMQ_CTL_ERL_ARGS="${RABBITMQ_CTL_ERL_ARGS:-} $sslErlArgs"
+
+	# (no WARNING here, because this will only happen if we already displayed the "combined PEM certificate file" WARNING above, so it would be redundant)
 fi
 
 exec "$@"
