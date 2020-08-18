@@ -11,7 +11,6 @@ versions=( "${versions[@]%/}" )
 
 # https://www.rabbitmq.com/which-erlang.html ("Maximum supported Erlang/OTP")
 declare -A otpMajors=(
-	[3.7]='22'
 	[3.8]='23'
 )
 declare -A otpHashCache=()
@@ -19,7 +18,6 @@ declare -A otpHashCache=()
 # https://www.openssl.org/policies/releasestrat.html
 # https://www.openssl.org/source/
 declare -A opensslMajors=(
-	[3.7]='1.1'
 	[3.8]='1.1'
 )
 

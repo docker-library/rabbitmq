@@ -15,7 +15,7 @@ RUN set -eux; \
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
 ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
 # If you are building this image locally and are getting `gpg: keyserver receive failed: No data` errors,
-# run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.7 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.7/ubuntu
+# run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.8 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.8/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
 # Using the latest OpenSSL LTS release, with support until September 2023 - https://www.openssl.org/source/
