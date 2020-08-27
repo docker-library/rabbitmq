@@ -386,8 +386,10 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 		# https://www.rabbitmq.com/management.html#load-definitions
 		managementDefinitionsFile='/etc/rabbitmq/definitions.json'
 		if [ -f "$managementDefinitionsFile" ]; then
-			# see also https://github.com/docker-library/rabbitmq/pull/112#issuecomment-271485550
-			rabbit_set_config 'management.load_definitions' "$managementDefinitionsFile"
+			# We use `load_definitions` (the built-in setting as of 3.8.2+) instead
+			# of `management.load_definitions`.
+			# See https://github.com/docker-library/rabbitmq/issues/429 for details.
+			rabbit_set_config 'load_definitions' "$managementDefinitionsFile"
 		fi
 	fi
 fi
