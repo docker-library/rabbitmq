@@ -200,6 +200,7 @@ fi
 configBase="${RABBITMQ_CONFIG_FILE:-/etc/rabbitmq/rabbitmq}"
 oldConfigFile="$configBase.config"
 newConfigFile="$configBase.conf"
+additionalConfigDir="/etc/rabbitmq/conf.d"
 
 shouldWriteConfig="$haveConfig"
 if [ -n "$shouldWriteConfig" ] && ! touch "$newConfigFile"; then
@@ -237,27 +238,29 @@ sed_escape_rhs() {
 rabbit_set_config() {
 	local key="$1"; shift
 	local val="$1"; shift
+	local configFile="${1:-$newConfigFile}"
 
-	[ -e "$newConfigFile" ] || touch "$newConfigFile"
+	[ -e "$configFile" ] || touch "$configFile"
 
 	local sedKey="$(sed_escape_lhs "$key")"
 	local sedVal="$(sed_escape_rhs "$val")"
 	sed -ri \
 		"s/^[[:space:]]*(${sedKey}[[:space:]]*=[[:space:]]*)\S.*\$/\1${sedVal}/" \
-		"$newConfigFile"
-	if ! grep -qE "^${sedKey}[[:space:]]*=" "$newConfigFile"; then
-		echo "$key = $val" >> "$newConfigFile"
+		"$configFile"
+	if ! grep -qE "^${sedKey}[[:space:]]*=" "$configFile"; then
+		echo "$key = $val" >> "$configFile"
 	fi
 }
 rabbit_comment_config() {
 	local key="$1"; shift
+	local configFile="${1:-$newConfigFile}"
 
-	[ -e "$newConfigFile" ] || touch "$newConfigFile"
+	[ -e "$configFile" ] || touch "$configFile"
 
 	local sedKey="$(sed_escape_lhs "$key")"
 	sed -ri \
 		"s/^[[:space:]]*#?[[:space:]]*(${sedKey}[[:space:]]*=[[:space:]]*\S.*)\$/# \1/" \
-		"$newConfigFile"
+		"$configFile"
 }
 rabbit_env_config() {
 	local prefix="$1"; shift
@@ -284,6 +287,14 @@ rabbit_env_config() {
 				;;
 
 			vm_memory_high_watermark) continue ;; # handled separately
+			default_user|default_pass)
+				if [ -n "$rawVal" ]; then
+					echo "WARNING! RabbitMQ configuration through environment variables is deprecated, and will be removed in 3.9."
+					echo "In order to configure $var in the future, you should mount a .conf file in $additionalConfigDir containing a value for the key $key"
+					rabbit_set_config "$key" "$rawVal" "$additionalConfigDir/default_user.conf"
+					continue
+				fi
+				;;
 		esac
 
 		if [ -n "$rawVal" ]; then
