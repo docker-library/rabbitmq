@@ -65,10 +65,17 @@ fileConfigKeys=(
 	ssl_certfile
 	ssl_keyfile
 )
+
 allConfigKeys=(
 	"${managementConfigKeys[@]/#/management_}"
 	"${rabbitConfigKeys[@]}"
 	"${sslConfigKeys[@]/#/ssl_}"
+)
+# Configuration through environment variables will be removed in a future release.
+# These keys should be configured through config files matching $RABBITMQ_CONFIG_FILES (/etc/rabbitmq/conf.d/*.conf by default)
+deprecatedConfigKeys=(
+	default_user
+	default_pass
 )
 
 declare -A configDefaults=(
@@ -200,7 +207,7 @@ fi
 configBase="${RABBITMQ_CONFIG_FILE:-/etc/rabbitmq/rabbitmq}"
 oldConfigFile="$configBase.config"
 newConfigFile="$configBase.conf"
-additionalConfigDir="/etc/rabbitmq/conf.d"
+writtenDeprecatedConfig=
 
 shouldWriteConfig="$haveConfig"
 if [ -n "$shouldWriteConfig" ] && ! touch "$newConfigFile"; then
@@ -238,29 +245,35 @@ sed_escape_rhs() {
 rabbit_set_config() {
 	local key="$1"; shift
 	local val="$1"; shift
-	local configFile="${1:-$newConfigFile}"
 
-	[ -e "$configFile" ] || touch "$configFile"
+	[ -e "$newConfigFile" ] || touch "$newConfigFile"
 
 	local sedKey="$(sed_escape_lhs "$key")"
 	local sedVal="$(sed_escape_rhs "$val")"
 	sed -ri \
 		"s/^[[:space:]]*(${sedKey}[[:space:]]*=[[:space:]]*)\S.*\$/\1${sedVal}/" \
-		"$configFile"
-	if ! grep -qE "^${sedKey}[[:space:]]*=" "$configFile"; then
-		echo "$key = $val" >> "$configFile"
+		"$newConfigFile"
+	if ! grep -qE "^${sedKey}[[:space:]]*=" "$newConfigFile"; then
+		echo "$key = $val" >> "$newConfigFile"
 	fi
+}
+rabbit_set_deprecated_config() {
+	local key="$1"; shift
+	local val="$1"; shift
+
+	# Keep track of any deprecated config written to the config file, to print a deprecation notice later.
+	writtenDeprecatedConfig="$writtenDeprecatedConfig\n$key = $val"
+	rabbit_set_config "$key" "$val"
 }
 rabbit_comment_config() {
 	local key="$1"; shift
-	local configFile="${1:-$newConfigFile}"
 
-	[ -e "$configFile" ] || touch "$configFile"
+	[ -e "$newConfigFile" ] || touch "$newConfigFile"
 
 	local sedKey="$(sed_escape_lhs "$key")"
 	sed -ri \
 		"s/^[[:space:]]*#?[[:space:]]*(${sedKey}[[:space:]]*=[[:space:]]*\S.*)\$/# \1/" \
-		"$configFile"
+		"$newConfigFile"
 }
 rabbit_env_config() {
 	local prefix="$1"; shift
@@ -287,22 +300,43 @@ rabbit_env_config() {
 				;;
 
 			vm_memory_high_watermark) continue ;; # handled separately
-			default_user|default_pass)
-				if [ -n "$rawVal" ]; then
-					echo "WARNING! RabbitMQ configuration through environment variables is deprecated, and will be removed in 3.9."
-					echo "In order to configure $var in the future, you should mount a .conf file in $additionalConfigDir containing a value for the key $key"
-					rabbit_set_config "$key" "$rawVal" "$additionalConfigDir/default_user.conf"
-					continue
-				fi
-				;;
 		esac
 
-		if [ -n "$rawVal" ]; then
-			rabbit_set_config "$key" "$rawVal"
-		else
+
+		if [ -z "$rawVal" ]; then
 			rabbit_comment_config "$key"
+		elif env_config_key_is_deprecated "$key"; then
+			rabbit_set_deprecated_config "$key" "$rawVal"
+		else
+			rabbit_set_config "$key" "$rawVal"
 		fi
 	done
+}
+env_config_key_is_deprecated() {
+	local configKey="$1"
+	local deprecated=1
+
+	for deprecatedKey in "${deprecatedConfigKeys[@]}"
+	do
+		if [[ $configKey == "$deprecatedKey" ]]
+		then
+			deprecated=0
+			break
+		fi
+	done
+	return $deprecated
+}
+show_deprecated_config_warning() {
+	local additionalConfigFiles="${RABBITMQ_CONFIG_FILES:-/etc/rabbitmq/conf.d/*.conf}"
+
+	echo ""
+	echo "WARNING! RabbitMQ configuration via environment variables is strongly discouraged where there is a config file alternative, and will be deprecated in a future version."
+	echo "In order to configure RabbitMQ without using environment variables in the future, you should mount a config file on the container"
+	echo "matching the file path regex defined by \$RABBITMQ_CONFIG_FILES ($additionalConfigFiles)"
+	echo ""
+	echo "The environment variable config you have set can be represented as follows in such a config file:"
+	echo -e "$writtenDeprecatedConfig"
+	echo ""
 }
 
 if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
@@ -423,6 +457,12 @@ if [ "$haveSslConfig" ] && [ -f "$combinedSsl" ]; then
 	sslErlArgs="-pa $ERL_SSL_PATH -proto_dist inet_tls -ssl_dist_opt server_certfile $combinedSsl -ssl_dist_opt server_secure_renegotiate true client_secure_renegotiate true"
 	export RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="${RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS:-} $sslErlArgs"
 	export RABBITMQ_CTL_ERL_ARGS="${RABBITMQ_CTL_ERL_ARGS:-} $sslErlArgs"
+fi
+
+# If any config has been written through deprecated means, such as through environment variables,
+# print a warning to the user now.
+if [[ -n $writtenDeprecatedConfig ]]; then
+	show_deprecated_config_warning
 fi
 
 exec "$@"
