@@ -246,6 +246,7 @@ rabbit_set_config() {
 		"s/^[[:space:]]*(${sedKey}[[:space:]]*=[[:space:]]*)\S.*\$/\1${sedVal}/" \
 		"$newConfigFile"
 	if ! grep -qE "^${sedKey}[[:space:]]*=" "$newConfigFile"; then
+		sed -i -e '$a\' "$newConfigFile" # https://github.com/docker-library/rabbitmq/issues/456#issuecomment-752251872 (https://unix.stackexchange.com/a/31955/153467)
 		echo "$key = $val" >> "$newConfigFile"
 	fi
 }
