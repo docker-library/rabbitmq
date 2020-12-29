@@ -18,17 +18,37 @@ ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
 # run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.8 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.8/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
-# Using the latest OpenSSL LTS release, with support until September 2023 - https://www.openssl.org/source/
-ENV OPENSSL_VERSION %%OPENSSL_VERSION%%
-ENV OPENSSL_SOURCE_SHA256="%%OPENSSL_SOURCE_SHA256%%"
+ENV OPENSSL_VERSION {{ .openssl.version }}
+ENV OPENSSL_SOURCE_SHA256="{{ .openssl.sha256 }}"
 # https://www.openssl.org/community/omc.html
-ENV OPENSSL_PGP_KEY_IDS="%%OPENSSL_PGP_KEY_IDS%%"
+ENV OPENSSL_PGP_KEY_IDS="{{
+[
+	# Matt Caswell
+	"8657 ABB2 60F0 56B1 E519 0839 D9C4 D26D 0E60 4491",
 
-# Use the latest stable Erlang/OTP release (https://github.com/erlang/otp/tags)
-ENV OTP_VERSION %%OTP_VERSION%%
+	# Mark J. Cox
+	"5B25 45DA B219 95F4 088C EFAA 36CE E4DE B00C FE33",
+
+	# Paul Dale
+	"ED23 0BEC 4D4F 2518 B9D7 DF41 F0DB 4D21 C1D3 5231",
+
+	# Tim Hudson
+	"C1F3 3DD8 CE1D 4CC6 13AF 14DA 9195 C482 41FB F7DD",
+
+	# Richard Levitte
+	"7953 AC1F BC3D C8B3 B292 393E D5E9 E43F 7DF9 EE8C",
+
+	# Kurt Roeckx
+	"E5E5 2560 DD91 C556 DDBD A5D0 2064 C536 41C2 5E5D"
+]
+# TODO auto-generate / scrape this list from the canonical upstream source instead (check the signature file and add an entry in the .openssl object with just the one signature that we expect to have signed this release, after cross-referencing the official OMC list?)
+| map("0x" + gsub(" "; "")) | join(" ")
+}}"
+
+ENV OTP_VERSION {{ .otp.version }}
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # http://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="%%OTP_SOURCE_SHA256%%"
+ENV OTP_SOURCE_SHA256="{{ .otp.sha256 }}"
 
 # Install dependencies required to build Erlang/OTP from source
 # http://erlang.org/doc/installation_guide/INSTALL.html
@@ -191,7 +211,7 @@ RUN set -eux; \
 	ln -sf "$RABBITMQ_DATA_DIR/.erlang.cookie" /root/.erlang.cookie
 
 # Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
-ENV RABBITMQ_VERSION %%RABBITMQ_VERSION%%
+ENV RABBITMQ_VERSION {{ .version }}
 # https://www.rabbitmq.com/signatures.html#importing-gpg
 ENV RABBITMQ_PGP_KEY_ID="0x0A9AF2115F4687BD29803A206B73A36E6026DFCA"
 ENV RABBITMQ_HOME=/opt/rabbitmq

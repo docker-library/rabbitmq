@@ -1,3 +1,9 @@
+#
+# NOTE: THIS DOCKERFILE IS GENERATED VIA "apply-templates.sh"
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
+
 FROM rabbitmq:3.8-alpine
 
 RUN rabbitmq-plugins enable --offline rabbitmq_management
