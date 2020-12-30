@@ -1,3 +1,9 @@
+#
+# NOTE: THIS DOCKERFILE IS GENERATED VIA "apply-templates.sh"
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
+
 # The official Canonical Ubuntu Bionic image is ideal from a security perspective,
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
 FROM ubuntu:18.04
@@ -18,13 +24,11 @@ ARG PGP_KEYSERVER=ha.pool.sks-keyservers.net
 # run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.8 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.8/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
-# Using the latest OpenSSL LTS release, with support until September 2023 - https://www.openssl.org/source/
 ENV OPENSSL_VERSION 1.1.1i
 ENV OPENSSL_SOURCE_SHA256="e8be6a35fe41d10603c3cc635e93289ed00bf34b79671a3a4de64fcee00d5242"
 # https://www.openssl.org/community/omc.html
 ENV OPENSSL_PGP_KEY_IDS="0x8657ABB260F056B1E5190839D9C4D26D0E604491 0x5B2545DAB21995F4088CEFAA36CEE4DEB00CFE33 0xED230BEC4D4F2518B9D7DF41F0DB4D21C1D35231 0xC1F33DD8CE1D4CC613AF14DA9195C48241FBF7DD 0x7953AC1FBC3DC8B3B292393ED5E9E43F7DF9EE8C 0xE5E52560DD91C556DDBDA5D02064C53641C25E5D"
 
-# Use the latest stable Erlang/OTP release (https://github.com/erlang/otp/tags)
 ENV OTP_VERSION 23.2.1
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # http://erlang.org/pipermail/erlang-questions/2019-January/097067.html

@@ -1,5 +1,5 @@
-#!/bin/bash
-set -eu
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
 declare -A aliases=(
 	[3.8]='3 latest'
@@ -9,11 +9,13 @@ defaultVariant='ubuntu'
 self="$(basename "$BASH_SOURCE")"
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
-versions=( */ )
-versions=( "${versions[@]%/}" )
+if [ "$#" -eq 0 ]; then
+	versions="$(jq -r 'keys | map(@sh) | join(" ")' versions.json)"
+	eval "set -- $versions"
+fi
 
 # sort version numbers with highest first
-IFS=$'\n'; versions=( $(echo "${versions[*]}" | sort -rV) ); unset IFS
+IFS=$'\n'; set -- $(sort -rV <<<"$*"); unset IFS
 
 # get the most recent commit which modified any of "$@"
 fileCommit() {
@@ -68,37 +70,39 @@ join() {
 	echo "${out#$sep}"
 }
 
-for version in "${versions[@]}"; do
+for version; do
+	export version
 	rcVersion="${version%-rc}"
 
-	for variant in ubuntu alpine; do
-		commit="$(dirCommit "$version/$variant")"
+	fullVersion="$(jq -r '.[env.version].version' versions.json)"
 
-		fullVersion="$(git show "$commit":"$version/$variant/Dockerfile" | awk '$1 == "ENV" && $2 == "RABBITMQ_VERSION" { print $3; exit }')"
-
-		if [ "$rcVersion" != "$version" ] && [ -e "$rcVersion/$variant/Dockerfile" ]; then
-			# if this is a "-rc" release, let's make sure the release it contains isn't already GA (and thus something we should not publish anymore)
-			rcFullVersion="$(git show HEAD:"$rcVersion/$variant/Dockerfile" | awk '$1 == "ENV" && $2 == "RABBITMQ_VERSION" { print $3; exit }')"
-			latestVersion="$({ echo "$fullVersion"; echo "$rcFullVersion"; } | sort -V | tail -1)"
-			if [[ "$fullVersion" == "$rcFullVersion"* ]] || [ "$latestVersion" = "$rcFullVersion" ]; then
-				# "x.y.z-rc1" == x.y.z*
-				continue
-			fi
+	# if this is a "-rc" release, let's make sure the release it contains isn't already GA (and thus something we should not publish anymore)
+	export rcVersion
+	if [ "$rcVersion" != "$version" ] && rcFullVersion="$(jq -r '.[env.rcVersion].version // ""' versions.json)" && [ -n "$rcFullVersion" ]; then
+		latestVersion="$({ echo "$fullVersion"; echo "$rcFullVersion"; } | sort -V | tail -1)"
+		if [[ "$fullVersion" == "$rcFullVersion"* ]] || [ "$latestVersion" = "$rcFullVersion" ]; then
+			# "x.y.z-rc1" == x.y.z*
+			continue
 		fi
+	fi
 
-		versionAliases=()
-		if [ "$version" = "$rcVersion" ]; then
-			while [ "$fullVersion" != "$version" -a "${fullVersion%[.-]*}" != "$fullVersion" ]; do
-				versionAliases+=( $fullVersion )
-				fullVersion="${fullVersion%[.-]*}"
-			done
-		else
+	versionAliases=()
+	if [ "$version" = "$rcVersion" ]; then
+		while [ "$fullVersion" != "$version" -a "${fullVersion%[.-]*}" != "$fullVersion" ]; do
 			versionAliases+=( $fullVersion )
-		fi
-		versionAliases+=(
-			$version
-			${aliases[$version]:-}
-		)
+			fullVersion="${fullVersion%[.-]*}"
+		done
+	else
+		versionAliases+=( $fullVersion )
+	fi
+	versionAliases+=(
+		$version
+		${aliases[$version]:-}
+	)
+
+	for variant in ubuntu alpine; do
+		dir="$version/$variant"
+		commit="$(dirCommit "$dir")"
 
 		if [ "$variant" = "$defaultVariant" ]; then
 			variantAliases=( "${versionAliases[@]}" )
@@ -107,7 +111,7 @@ for version in "${versions[@]}"; do
 			variantAliases=( "${variantAliases[@]//latest-/}" )
 		fi
 
-		variantParent="$(awk 'toupper($1) == "FROM" { print $2 }' "$version/$variant/Dockerfile")"
+		variantParent="$(awk 'toupper($1) == "FROM" { print $2 }' "$dir/Dockerfile")"
 		variantArches="${parentRepoToArches[$variantParent]}"
 
 		echo
@@ -115,11 +119,12 @@ for version in "${versions[@]}"; do
 			Tags: $(join ', ' "${variantAliases[@]}")
 			Architectures: $(join ', ' $variantArches)
 			GitCommit: $commit
-			Directory: $version/$variant
+			Directory: $dir
 		EOE
 
 		for subVariant in management; do
-			commit="$(dirCommit "$version/$variant/$subVariant")"
+			subDir="$dir/$subVariant"
+			commit="$(dirCommit "$subDir")"
 
 			subVariantAliases=( "${versionAliases[@]/%/-$subVariant}" )
 			subVariantAliases=( "${subVariantAliases[@]//latest-/}" )
@@ -133,7 +138,7 @@ for version in "${versions[@]}"; do
 				Tags: $(join ', ' "${subVariantAliases[@]}")
 				Architectures: $(join ', ' $variantArches)
 				GitCommit: $commit
-				Directory: $version/$variant/$subVariant
+				Directory: $subDir
 			EOE
 		done
 	done

@@ -1,4 +1,7 @@
-FROM %%FROM%%
+FROM {{
+	"rabbitmq:" + env.version
+	+ if env.variant == "alpine" then "-alpine" else "" end
+}}
 
 RUN rabbitmq-plugins enable --offline rabbitmq_management
 
@@ -24,7 +27,13 @@ RUN set -eux; \
 	' -- /plugins/rabbitmq_management-*.ez > /usr/local/bin/rabbitmqadmin; \
 	[ -s /usr/local/bin/rabbitmqadmin ]; \
 	chmod +x /usr/local/bin/rabbitmqadmin; \
-	%%INSTALL_PYTHON%%; \
+{{ if env.variant == "alpine" then ( -}}
+	apk add --no-cache python3; \
+{{ ) else ( -}}
+	apt-get update; \
+	apt-get install -y --no-install-recommends python3; \
+	rm -rf /var/lib/apt/lists/*; \
+{{ ) end -}}
 	rabbitmqadmin --version
 
 EXPOSE 15671 15672
