@@ -117,7 +117,7 @@ RUN set -eux; \
 # smoke test
 	openssl version; \
 	\
-	OTP_SOURCE_URL="https://github.com/erlang/otp/archive/OTP-$OTP_VERSION.tar.gz"; \
+	OTP_SOURCE_URL="https://github.com/erlang/otp/releases/download/OTP-$OTP_VERSION/otp_src_$OTP_VERSION.tar.gz"; \
 	OTP_PATH="/usr/local/src/otp-$OTP_VERSION"; \
 	\
 # Download, verify & extract OTP_SOURCE
