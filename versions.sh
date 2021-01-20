@@ -5,7 +5,6 @@ set -Eeuo pipefail
 declare -A otpMajors=(
 	[3.8]='23'
 )
-declare -A otpHashCache=()
 
 # https://www.openssl.org/policies/releasestrat.html
 # https://www.openssl.org/source/
@@ -79,11 +78,13 @@ for version in "${versions[@]}"; do
 		echo >&2 "warning: failed to get Erlang/OTP version for '$version' ($fullVersion); skipping"
 		continue
 	fi
-	otpSourceSha256="${otpHashCache[$otpVersion]:-}"
+	otpSourceSha256="$(
+		wget -qO- "https://github.com/erlang/otp/releases/download/OTP-$otpVersion/SHA256.txt" \
+			| awk -v v="$otpVersion" '$2 == "otp_src_" v ".tar.gz" { print $1 }'
+	)"
 	if [ -z "$otpSourceSha256" ]; then
-		# TODO these aren't published anywhere (nor is the tarball we download even provided by Erlang -- it's simply a "git archive" tar provided by GitHub)...
-		otpSourceSha256="$(wget -qO- "https://github.com/erlang/otp/archive/OTP-$otpVersion.tar.gz" | sha256sum | cut -d' ' -f1)"
-		otpHashCache[$otpVersion]="$otpSourceSha256"
+		echo >&2 "error: failed to get Erlang/OTP SHA256 for '$otpVersion' ('$version' / '$fullVersion')"
+		exit 1
 	fi
 	export otpVersion otpSourceSha256
 

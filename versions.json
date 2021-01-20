@@ -5,7 +5,7 @@
       "version": "1.1.1i"
     },
     "otp": {
-      "sha256": "3160912856ba734bd9c17075e72f469b9d4b913f3ab9652ee7e0fb406f0f0f2c",
+      "sha256": "d978ea01def07d2533cba3277b27cad9640589f36e39582fdeed0966b471bf3f",
       "version": "23.2.3"
     },
     "version": "3.8.10"
@@ -16,7 +16,7 @@
       "version": "1.1.1i"
     },
     "otp": {
-      "sha256": "3160912856ba734bd9c17075e72f469b9d4b913f3ab9652ee7e0fb406f0f0f2c",
+      "sha256": "d978ea01def07d2533cba3277b27cad9640589f36e39582fdeed0966b471bf3f",
       "version": "23.2.3"
     },
     "version": "3.8.10-rc.6"

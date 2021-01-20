@@ -32,7 +32,7 @@ ENV OPENSSL_PGP_KEY_IDS="0x8657ABB260F056B1E5190839D9C4D26D0E604491 0x5B2545DAB2
 ENV OTP_VERSION 23.2.3
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # http://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="3160912856ba734bd9c17075e72f469b9d4b913f3ab9652ee7e0fb406f0f0f2c"
+ENV OTP_SOURCE_SHA256="d978ea01def07d2533cba3277b27cad9640589f36e39582fdeed0966b471bf3f"
 
 # Install dependencies required to build Erlang/OTP from source
 # http://erlang.org/doc/installation_guide/INSTALL.html
@@ -101,7 +101,7 @@ RUN set -eux; \
 # smoke test
 	openssl version; \
 	\
-	OTP_SOURCE_URL="https://github.com/erlang/otp/archive/OTP-$OTP_VERSION.tar.gz"; \
+	OTP_SOURCE_URL="https://github.com/erlang/otp/releases/download/OTP-$OTP_VERSION/otp_src_$OTP_VERSION.tar.gz"; \
 	OTP_PATH="/usr/local/src/otp-$OTP_VERSION"; \
 	\
 # Download, verify & extract OTP_SOURCE
