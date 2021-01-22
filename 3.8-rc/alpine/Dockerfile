@@ -28,11 +28,11 @@ ENV OPENSSL_PGP_KEY_IDS="0x8657ABB260F056B1E5190839D9C4D26D0E604491 0x5B2545DAB2
 
 ENV OTP_VERSION 23.2.3
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
-# http://erlang.org/pipermail/erlang-questions/2019-January/097067.html
+# https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
 ENV OTP_SOURCE_SHA256="d978ea01def07d2533cba3277b27cad9640589f36e39582fdeed0966b471bf3f"
 
 # Install dependencies required to build Erlang/OTP from source
-# http://erlang.org/doc/installation_guide/INSTALL.html
+# https://erlang.org/doc/installation_guide/INSTALL.html
 # autoconf: Required to configure Erlang/OTP before compiling
 # dpkg-dev: Required to set up host & build type when compiling Erlang/OTP
 # gnupg: Required to verify OpenSSL artefacts
@@ -104,7 +104,7 @@ RUN set -eux; \
 	tar --extract --file "$OTP_PATH.tar.gz" --directory "$OTP_PATH" --strip-components 1; \
 	\
 # Configure Erlang/OTP for compilation, disable unused features & applications
-# http://erlang.org/doc/applications.html
+# https://erlang.org/doc/applications.html
 # ERL_TOP is required for Erlang/OTP makefiles to find the absolute path for the installation
 	cd "$OTP_PATH"; \
 	export ERL_TOP="$OTP_PATH"; \
