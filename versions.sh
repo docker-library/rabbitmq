@@ -65,26 +65,27 @@ for version in "${versions[@]}"; do
 	export fullVersion
 
 	otpMajor="${otpMajors[$rcVersion]}"
-	otpVersion="$(
+	otpVersions=( $(
 		git ls-remote --tags https://github.com/erlang/otp.git \
 			"refs/tags/OTP-$otpMajor.*"\
 			| cut -d'/' -f3- \
 			| cut -d'^' -f1 \
 			| cut -d- -f2- \
-			| sort -uV \
-			| tail -1
-	)"
+			| sort -urV
+	) )
+	otpVersion=
+	for possibleVersion in "${otpVersions[@]}"; do
+		if otpSourceSha256="$(
+			wget -qO- "https://github.com/erlang/otp/releases/download/OTP-$possibleVersion/SHA256.txt" \
+				| awk -v v="$possibleVersion" '$2 == "otp_src_" v ".tar.gz" { print $1 }'
+		)"; then
+			otpVersion="$possibleVersion"
+			break
+		fi
+	done
 	if [ -z "$otpVersion" ]; then
 		echo >&2 "warning: failed to get Erlang/OTP version for '$version' ($fullVersion); skipping"
 		continue
-	fi
-	otpSourceSha256="$(
-		wget -qO- "https://github.com/erlang/otp/releases/download/OTP-$otpVersion/SHA256.txt" \
-			| awk -v v="$otpVersion" '$2 == "otp_src_" v ".tar.gz" { print $1 }'
-	)"
-	if [ -z "$otpSourceSha256" ]; then
-		echo >&2 "error: failed to get Erlang/OTP SHA256 for '$otpVersion' ('$version' / '$fullVersion')"
-		exit 1
 	fi
 	export otpVersion otpSourceSha256
 
