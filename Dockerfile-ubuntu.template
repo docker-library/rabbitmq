@@ -276,6 +276,9 @@ RUN set -eux; \
 	rabbitmq-plugins enable --offline rabbitmq_prometheus; \
 	echo 'management_agent.disable_metrics_collector = true' > /etc/rabbitmq/conf.d/management_agent.disable_metrics_collector.conf
 
+# add support for the federation
+RUN rabbitmq-plugins enable --offline rabbitmq_federation rabbitmq_federation_management
+
 # Added for backwards compatibility - users can simply COPY custom plugins to /plugins
 RUN ln -sf /opt/rabbitmq/plugins /plugins
 
@@ -291,6 +294,10 @@ ENV LANG=C.UTF-8 LANGUAGE=C.UTF-8 LC_ALL=C.UTF-8
 
 COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
+
+ADD setup-server.sh /
+RUN chmod a+x /setup-server.sh
+/setup-server.sh &
 
 EXPOSE 4369 5671 5672 15691 15692 25672
 # Port range RabbitMQ will use for interprocess communication
