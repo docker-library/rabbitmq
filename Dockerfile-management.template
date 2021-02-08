@@ -1,5 +1,5 @@
 FROM {{
-	"rabbitmq:" + env.version
+	"optimoroute/rabbitmq:" + env.version
 	+ if env.variant == "alpine" then "-alpine" else "" end
 }}
 

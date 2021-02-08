@@ -7,6 +7,9 @@
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
 FROM alpine:3.13
 
+ARG USER_ID
+ARG GROUP_ID
+
 RUN apk add --no-cache \
 # grab su-exec for easy step-down from root
 		'su-exec>=0.2' \
@@ -176,8 +179,8 @@ RUN set -eux; \
 ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
 # Create rabbitmq system user & group, fix permissions & allow root user to connect to the RabbitMQ Erlang VM
 RUN set -eux; \
-	addgroup -g 101 -S rabbitmq; \
-	adduser -u 100 -S -h "$RABBITMQ_DATA_DIR" -G rabbitmq rabbitmq; \
+	addgroup -g ${GROUP_ID:-101} -S rabbitmq; \
+	adduser -u ${USER_ID:-100} -S -h "$RABBITMQ_DATA_DIR" -G rabbitmq rabbitmq; \
 	mkdir -p "$RABBITMQ_DATA_DIR" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
 	chown -fR rabbitmq:rabbitmq "$RABBITMQ_DATA_DIR" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
 	chmod 777 "$RABBITMQ_DATA_DIR" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \

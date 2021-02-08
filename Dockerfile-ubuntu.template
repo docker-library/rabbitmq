@@ -2,6 +2,9 @@
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
 FROM ubuntu:18.04
 
+ARG USER_ID
+ARG GROUP_ID
+
 RUN set -eux; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
@@ -203,8 +206,8 @@ RUN set -eux; \
 ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
 # Create rabbitmq system user & group, fix permissions & allow root user to connect to the RabbitMQ Erlang VM
 RUN set -eux; \
-	groupadd --gid 999 --system rabbitmq; \
-	useradd --uid 999 --system --home-dir "$RABBITMQ_DATA_DIR" --gid rabbitmq rabbitmq; \
+	groupadd --gid ${GROUP_ID:-999} --system rabbitmq; \
+	useradd --uid ${USER_ID:-999} --system --home-dir "$RABBITMQ_DATA_DIR" --gid rabbitmq rabbitmq; \
 	mkdir -p "$RABBITMQ_DATA_DIR" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
 	chown -fR rabbitmq:rabbitmq "$RABBITMQ_DATA_DIR" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
 	chmod 777 "$RABBITMQ_DATA_DIR" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
@@ -290,4 +293,6 @@ COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 4369 5671 5672 15691 15692 25672
+# Port range RabbitMQ will use for interprocess communication
+EXPOSE 9100 9101 9102 9103 9104 9105
 CMD ["rabbitmq-server"]
