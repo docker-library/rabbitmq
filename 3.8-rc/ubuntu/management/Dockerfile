@@ -8,6 +8,9 @@ FROM optimoroute/rabbitmq:3.8-rc
 
 RUN rabbitmq-plugins enable --offline rabbitmq_management
 
+# Add management agent to the image
+RUN rabbitmq-plugins enable --offline rabbitmq_management_agent
+
 # make sure the metrics collector is re-enabled (disabled in the base image for Prometheus-style metrics by default)
 RUN rm -f /etc/rabbitmq/conf.d/management_agent.disable_metrics_collector.conf
 
