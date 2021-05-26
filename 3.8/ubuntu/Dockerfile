@@ -29,10 +29,10 @@ ENV OPENSSL_SOURCE_SHA256="892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c32
 # https://www.openssl.org/community/omc.html
 ENV OPENSSL_PGP_KEY_IDS="0x8657ABB260F056B1E5190839D9C4D26D0E604491 0x5B2545DAB21995F4088CEFAA36CEE4DEB00CFE33 0xED230BEC4D4F2518B9D7DF41F0DB4D21C1D35231 0xC1F33DD8CE1D4CC613AF14DA9195C48241FBF7DD 0x7953AC1FBC3DC8B3B292393ED5E9E43F7DF9EE8C 0xE5E52560DD91C556DDBDA5D02064C53641C25E5D"
 
-ENV OTP_VERSION 23.3.4.1
+ENV OTP_VERSION 24.0.1
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="ec2998933ff634552b3daadd85c1cf9b93abb06497e3722c9b1596b2f7931bd9"
+ENV OTP_SOURCE_SHA256="e69bfaf8431252944ae87e7f031ef174ccdf61336334e70770af397d80ea7a6b"
 
 # Install dependencies required to build Erlang/OTP from source
 # https://erlang.org/doc/installation_guide/INSTALL.html
@@ -142,7 +142,6 @@ RUN set -eux; \
 		--without-diameter \
 		--without-edoc \
 		--without-erl_docgen \
-		--without-erl_interface \
 		--without-et \
 		--without-eunit \
 		--without-ftp \
