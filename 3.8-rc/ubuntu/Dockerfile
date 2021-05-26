@@ -4,9 +4,9 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-# The official Canonical Ubuntu Bionic image is ideal from a security perspective,
+# The official Canonical Ubuntu Focal image is ideal from a security perspective,
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 RUN set -eux; \
 	apt-get update; \
