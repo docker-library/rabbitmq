@@ -365,10 +365,10 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 	fi
 
 	if [ "$haveSslConfig" ]; then
-		rabbit_set_config 'listeners.ssl.default' 5671
+		rabbit_set_config 'listeners.ssl.default' "${RABBITMQ_NODE_PORT:-5671}"
 		rabbit_env_config 'ssl' "${sslConfigKeys[@]}"
 	else
-		rabbit_set_config 'listeners.tcp.default' 5672
+		rabbit_set_config 'listeners.tcp.default' "${RABBITMQ_NODE_PORT:-5672}"
 	fi
 
 	rabbit_env_config '' "${rabbitConfigKeys[@]}"
