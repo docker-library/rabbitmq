@@ -375,7 +375,7 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 
 	# if management plugin is installed, generate config for it
 	# https://www.rabbitmq.com/management.html#configuration
-	if [ "$(rabbitmq-plugins list -q -m -e rabbitmq_management)" ]; then
+	if [ "$(rabbitmq-plugins list -q -m -e '^rabbitmq_management$')" ]; then
 		if [ "$haveManagementSslConfig" ]; then
 			rabbit_set_config 'management.ssl.port' 15671
 			rabbit_env_config 'management_ssl' "${sslConfigKeys[@]}"
