@@ -43,6 +43,7 @@ RUN set -eux; \
 		autoconf \
 		dpkg-dev dpkg \
 		gcc \
+		g++ \
 		gnupg \
 		libc-dev \
 		linux-headers \
@@ -122,6 +123,7 @@ RUN set -eux; \
 		--disable-hipe \
 		--disable-sctp \
 		--disable-silent-rules \
+		--enable-jit
 		--enable-clock-gettime \
 		--enable-hybrid-heap \
 		--enable-kernel-poll \
