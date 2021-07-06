@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -eu
 
 # usage: file_env VAR [DEFAULT]
@@ -196,7 +196,7 @@ if [ "${RABBITMQ_ERLANG_COOKIE:-}" ]; then
 	fi
 	chmod 600 "$cookieFile"
 
-	echo >&2 "WARNING: '$cookieFile' was populated from '\$RABBITMQ_ERLANG_COOKIE', which will no longer happen in a future release! (https://github.com/docker-library/rabbitmq/pull/424)"
+	echo >&2 "WARNING: '$cookieFile' was populated from '\$RABBITMQ_ERLANG_COOKIE', which will no longer happen in 3.9 and later! (https://github.com/docker-library/rabbitmq/pull/424)"
 fi
 
 configBase="${RABBITMQ_CONFIG_FILE:-/etc/rabbitmq/rabbitmq}"
@@ -396,7 +396,7 @@ if [ "$1" = 'rabbitmq-server' ] && [ "$shouldWriteConfig" ]; then
 		fi
 	fi
 
-	echo >&2 "WARNING: 'docker-entrypoint.sh' generated/modified the RabbitMQ configuration file, which will no longer happen in a future release! (https://github.com/docker-library/rabbitmq/pull/424)"
+	echo >&2 "WARNING: 'docker-entrypoint.sh' generated/modified the RabbitMQ configuration file, which will no longer happen in 3.9 and later! (https://github.com/docker-library/rabbitmq/pull/424)"
 	echo >&2
 	echo >&2 "Generated end result, for reference:"
 	echo >&2 "------------------------------------"
@@ -414,7 +414,7 @@ if [ "$haveSslConfig" ] && [[ "$1" == rabbitmq* ]] && [ ! -f "$combinedSsl" ]; t
 	} > "$combinedSsl"
 	chmod 0400 "$combinedSsl"
 
-	echo >&2 "WARNING: relying on 'docker-entrypoint.sh' generating a combined PEM certificate file, which will no longer happen in a future release! (https://github.com/docker-library/rabbitmq/pull/424)"
+	echo >&2 "WARNING: relying on 'docker-entrypoint.sh' generating a combined PEM certificate file, which will no longer happen in 3.9 and later! (https://github.com/docker-library/rabbitmq/pull/424)"
 fi
 if [ "$haveSslConfig" ] && [ -f "$combinedSsl" ]; then
 	# More ENV vars for make clustering happiness

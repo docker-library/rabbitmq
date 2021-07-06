@@ -3,14 +3,13 @@ FROM {{
 	+ if env.variant == "alpine" then "-alpine" else "" end
 }}
 
-RUN rabbitmq-plugins enable --offline rabbitmq_management
-
+RUN set eux; \
+	rabbitmq-plugins enable --offline rabbitmq_management; \
 # make sure the metrics collector is re-enabled (disabled in the base image for Prometheus-style metrics by default)
-RUN rm -f /etc/rabbitmq/conf.d/management_agent.disable_metrics_collector.conf
-
+	rm -f /etc/rabbitmq/conf.d/management_agent.disable_metrics_collector.conf; \
+{{ if .version | startswith("3.8") then ( -}}
 # extract "rabbitmqadmin" from inside the "rabbitmq_management-X.Y.Z.ez" plugin zipfile
 # see https://github.com/docker-library/rabbitmq/issues/207
-RUN set -eux; \
 	erl -noinput -eval ' \
 		{ ok, AdminBin } = zip:foldl(fun(FileInArchive, GetInfo, GetBin, Acc) -> \
 			case Acc of \
@@ -25,6 +24,11 @@ RUN set -eux; \
 		io:format("~s", [ AdminBin ]), \
 		init:stop(). \
 	' -- /plugins/rabbitmq_management-*.ez > /usr/local/bin/rabbitmqadmin; \
+{{ ) else ( -}}
+# grab "rabbitmqadmin" from inside the "rabbitmq_management-X.Y.Z" plugin folder
+# see https://github.com/docker-library/rabbitmq/issues/207
+	cp /plugins/rabbitmq_management-*/priv/www/cli/rabbitmqadmin /usr/local/bin/rabbitmqadmin; \
+{{ ) end -}}
 	[ -s /usr/local/bin/rabbitmqadmin ]; \
 	chmod +x /usr/local/bin/rabbitmqadmin; \
 {{ if env.variant == "alpine" then ( -}}

@@ -7,7 +7,7 @@ if [[ "$1" == rabbitmq* ]] && [ "$(id -u)" = '0' ]; then
 		find /var/lib/rabbitmq \! -user rabbitmq -exec chown rabbitmq '{}' +
 	fi
 
-	exec gosu rabbitmq "$BASH_SOURCE" "$@"
+	exec su-exec rabbitmq "$BASH_SOURCE" "$@"
 fi
 
 deprecatedEnvVars=(
