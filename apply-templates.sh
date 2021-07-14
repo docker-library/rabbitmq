@@ -41,6 +41,9 @@ for version; do
 			gawk -f "$jqt" "Dockerfile-$variant.template"
 		} > "$version/$variant/Dockerfile"
 
+		conf='rabbitmq.conf'
+		cp -a "$conf" "$version/$variant/rabbitmq.conf"
+
 		entrypoint='docker-entrypoint.sh'
 		rcVersion="${version%-rc}"
 		if [ "$rcVersion" = '3.8' ]; then
