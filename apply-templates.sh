@@ -41,14 +41,18 @@ for version; do
 			gawk -f "$jqt" "Dockerfile-$variant.template"
 		} > "$version/$variant/Dockerfile"
 
-		cp -a "rabbitmq.conf" "$version/$variant/rabbitmq.conf"
-
 		entrypoint='docker-entrypoint.sh'
 		rcVersion="${version%-rc}"
 		if [ "$rcVersion" = '3.8' ]; then
 			entrypoint="docker-entrypoint-$rcVersion.sh"
 		fi
 		cp -a "$entrypoint" "$version/$variant/docker-entrypoint.sh"
+
+		if [ "$rcVersion" = '3.8' ]; then
+			sed -i -e '/COPY rabbitmq.conf/d' "$version/$variant/Dockerfile"
+		else
+			cp -a "rabbitmq.conf" "$version/$variant/"
+		fi
 
 		if [ "$variant" = 'alpine' ]; then
 			sed -i -e 's/gosu/su-exec/g' "$version/$variant/docker-entrypoint.sh"
