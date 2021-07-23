@@ -1,3 +1,4 @@
+/*/**/*.conf                linguist-generated
 /*/**/Dockerfile            linguist-generated
 /*/**/docker-entrypoint.sh  linguist-generated
 /Dockerfile*.template       linguist-language=Dockerfile
