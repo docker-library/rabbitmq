@@ -48,10 +48,8 @@ for version; do
 		fi
 		cp -a "$entrypoint" "$version/$variant/docker-entrypoint.sh"
 
-		if [ "$rcVersion" = '3.8' ]; then
-			sed -i -e '/COPY conf.d/d' "$version/$variant/Dockerfile"
-		else
-			cp -aR "conf.d" "$version/$variant/"
+		if [ "$rcVersion" != '3.8' ]; then
+			cp 10-default-guest-user.conf "$version/$variant/"
 		fi
 
 		if [ "$variant" = 'alpine' ]; then
