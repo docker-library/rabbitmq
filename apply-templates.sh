@@ -49,9 +49,9 @@ for version; do
 		cp -a "$entrypoint" "$version/$variant/docker-entrypoint.sh"
 
 		if [ "$rcVersion" = '3.8' ]; then
-			sed -i -e '/COPY rabbitmq.conf/d' "$version/$variant/Dockerfile"
+			sed -i -e '/COPY conf.d/d' "$version/$variant/Dockerfile"
 		else
-			cp -a "rabbitmq.conf" "$version/$variant/"
+			cp -aR "conf.d" "$version/$variant/"
 		fi
 
 		if [ "$variant" = 'alpine' ]; then
