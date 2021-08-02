@@ -116,6 +116,11 @@ RUN set -eux; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
+# JIT is only supported on amd64 (until 24.x+1, where it will support arm64 as well); https://github.com/erlang/otp/blob/OTP-24.0.5/erts/configure#L21694-L21709 / https://github.com/erlang/otp/pull/4869
+	jitFlag=; \
+	case "$dpkgArch" in \
+		amd64) jitFlag='--enable-jit' ;; \
+	esac; \
 	./configure \
 		--host="$hostArch" \
 		--build="$buildArch" \
@@ -123,7 +128,6 @@ RUN set -eux; \
 		--disable-hipe \
 		--disable-sctp \
 		--disable-silent-rules \
-		--enable-jit \
 		--enable-clock-gettime \
 		--enable-hybrid-heap \
 		--enable-kernel-poll \
@@ -149,6 +153,7 @@ RUN set -eux; \
 		--without-ssh \
 		--without-tftp \
 		--without-wx \
+		$jitFlag \
 	; \
 # Compile & install Erlang/OTP
 	make -j "$(getconf _NPROCESSORS_ONLN)" GEN_OPT_FLGS="-O2 -fno-strict-aliasing"; \
