@@ -25,6 +25,7 @@ jobs:
           git clone --depth 1 https://github.com/docker-library/bashbrew.git -b master ~/bashbrew
           strategy="$(~/bashbrew/scripts/github-actions/generate.sh)"
           strategy="$(~/bashbrew/scripts/github-actions/munge-i386.sh -c <<<"$strategy")"
+          strategy="$(jq -c '.matrix.include |= [ .[] | select(.name | (test("i386") | not) or test("alpine")) ]' <<<"$strategy")" # Ubuntu no longer supports i386 (so we can only build test Alpine there; qemu-user-static is too slow for other arches)
           jq . <<<"$strategy" # sanity check / debugging aid
           echo "::set-output name=strategy::$strategy"
 
