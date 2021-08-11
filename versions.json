@@ -30,7 +30,7 @@
       "sha256": "a5fec674b11d0a2b888963157a9de60fc384be27ff1a2175cd20708a5b9aa97d",
       "version": "24.0.5"
     },
-    "version": "3.9.2"
+    "version": "3.9.3"
   },
   "3.9-rc": {
     "openssl": {
