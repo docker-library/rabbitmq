@@ -34,8 +34,8 @@
   },
   "3.9-rc": {
     "openssl": {
-      "sha256": "892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5",
-      "version": "1.1.1k"
+      "sha256": "0b7a3e5e59c34827fe0c3a74b7ec8baef302b98fa80088d7f9153aa16fa76bd1",
+      "version": "1.1.1l"
     },
     "otp": {
       "sha256": "a5fec674b11d0a2b888963157a9de60fc384be27ff1a2175cd20708a5b9aa97d",
