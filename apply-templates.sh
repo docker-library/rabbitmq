@@ -31,6 +31,12 @@ generated_warning() {
 for version; do
 	export version
 
+	if jq -e '.[env.version] | not' versions.json > /dev/null; then
+		echo "deleting $version ..."
+		rm -rf "$version"
+		continue
+	fi
+
 	for variant in alpine ubuntu; do
 		export variant
 

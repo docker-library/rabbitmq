@@ -18,7 +18,9 @@ cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
 versions=( "$@" )
 if [ ${#versions[@]} -eq 0 ]; then
-	versions=( */ )
+	versions=( "${!otpMajors[@]}" )
+	# try RC releases after doing the non-RCs so we can check whether they're newer (and thus whether we should care)
+	versions+=( "${versions[@]/%/-rc}" )
 	json='{}'
 else
 	json="$(< versions.json)"
@@ -65,6 +67,18 @@ for version in "${versions[@]}"; do
 		continue
 	fi
 	export fullVersion
+
+	# if this is a "-rc" release, let's make sure the release it contains isn't already GA (and thus something we should not publish anymore)
+	export rcVersion
+	if [ "$rcVersion" != "$version" ] && rcFullVersion="$(jq <<<"$json" -r '.[env.rcVersion].version // ""')" && [ -n "$rcFullVersion" ]; then
+		latestVersion="$({ echo "$fullVersion"; echo "$rcFullVersion"; } | sort -V | tail -1)"
+		if [[ "$fullVersion" == "$rcFullVersion"* ]] || [ "$latestVersion" = "$rcFullVersion" ]; then
+			# "x.y.z-rc1" == x.y.z*
+			echo >&2 "warning: skipping/removing '$version' ('$rcVersion' is at '$rcFullVersion' which is newer than '$fullVersion')"
+			json="$(jq <<<"$json" -c '.[env.version] = null')"
+			continue
+		fi
+	fi
 
 	otpMajor="${otpMajors[$rcVersion]}"
 	otpVersions=( $(
