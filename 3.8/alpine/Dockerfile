@@ -26,10 +26,10 @@ ENV OPENSSL_SOURCE_SHA256="0b7a3e5e59c34827fe0c3a74b7ec8baef302b98fa80088d7f9153
 # https://www.openssl.org/community/omc.html
 ENV OPENSSL_PGP_KEY_IDS="0x8657ABB260F056B1E5190839D9C4D26D0E604491 0x5B2545DAB21995F4088CEFAA36CEE4DEB00CFE33 0xED230BEC4D4F2518B9D7DF41F0DB4D21C1D35231 0xC1F33DD8CE1D4CC613AF14DA9195C48241FBF7DD 0x7953AC1FBC3DC8B3B292393ED5E9E43F7DF9EE8C 0xE5E52560DD91C556DDBDA5D02064C53641C25E5D"
 
-ENV OTP_VERSION 24.0.5
+ENV OTP_VERSION 24.1
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="a5fec674b11d0a2b888963157a9de60fc384be27ff1a2175cd20708a5b9aa97d"
+ENV OTP_SOURCE_SHA256="72945f5e1b508903fb747e1c903aa2ccdff307843e65426a5e583ea81aa162ef"
 
 # Install dependencies required to build Erlang/OTP from source
 # https://erlang.org/doc/installation_guide/INSTALL.html
@@ -42,13 +42,14 @@ RUN set -eux; \
 	apk add --no-cache --virtual .build-deps \
 		autoconf \
 		dpkg-dev dpkg \
-		gcc \
 		g++ \
+		gcc \
 		gnupg \
 		libc-dev \
 		linux-headers \
 		make \
 		ncurses-dev \
+		patch \
 	; \
 	\
 	OPENSSL_SOURCE_URL="https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz"; \
@@ -103,6 +104,11 @@ RUN set -eux; \
 	wget --output-document "$OTP_PATH.tar.gz" "$OTP_SOURCE_URL"; \
 	echo "$OTP_SOURCE_SHA256 *$OTP_PATH.tar.gz" | sha256sum -c -; \
 	tar --extract --file "$OTP_PATH.tar.gz" --directory "$OTP_PATH" --strip-components 1; \
+	\
+# https://github.com/erlang/otp/pull/5236
+	wget --output-document erlang-configure-expr.patch 'https://github.com/erlang/otp/pull/5236.patch'; \
+	patch --strip=1 --input="$PWD/erlang-configure-expr.patch" --directory "$OTP_PATH"; \
+	rm erlang-configure-expr.patch; \
 	\
 # Configure Erlang/OTP for compilation, disable unused features & applications
 # https://erlang.org/doc/applications.html

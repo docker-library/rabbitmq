@@ -5,8 +5,8 @@
       "version": "1.1.1l"
     },
     "otp": {
-      "sha256": "a5fec674b11d0a2b888963157a9de60fc384be27ff1a2175cd20708a5b9aa97d",
-      "version": "24.0.5"
+      "sha256": "72945f5e1b508903fb747e1c903aa2ccdff307843e65426a5e583ea81aa162ef",
+      "version": "24.1"
     },
     "version": "3.8.22"
   },
@@ -17,10 +17,10 @@
       "version": "1.1.1l"
     },
     "otp": {
-      "sha256": "a5fec674b11d0a2b888963157a9de60fc384be27ff1a2175cd20708a5b9aa97d",
-      "version": "24.0.5"
+      "sha256": "72945f5e1b508903fb747e1c903aa2ccdff307843e65426a5e583ea81aa162ef",
+      "version": "24.1"
     },
-    "version": "3.9.5"
+    "version": "3.9.6"
   },
   "3.9-rc": null
 }
