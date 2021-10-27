@@ -65,7 +65,6 @@ RUN set -eux; \
 		linux-headers \
 		make \
 		ncurses-dev \
-		patch \
 	; \
 	\
 	OPENSSL_SOURCE_URL="https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz"; \
@@ -120,11 +119,6 @@ RUN set -eux; \
 	wget --output-document "$OTP_PATH.tar.gz" "$OTP_SOURCE_URL"; \
 	echo "$OTP_SOURCE_SHA256 *$OTP_PATH.tar.gz" | sha256sum -c -; \
 	tar --extract --file "$OTP_PATH.tar.gz" --directory "$OTP_PATH" --strip-components 1; \
-	\
-# https://github.com/erlang/otp/pull/5236
-	wget --output-document erlang-configure-expr.patch 'https://github.com/erlang/otp/pull/5236.patch'; \
-	patch --strip=1 --input="$PWD/erlang-configure-expr.patch" --directory "$OTP_PATH"; \
-	rm erlang-configure-expr.patch; \
 	\
 # Configure Erlang/OTP for compilation, disable unused features & applications
 # https://erlang.org/doc/applications.html
