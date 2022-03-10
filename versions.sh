@@ -5,6 +5,7 @@ set -Eeuo pipefail
 declare -A otpMajors=(
 	[3.8]='24'
 	[3.9]='24'
+	[3.10]='24'
 )
 
 # https://www.openssl.org/policies/releasestrat.html
@@ -12,6 +13,7 @@ declare -A otpMajors=(
 declare -A opensslMajors=(
 	[3.8]='1.1'
 	[3.9]='1.1'
+	[3.10]='1.1'
 )
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
