@@ -24,15 +24,15 @@ ARG PGP_KEYSERVER=keyserver.ubuntu.com
 # run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.8 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.8/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
-ENV OPENSSL_VERSION 1.1.1m
-ENV OPENSSL_SOURCE_SHA256="f89199be8b23ca45fc7cb9f1d8d3ee67312318286ad030f5316aca6462db6c96"
+ENV OPENSSL_VERSION 1.1.1n
+ENV OPENSSL_SOURCE_SHA256="40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a"
 # https://www.openssl.org/community/omc.html
 ENV OPENSSL_PGP_KEY_IDS="0x8657ABB260F056B1E5190839D9C4D26D0E604491 0x5B2545DAB21995F4088CEFAA36CEE4DEB00CFE33 0xED230BEC4D4F2518B9D7DF41F0DB4D21C1D35231 0xC1F33DD8CE1D4CC613AF14DA9195C48241FBF7DD 0x7953AC1FBC3DC8B3B292393ED5E9E43F7DF9EE8C 0xE5E52560DD91C556DDBDA5D02064C53641C25E5D"
 
-ENV OTP_VERSION 24.3
+ENV OTP_VERSION 24.3.1
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="ee8dd101af68ba175deec1844059ed287a22f7f46e72915631c965cc8be331f9"
+ENV OTP_SOURCE_SHA256="925d0b767c913ac1b3a28bef53500b897a4e13a42fcd530a6d1bce837c97f685"
 
 # Install dependencies required to build Erlang/OTP from source
 # https://erlang.org/doc/installation_guide/INSTALL.html
