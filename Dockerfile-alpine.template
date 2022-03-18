@@ -211,9 +211,15 @@ ENV RABBITMQ_VERSION {{ .version }}
 ENV RABBITMQ_PGP_KEY_ID="0x0A9AF2115F4687BD29803A206B73A36E6026DFCA"
 ENV RABBITMQ_HOME=/opt/rabbitmq
 
+{{ if ([ "3.8", "3.8-rc" ] | index(env.version)) then ( -}}
 # Add RabbitMQ to PATH, send all logs to TTY
 ENV PATH=$RABBITMQ_HOME/sbin:$PATH \
 	RABBITMQ_LOGS=-
+{{ )
+else ( -}}
+# Add RabbitMQ to PATH
+ENV PATH=$RABBITMQ_HOME/sbin:$PATH
+{{ ) end -}}
 
 # Install RabbitMQ
 RUN set -eux; \
@@ -276,7 +282,7 @@ VOLUME $RABBITMQ_DATA_DIR
 ENV LANG=C.UTF-8 LANGUAGE=C.UTF-8 LC_ALL=C.UTF-8
 
 {{ if ([ "3.8", "3.8-rc" ] | index(env.version)) then "" else ( -}}
-COPY --chown=rabbitmq:rabbitmq 10-default-guest-user.conf /etc/rabbitmq/conf.d/
+COPY --chown=rabbitmq:rabbitmq 10-defaults.conf /etc/rabbitmq/conf.d/
 {{ ) end -}}
 COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
