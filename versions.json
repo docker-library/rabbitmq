@@ -8,7 +8,7 @@
       "sha256": "fb39eecf5a5710200871c85c11251e27afce7c2a11f569bd6394c6d48240ec8d",
       "version": "24.3.2"
     },
-    "version": "3.10.0-beta.5"
+    "version": "3.10.0-rc.1"
   },
   "3.8": {
     "openssl": {
