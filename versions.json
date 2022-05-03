@@ -1,5 +1,5 @@
 {
-  "3.10-rc": {
+  "3.10": {
     "openssl": {
       "sha256": "40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a",
       "version": "1.1.1n"
@@ -8,8 +8,9 @@
       "sha256": "76fcca5ba6f11eb9caac32bf053badc46b5d66f867150eef077f4f0d7944ecd7",
       "version": "24.3.4"
     },
-    "version": "3.10.0-rc.6"
+    "version": "3.10.0"
   },
+  "3.10-rc": null,
   "3.8": {
     "openssl": {
       "sha256": "40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a",
