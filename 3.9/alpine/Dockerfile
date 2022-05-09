@@ -18,7 +18,7 @@ RUN apk add --no-cache \
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
 ARG PGP_KEYSERVER=keyserver.ubuntu.com
 # If you are building this image locally and are getting `gpg: keyserver receive failed: No data` errors,
-# run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.8 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.8/ubuntu
+# run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.10 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.10/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
 ENV OPENSSL_VERSION 1.1.1o
