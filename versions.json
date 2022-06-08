@@ -29,8 +29,8 @@
       "version": "1.1.1o"
     },
     "otp": {
-      "sha256": "76fcca5ba6f11eb9caac32bf053badc46b5d66f867150eef077f4f0d7944ecd7",
-      "version": "24.3.4"
+      "sha256": "f5c502dfab713a83f73eabf79fb6d83ac85d53386a571f55c2297e165a8145de",
+      "version": "24.3.4.1"
     },
     "version": "3.9.20"
   },
