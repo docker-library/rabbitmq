@@ -79,7 +79,7 @@ for version; do
 	rcVersion="${version%-rc}"
 
 	if ! fullVersion="$(jq -er '.[env.version] | if . then .version else empty end' versions.json)"; then
-		# support running "generate-stackbrew-library.sh" on a singular "null" version ("3.8-rc" when the RC is older than the GA release, for example)
+		# support running "generate-stackbrew-library.sh" on a singular "null" version ("3.10-rc" when the RC is older than the GA release, for example)
 		continue
 	fi
 

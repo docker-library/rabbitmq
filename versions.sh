@@ -3,7 +3,6 @@ set -Eeuo pipefail
 
 # https://www.rabbitmq.com/which-erlang.html ("Maximum supported Erlang/OTP")
 declare -A otpMajors=(
-	[3.8]='24'
 	[3.9]='24'
 	[3.10]='24'
 )
@@ -11,7 +10,6 @@ declare -A otpMajors=(
 # https://www.openssl.org/policies/releasestrat.html
 # https://www.openssl.org/source/
 declare -A opensslMajors=(
-	[3.8]='1.1'
 	[3.9]='1.1'
 	[3.10]='1.1'
 )

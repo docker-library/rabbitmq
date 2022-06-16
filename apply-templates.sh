@@ -47,16 +47,7 @@ for version; do
 			gawk -f "$jqt" "Dockerfile-$variant.template"
 		} > "$version/$variant/Dockerfile"
 
-		entrypoint='docker-entrypoint.sh'
-		rcVersion="${version%-rc}"
-		if [ "$rcVersion" = '3.8' ]; then
-			entrypoint="docker-entrypoint-$rcVersion.sh"
-		fi
-		cp -a "$entrypoint" "$version/$variant/docker-entrypoint.sh"
-
-		if [ "$rcVersion" != '3.8' ]; then
-			cp 10-defaults.conf "$version/$variant/"
-		fi
+		cp -a 10-defaults.conf docker-entrypoint.sh "$version/$variant/"
 
 		if [ "$variant" = 'alpine' ]; then
 			sed -i -e 's/gosu/su-exec/g' "$version/$variant/docker-entrypoint.sh"

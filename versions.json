@@ -11,18 +11,6 @@
     "version": "3.10.5"
   },
   "3.10-rc": null,
-  "3.8": {
-    "openssl": {
-      "sha256": "9384a2b0570dd80358841464677115df785edb941c71211f75076d72fe6b438f",
-      "version": "1.1.1o"
-    },
-    "otp": {
-      "sha256": "f5c502dfab713a83f73eabf79fb6d83ac85d53386a571f55c2297e165a8145de",
-      "version": "24.3.4.1"
-    },
-    "version": "3.8.34"
-  },
-  "3.8-rc": null,
   "3.9": {
     "openssl": {
       "sha256": "9384a2b0570dd80358841464677115df785edb941c71211f75076d72fe6b438f",
