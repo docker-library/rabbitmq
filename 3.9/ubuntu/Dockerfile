@@ -13,6 +13,8 @@ RUN set -eux; \
 	apt-get install -y --no-install-recommends \
 # grab gosu for easy step-down from root
 		gosu \
+# Bring in tzdata so users could set the timezones through the environment
+		tzdata \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 # verify that the "gosu" binary works

@@ -13,7 +13,9 @@ RUN apk add --no-cache \
 # bash for docker-entrypoint.sh
 		bash \
 # "ps" for "rabbitmqctl wait" (https://github.com/docker-library/rabbitmq/issues/162)
-		procps
+		procps \
+# Bring in tzdata so users could set the timezones through the environment
+		tzdata
 
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
 ARG PGP_KEYSERVER=keyserver.ubuntu.com
