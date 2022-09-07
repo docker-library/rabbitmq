@@ -5,6 +5,7 @@ set -Eeuo pipefail
 declare -A otpMajors=(
 	[3.9]='24'
 	[3.10]='25'
+	[3.11]='25'
 )
 
 # https://www.openssl.org/policies/releasestrat.html
@@ -12,6 +13,7 @@ declare -A otpMajors=(
 declare -A opensslMajors=(
 	[3.9]='1.1'
 	[3.10]='1.1'
+	[3.11]='1.1'
 )
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
@@ -43,7 +45,7 @@ for version in "${versions[@]}"; do
 			"refs/tags/v${rcVersion}"{'','.*','-*','^*'} \
 			| cut -d'/' -f3- \
 			| cut -d'^' -f1 \
-			| grep $rcGrepV -- "$rcGrepExpr" \
+			| { grep $rcGrepV -- "$rcGrepExpr" || :; } \
 			| sort -urV
 	) )
 
@@ -119,6 +121,9 @@ for version in "${versions[@]}"; do
 	fi
 	opensslSourceSha256="$(wget -qO- "https://www.openssl.org/source/openssl-$opensslVersion.tar.gz.sha256")"
 	export opensslVersion opensslSourceSha256
+
+	# OpenSSL 3.0.5's sha256 file starts with a single space 😬
+	opensslSourceSha256="${opensslSourceSha256# }"
 
 	echo "$version: $fullVersion (otp $otpVersion, openssl $opensslVersion)"
 
