@@ -20,7 +20,7 @@ RUN apk add --no-cache \
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
 ARG PGP_KEYSERVER=keyserver.ubuntu.com
 # If you are building this image locally and are getting `gpg: keyserver receive failed: No data` errors,
-# run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.9 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.9/ubuntu
+# run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.11-rc --build-arg PGP_KEYSERVER=pgpkeys.eu 3.11-rc/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
 ENV OPENSSL_VERSION 1.1.1q
@@ -28,10 +28,10 @@ ENV OPENSSL_SOURCE_SHA256="d7939ce614029cdff0b6c20f0e2e5703158a489a72b2507b8bd51
 # https://www.openssl.org/community/omc.html
 ENV OPENSSL_PGP_KEY_IDS="0x8657ABB260F056B1E5190839D9C4D26D0E604491 0x5B2545DAB21995F4088CEFAA36CEE4DEB00CFE33 0xED230BEC4D4F2518B9D7DF41F0DB4D21C1D35231 0xC1F33DD8CE1D4CC613AF14DA9195C48241FBF7DD 0x7953AC1FBC3DC8B3B292393ED5E9E43F7DF9EE8C 0xE5E52560DD91C556DDBDA5D02064C53641C25E5D"
 
-ENV OTP_VERSION 24.3.4.4
+ENV OTP_VERSION 25.0.4
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="86dddc0de486acc320ed7557f12033af0b5045205290ee4926aa931b3d8b3ab2"
+ENV OTP_SOURCE_SHA256="8fc707f92a124b2aeb0f65dcf9ac8e27b2a305e7bcc4cc1b2fdf770eec0165bf"
 
 # Install dependencies required to build Erlang/OTP from source
 # https://erlang.org/doc/installation_guide/INSTALL.html
@@ -192,7 +192,7 @@ RUN set -eux; \
 	ln -sf "$RABBITMQ_DATA_DIR/.erlang.cookie" /root/.erlang.cookie
 
 # Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
-ENV RABBITMQ_VERSION 3.9.22
+ENV RABBITMQ_VERSION 3.11.0-rc.1
 # https://www.rabbitmq.com/signatures.html#importing-gpg
 ENV RABBITMQ_PGP_KEY_ID="0x0A9AF2115F4687BD29803A206B73A36E6026DFCA"
 ENV RABBITMQ_HOME=/opt/rabbitmq
