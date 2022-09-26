@@ -17,10 +17,10 @@
       "version": "1.1.1q"
     },
     "otp": {
-      "sha256": "8fc707f92a124b2aeb0f65dcf9ac8e27b2a305e7bcc4cc1b2fdf770eec0165bf",
-      "version": "25.0.4"
+      "sha256": "a5ea27c1e07511a84bdd869c37f5e254f198c1cecf68ee9c8fedd23010750c31",
+      "version": "25.1"
     },
-    "version": "3.11.0-rc.1"
+    "version": "3.11.0-rc.2"
   },
   "3.9": {
     "openssl": {
