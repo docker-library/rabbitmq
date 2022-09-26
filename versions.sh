@@ -53,8 +53,11 @@ for version in "${versions[@]}"; do
 	githubTag=
 	for possibleTag in "${githubTags[@]}"; do
 		fullVersion="$(
-			wget -qO- "https://github.com/rabbitmq/rabbitmq-server/releases/tag/$possibleTag" \
-				| grep -oE "/rabbitmq-server-generic-unix-${rcVersion}([.-].+)?[.]tar[.]xz" \
+			{
+				# thanks GitHub...
+				wget -qO- "https://github.com/rabbitmq/rabbitmq-server/releases/expanded_assets/$possibleTag" \
+				|| wget -qO- "https://github.com/rabbitmq/rabbitmq-server/releases/tag/$possibleTag"
+			} | grep -oE "/rabbitmq-server-generic-unix-${rcVersion}([.-].+)?[.]tar[.]xz" \
 				| head -1 \
 				| sed -r "s/^.*(${rcVersion}.*)[.]tar[.]xz/\1/" \
 				|| :
