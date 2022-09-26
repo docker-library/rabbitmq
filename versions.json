@@ -11,7 +11,7 @@
     "version": "3.10.8"
   },
   "3.10-rc": null,
-  "3.11-rc": {
+  "3.11": {
     "openssl": {
       "sha256": "d7939ce614029cdff0b6c20f0e2e5703158a489a72b2507b8bd51bf8c8fd10ca",
       "version": "1.1.1q"
@@ -20,8 +20,9 @@
       "sha256": "a5ea27c1e07511a84bdd869c37f5e254f198c1cecf68ee9c8fedd23010750c31",
       "version": "25.1"
     },
-    "version": "3.11.0-rc.2"
+    "version": "3.11.0"
   },
+  "3.11-rc": null,
   "3.9": {
     "openssl": {
       "sha256": "d7939ce614029cdff0b6c20f0e2e5703158a489a72b2507b8bd51bf8c8fd10ca",
