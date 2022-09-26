@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 # https://www.rabbitmq.com/which-erlang.html ("Maximum supported Erlang/OTP")
 declare -A otpMajors=(
-	[3.9]='24'
+	[3.9]='25'
 	[3.10]='25'
 	[3.11]='25'
 )
