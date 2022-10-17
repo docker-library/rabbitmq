@@ -18,7 +18,7 @@ jobs:
     outputs:
       strategy: ${{ steps.generate-jobs.outputs.strategy }}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - id: generate-jobs
         name: Generate Jobs
         run: |
@@ -26,8 +26,8 @@ jobs:
           strategy="$(~/bashbrew/scripts/github-actions/generate.sh)"
           strategy="$(~/bashbrew/scripts/github-actions/munge-i386.sh -c <<<"$strategy")"
           strategy="$(jq -c '.matrix.include |= [ .[] | select(.name | (test("i386") | not) or test("alpine")) ]' <<<"$strategy")" # Ubuntu no longer supports i386 (so we can only build test Alpine there; qemu-user-static is too slow for other arches)
+          echo "strategy=$strategy" >> "$GITHUB_OUTPUT"
           jq . <<<"$strategy" # sanity check / debugging aid
-          echo "::set-output name=strategy::$strategy"
 
   test:
     needs: generate-jobs
@@ -35,7 +35,7 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Prepare Environment
         run: ${{ matrix.runs.prepare }}
       - name: Pull Dependencies
