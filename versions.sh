@@ -11,9 +11,9 @@ declare -A otpMajors=(
 # https://www.openssl.org/policies/releasestrat.html
 # https://www.openssl.org/source/
 declare -A opensslMajors=(
-	[3.9]='1.1'
-	[3.10]='1.1'
-	[3.11]='1.1'
+	[3.9]='3.0'
+	[3.10]='3.0'
+	[3.11]='3.0'
 )
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"

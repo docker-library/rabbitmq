@@ -66,7 +66,6 @@ ENV OTP_SOURCE_SHA256="{{ .otp.sha256 }}"
 
 # Install dependencies required to build Erlang/OTP from source
 # https://erlang.org/doc/installation_guide/INSTALL.html
-# autoconf: Required to configure Erlang/OTP before compiling
 # dpkg-dev: Required to set up host & build type when compiling Erlang/OTP
 # gnupg: Required to verify OpenSSL artefacts
 # libncurses5-dev: Required for Erlang/OTP new shell & observer_cli - https://github.com/zhongwencool/observer_cli
@@ -100,13 +99,14 @@ RUN set -eux; \
 	SYSTEM='Linux' \
 	BUILD='???' \
 	./config \
+		enable-fips \
 		--openssldir="$OPENSSL_CONFIG_DIR" \
-# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
-		-Wl,-rpath=/usr/local/lib \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib64 is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+		-Wl,-rpath=/usr/local/lib64 \
 	; \
 # Compile, install OpenSSL, verify that the command-line works & development headers are present
 	make -j "$(getconf _NPROCESSORS_ONLN)"; \
-	make install_sw install_ssldirs; \
+	make install_sw install_ssldirs install_fips; \
 # use Alpine's CA certificates
 	rmdir "$OPENSSL_CONFIG_DIR/certs" "$OPENSSL_CONFIG_DIR/private"; \
 	ln -sf /etc/ssl/certs /etc/ssl/private "$OPENSSL_CONFIG_DIR"
@@ -135,8 +135,8 @@ RUN set -eux; \
 	cd "$OTP_PATH"; \
 	export ERL_TOP="$OTP_PATH"; \
 	export CFLAGS='-g -O2'; \
-# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
-	export CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib"; \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib64 is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+	export CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib64"; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
@@ -212,8 +212,12 @@ RUN set -eux; \
 	)"; \
 	apk add --no-cache --virtual .otp-run-deps $runDeps; \
 	\
-# Check that OpenSSL still works after copying from previous builder
+# Check that OpenSSL still works after purging build dependencies
+	sed -i.ORIG -e '/\.include.*fips/s/.*/.include \/usr\/local\/etc\/ssl\/fipsmodule.cnf/' \
+	    -e '/# fips =/s/.*/fips = fips_sect/' /usr/local/etc/ssl/openssl.cnf; \
+	sed -i.ORIG -e '/^activate/s/^/#/' /usr/local/etc/ssl/fipsmodule.cnf; \
 	openssl version; \
+	openssl version -d; \
 	\
 # Check that Erlang/OTP crypto & ssl were compiled against OpenSSL correctly
 	erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'; \

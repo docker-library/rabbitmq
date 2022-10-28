@@ -25,8 +25,8 @@ ARG PGP_KEYSERVER=keyserver.ubuntu.com
 # run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.11 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.11/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
-ENV OPENSSL_VERSION 1.1.1s
-ENV OPENSSL_SOURCE_SHA256="c5ac01e760ee6ff0dab61d6b2bbd30146724d063eb322180c6f18a6f74e4b6aa"
+ENV OPENSSL_VERSION 3.0.7
+ENV OPENSSL_SOURCE_SHA256="83049d042a260e696f62406ac5c08bf706fd84383f945cf21bd61e9ed95c396e"
 # https://www.openssl.org/community/otc.html
 ENV OPENSSL_PGP_KEY_IDS="0x8657ABB260F056B1E5190839D9C4D26D0E604491 0xB7C1C14360F353A36862E4D5231C84CDDCC69C45 0xC1F33DD8CE1D4CC613AF14DA9195C48241FBF7DD 0x95A9908DDFA16830BE9FB9003D30A3A9FF1360DC 0x7953AC1FBC3DC8B3B292393ED5E9E43F7DF9EE8C 0xA21FAB74B0088AA361152586B8EF1A6BA9DA2D5C 0xE5E52560DD91C556DDBDA5D02064C53641C25E5D"
 
@@ -37,7 +37,6 @@ ENV OTP_SOURCE_SHA256="94d5b6b0495050c5ea78a10c02ba3bdb58ce537c2a8869957760e67ec
 
 # Install dependencies required to build Erlang/OTP from source
 # https://erlang.org/doc/installation_guide/INSTALL.html
-# autoconf: Required to configure Erlang/OTP before compiling
 # dpkg-dev: Required to set up host & build type when compiling Erlang/OTP
 # gnupg: Required to verify OpenSSL artefacts
 # libncurses5-dev: Required for Erlang/OTP new shell & observer_cli - https://github.com/zhongwencool/observer_cli
@@ -70,14 +69,15 @@ RUN set -eux; \
 	SYSTEM='Linux' \
 	BUILD='???' \
 	./config \
+		enable-fips \
 		--openssldir="$OPENSSL_CONFIG_DIR" \
 		--libdir="lib/$debMultiarch" \
-# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
-		-Wl,-rpath=/usr/local/lib \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib/$debMultiarch is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+		-Wl,-rpath="/usr/local/lib/$debMultiarch" \
 	; \
 # Compile, install OpenSSL, verify that the command-line works & development headers are present
 	make -j "$(getconf _NPROCESSORS_ONLN)"; \
-	make install_sw install_ssldirs; \
+	make install_sw install_ssldirs install_fips; \
 	ldconfig; \
 # use Debian's CA certificates
 	rmdir "$OPENSSL_CONFIG_DIR/certs" "$OPENSSL_CONFIG_DIR/private"; \
@@ -104,8 +104,8 @@ RUN set -eux; \
 	cd "$OTP_PATH"; \
 	export ERL_TOP="$OTP_PATH"; \
 	CFLAGS="$(dpkg-buildflags --get CFLAGS)"; export CFLAGS; \
-# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
-	export CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib"; \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib/$debMultiarch is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+	export CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib/$(dpkg-architecture --query DEB_HOST_MULTIARCH)"; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
@@ -175,7 +175,11 @@ RUN set -eux; \
 	\
 # Check that OpenSSL still works after copying from previous builder
 	ldconfig; \
+	sed -i.ORIG -e '/\.include.*fips/s/.*/.include \/usr\/local\/etc\/ssl\/fipsmodule.cnf/' \
+	    -e '/# fips =/s/.*/fips = fips_sect/' /usr/local/etc/ssl/openssl.cnf; \
+	sed -i.ORIG -e '/^activate/s/^/#/' /usr/local/etc/ssl/fipsmodule.cnf; \
 	openssl version; \
+	openssl version -d; \
 	\
 # Check that Erlang/OTP crypto & ssl were compiled against OpenSSL correctly
 	erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'; \
