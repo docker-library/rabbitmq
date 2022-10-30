@@ -27,19 +27,24 @@ fileCommit() {
 }
 
 # get the most recent commit which modified "$1/Dockerfile" or any file COPY'd from "$1/Dockerfile"
+# ...but not 'COPY --from=' previous build stages
 dirCommit() {
 	local dir="$1"; shift
 	(
-		cd "$dir"
-		fileCommit \
-			Dockerfile \
-			$(git show HEAD:./Dockerfile | awk '
-				toupper($1) == "COPY" {
-					for (i = 2; i < NF; i++) {
+	cd "$dir"
+	fileCommit \
+		Dockerfile \
+		$(git show HEAD:./Dockerfile | awk '
+			/^COPY/ {
+			copy_arg = substr($2,1,6)
+			if (copy_arg != "--from" && copy_arg != "--link")
+				for (i = 2; i < NF; i++) {
+					copy_arg_arg = substr($i,1,2)
+					if (copy_arg_arg != "--")
 						print $i
-					}
 				}
-			')
+			}
+		')
 	)
 }
 
@@ -48,13 +53,13 @@ getArches() {
 	local officialImagesUrl='https://github.com/docker-library/official-images/raw/master/library/'
 
 	eval "declare -g -A parentRepoToArches=( $(
-		find -name 'Dockerfile' -exec awk '
-				toupper($1) == "FROM" && $2 !~ /^('"$repo"'|scratch|.*\/.*)(:|$)/ {
-					print "'"$officialImagesUrl"'" $2
-				}
-			' '{}' + \
-			| sort -u \
-			| xargs bashbrew cat --format '[{{ .RepoName }}:{{ .TagName }}]="{{ join " " .TagEntry.Architectures }}"'
+		find -name Dockerfile -exec awk '
+            /^FROM/ {
+                if (index($2, ":") > 0 && index($2, "'"$repo"'") == 0) {
+                    print "'"$officialImagesUrl"'" $2
+                }
+            }' '{}' + | sort -u | \
+        xargs bashbrew cat --format '[{{ .RepoName }}:{{ .TagName }}]="{{ join " " .TagEntry.Architectures }}"'
 	) )"
 }
 getArches 'rabbitmq'
@@ -118,7 +123,14 @@ for version; do
 			variantAliases=( "${variantAliases[@]//latest-/}" )
 		fi
 
-		variantParent="$(awk 'toupper($1) == "FROM" { print $2 }' "$dir/Dockerfile")"
+		variantParent="$(awk '
+            /^FROM/ {
+                if (index($2, ":") > 0) {
+                    print $2
+                    exit 0
+                }
+            }
+        ' "$dir/Dockerfile")"
 		variantArches="${parentRepoToArches[$variantParent]}"
 
 		echo
