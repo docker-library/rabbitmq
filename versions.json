@@ -13,14 +13,14 @@
   "3.10-rc": null,
   "3.11": {
     "openssl": {
-      "sha256": "d7939ce614029cdff0b6c20f0e2e5703158a489a72b2507b8bd51bf8c8fd10ca",
-      "version": "1.1.1q"
+      "sha256": "c5ac01e760ee6ff0dab61d6b2bbd30146724d063eb322180c6f18a6f74e4b6aa",
+      "version": "1.1.1s"
     },
     "otp": {
       "sha256": "5442dea694e7555d479d80bc81f1428020639c258f8e40b2052732d1cc95cca5",
       "version": "25.1.2"
     },
-    "version": "3.11.2"
+    "version": "3.11.3"
   },
   "3.11-rc": null,
   "3.9": {
