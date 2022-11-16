@@ -5,17 +5,18 @@
 #
 
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
-FROM alpine:3.17
+FROM alpine:3.17 as build-base
 
 RUN apk add --no-cache \
-# grab su-exec for easy step-down from root
-		'su-exec>=0.2' \
-# bash for docker-entrypoint.sh
-		bash \
-# "ps" for "rabbitmqctl wait" (https://github.com/docker-library/rabbitmq/issues/162)
-		procps \
-# Bring in tzdata so users could set the timezones through the environment
-		tzdata
+	build-base \
+	dpkg-dev \
+	dpkg \
+	gnupg \
+	libc-dev \
+	linux-headers \
+	ncurses-dev
+
+FROM build-base as openssl-builder
 
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
 ARG PGP_KEYSERVER=keyserver.ubuntu.com
@@ -40,25 +41,12 @@ ENV OTP_SOURCE_SHA256="5442dea694e7555d479d80bc81f1428020639c258f8e40b2052732d1c
 # gnupg: Required to verify OpenSSL artefacts
 # libncurses5-dev: Required for Erlang/OTP new shell & observer_cli - https://github.com/zhongwencool/observer_cli
 RUN set -eux; \
-	\
-	apk add --no-cache --virtual .build-deps \
-		autoconf \
-		dpkg-dev dpkg \
-		g++ \
-		gcc \
-		gnupg \
-		libc-dev \
-		linux-headers \
-		make \
-		ncurses-dev \
-	; \
+# /usr/local/src doesn't exist in Alpine by default
+	mkdir -p /usr/local/src; \
 	\
 	OPENSSL_SOURCE_URL="https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz"; \
 	OPENSSL_PATH="/usr/local/src/openssl-$OPENSSL_VERSION"; \
 	OPENSSL_CONFIG_DIR=/usr/local/etc/ssl; \
-	\
-# /usr/local/src doesn't exist in Alpine by default
-	mkdir /usr/local/src; \
 	\
 # Required by the crypto & ssl Erlang/OTP applications
 	wget --output-document "$OPENSSL_PATH.tar.gz.asc" "$OPENSSL_SOURCE_URL.asc"; \
@@ -89,13 +77,18 @@ RUN set -eux; \
 # Compile, install OpenSSL, verify that the command-line works & development headers are present
 	make -j "$(getconf _NPROCESSORS_ONLN)"; \
 	make install_sw install_ssldirs; \
-	cd ..; \
-	rm -rf "$OPENSSL_PATH"*; \
 # use Alpine's CA certificates
 	rmdir "$OPENSSL_CONFIG_DIR/certs" "$OPENSSL_CONFIG_DIR/private"; \
-	ln -sf /etc/ssl/certs /etc/ssl/private "$OPENSSL_CONFIG_DIR"; \
+	ln -sf /etc/ssl/certs /etc/ssl/private "$OPENSSL_CONFIG_DIR"
+
 # smoke test
-	openssl version; \
+RUN openssl version
+
+FROM openssl-builder as erlang-builder
+
+RUN set -eux; \
+# /usr/local/src doesn't exist in Alpine by default
+	mkdir -p /usr/local/src; \
 	\
 	OTP_SOURCE_URL="https://github.com/erlang/otp/releases/download/OTP-$OTP_VERSION/otp_src_$OTP_VERSION.tar.gz"; \
 	OTP_PATH="/usr/local/src/otp-$OTP_VERSION"; \
@@ -111,7 +104,6 @@ RUN set -eux; \
 # ERL_TOP is required for Erlang/OTP makefiles to find the absolute path for the installation
 	cd "$OTP_PATH"; \
 	export ERL_TOP="$OTP_PATH"; \
-	./otp_build autoconf; \
 	export CFLAGS='-g -O2'; \
 # add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
 	export CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib"; \
@@ -160,36 +152,59 @@ RUN set -eux; \
 # Compile & install Erlang/OTP
 	make -j "$(getconf _NPROCESSORS_ONLN)" GEN_OPT_FLGS="-O2 -fno-strict-aliasing"; \
 	make install; \
-	cd ..; \
-	rm -rf \
-		"$OTP_PATH"* \
-		/usr/local/lib/erlang/lib/*/examples \
-		/usr/local/lib/erlang/lib/*/src \
-	; \
 	\
+# Remove unnecessary files
+	find /usr/local/lib/erlang -type d -name examples -exec rm -rf '{}' +; \
+	find /usr/local/lib/erlang -type d -name src -exec rm -rf '{}' +; \
+	find /usr/local/lib/erlang -type d -name include -exec rm -rf '{}' +
+
+# Check that Erlang/OTP crypto & ssl were compiled against OpenSSL correctly
+RUN erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
+
+FROM alpine:3.17
+
+COPY --from=erlang-builder /usr/local/bin/ /usr/local/bin/
+COPY --from=erlang-builder /usr/local/etc/ssl/ /usr/local/etc/ssl/
+COPY --from=erlang-builder /usr/local/lib/ /usr/local/lib/
+
+ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
+
+RUN set -eux; \
+# Configure OpenSSL to use system certs
+	ln -vsf /etc/ssl/certs /etc/ssl/private /usr/local/etc/ssl; \
+	\
+# Ensure run-time dependencies are installed
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
 			| tr ',' '\n' \
 			| sort -u \
-			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+			| awk 'system("test -e /usr/local/lib/" $1) == 0 { next } { print "so:" $1 }' \
 	)"; \
 	apk add --no-cache --virtual .otp-run-deps $runDeps; \
-	apk del --no-network .build-deps; \
 	\
-# Check that OpenSSL still works after purging build dependencies
+# Check that OpenSSL still works after copying from previous builder
 	openssl version; \
+	\
 # Check that Erlang/OTP crypto & ssl were compiled against OpenSSL correctly
-	erl -noshell -eval 'io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
-
-ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
+	erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'; \
+	\
 # Create rabbitmq system user & group, fix permissions & allow root user to connect to the RabbitMQ Erlang VM
-RUN set -eux; \
 	addgroup -g 101 -S rabbitmq; \
 	adduser -u 100 -S -h "$RABBITMQ_DATA_DIR" -G rabbitmq rabbitmq; \
 	mkdir -p "$RABBITMQ_DATA_DIR" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
 	chown -fR rabbitmq:rabbitmq "$RABBITMQ_DATA_DIR" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
 	chmod 777 "$RABBITMQ_DATA_DIR" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
-	ln -sf "$RABBITMQ_DATA_DIR/.erlang.cookie" /root/.erlang.cookie
+	ln -sf "$RABBITMQ_DATA_DIR/.erlang.cookie" /root/.erlang.cookie; \
+	\
+	apk add --no-cache \
+# grab su-exec for easy step-down from root
+		'su-exec>=0.2' \
+# bash for docker-entrypoint.sh
+		bash \
+# "ps" for "rabbitmqctl wait" (https://github.com/docker-library/rabbitmq/issues/162)
+		procps \
+# Bring in tzdata so users could set the timezones through the environment
+		tzdata
 
 # Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
 ENV RABBITMQ_VERSION 3.10.12
@@ -202,6 +217,8 @@ ENV PATH=$RABBITMQ_HOME/sbin:$PATH
 
 # Install RabbitMQ
 RUN set -eux; \
+# /usr/local/src doesn't exist in Alpine by default
+	mkdir -p /usr/local/src; \
 	\
 	apk add --no-cache --virtual .build-deps \
 		gnupg \
@@ -229,7 +246,7 @@ RUN set -eux; \
 	grep -qE '^SYS_PREFIX=$' "$RABBITMQ_HOME/sbin/rabbitmq-defaults"; \
 	chown -R rabbitmq:rabbitmq "$RABBITMQ_HOME"; \
 	\
-	apk del .build-deps; \
+	apk del --no-network .build-deps; \
 	\
 # verify assumption of no stale cookies
 	[ ! -e "$RABBITMQ_DATA_DIR/.erlang.cookie" ]; \

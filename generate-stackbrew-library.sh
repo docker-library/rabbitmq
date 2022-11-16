@@ -34,8 +34,11 @@ dirCommit() {
 		fileCommit \
 			Dockerfile \
 			$(git show HEAD:./Dockerfile | awk '
-				toupper($1) == "COPY" {
+				/^COPY/ {
 					for (i = 2; i < NF; i++) {
+						if ($i ~ /^--from=/) {
+							next
+						}
 						print $i
 					}
 				}
@@ -48,13 +51,13 @@ getArches() {
 	local officialImagesUrl='https://github.com/docker-library/official-images/raw/master/library/'
 
 	eval "declare -g -A parentRepoToArches=( $(
-		find -name 'Dockerfile' -exec awk '
-				toupper($1) == "FROM" && $2 !~ /^('"$repo"'|scratch|.*\/.*)(:|$)/ {
+		find -name Dockerfile -exec awk '
+			/^FROM/ {
+				if (index($2, ":") > 0 && index($2, "'"$repo"'") == 0) {
 					print "'"$officialImagesUrl"'" $2
 				}
-			' '{}' + \
-			| sort -u \
-			| xargs bashbrew cat --format '[{{ .RepoName }}:{{ .TagName }}]="{{ join " " .TagEntry.Architectures }}"'
+			}' '{}' + | sort -u \
+		| xargs bashbrew cat --format '[{{ .RepoName }}:{{ .TagName }}]="{{ join " " .TagEntry.Architectures }}"'
 	) )"
 }
 getArches 'rabbitmq'
@@ -65,6 +68,7 @@ cat <<-EOH
 Maintainers: Tianon Gravi <admwiggin@gmail.com> (@tianon),
              Joseph Ferguson <yosifkit@gmail.com> (@yosifkit)
 GitRepo: https://github.com/docker-library/rabbitmq.git
+Builder: buildkit
 EOH
 
 # prints "$2$1$3$1...$N"
@@ -118,7 +122,13 @@ for version; do
 			variantAliases=( "${variantAliases[@]//latest-/}" )
 		fi
 
-		variantParent="$(awk 'toupper($1) == "FROM" { print $2 }' "$dir/Dockerfile")"
+		variantParent="$(awk '
+			/^FROM/ {
+				if (index($2, ":") > 0) {
+					print $2
+					exit 0
+				}
+			}' "$dir/Dockerfile")"
 		variantArches="${parentRepoToArches[$variantParent]}"
 
 		echo
