@@ -125,7 +125,7 @@ RUN set -eux; \
 		--enable-clock-gettime \
 		--enable-hybrid-heap \
 		--enable-kernel-poll \
-		--enable-shared-zlib \
+		--enable-builtin-zlib \
 		--enable-smp-support \
 		--enable-threads \
 		--with-microstate-accounting=extra \
