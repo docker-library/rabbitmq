@@ -263,10 +263,7 @@ RUN set -eux; \
 	rm "$RABBITMQ_DATA_DIR/.erlang.cookie"
 
 # Enable Prometheus-style metrics by default (https://github.com/docker-library/rabbitmq/issues/419)
-RUN set -eux; \
-	su-exec rabbitmq rabbitmq-plugins enable --offline rabbitmq_prometheus; \
-	echo 'management_agent.disable_metrics_collector = true' > /etc/rabbitmq/conf.d/management_agent.disable_metrics_collector.conf; \
-	chown rabbitmq:rabbitmq /etc/rabbitmq/conf.d/management_agent.disable_metrics_collector.conf
+RUN su-exec rabbitmq rabbitmq-plugins enable --offline rabbitmq_prometheus
 
 # Added for backwards compatibility - users can simply COPY custom plugins to /plugins
 RUN ln -sf /opt/rabbitmq/plugins /plugins
@@ -281,7 +278,7 @@ VOLUME $RABBITMQ_DATA_DIR
 # https://docs.docker.com/samples/library/ubuntu/#locales
 ENV LANG=C.UTF-8 LANGUAGE=C.UTF-8 LC_ALL=C.UTF-8
 
-COPY --chown=rabbitmq:rabbitmq 10-defaults.conf /etc/rabbitmq/conf.d/
+COPY --chown=rabbitmq:rabbitmq 10-defaults.conf 20-management_agent.disable_metrics_collector.conf /etc/rabbitmq/conf.d/
 COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
