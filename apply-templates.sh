@@ -48,7 +48,7 @@ for version; do
 			gawk -f "$jqt" "Dockerfile-$variant.template"
 		} > "$version/$variant/Dockerfile"
 
-		cp -a 10-defaults.conf docker-entrypoint.sh "$version/$variant/"
+		cp -a 10-defaults.conf 20-management_agent.disable_metrics_collector.conf docker-entrypoint.sh "$version/$variant/"
 
 		if [ "$variant" = 'alpine' ]; then
 			sed -i -e 's/gosu/su-exec/g' "$version/$variant/docker-entrypoint.sh"
