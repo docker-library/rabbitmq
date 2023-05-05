@@ -29,8 +29,8 @@
       "version": "3.0.8"
     },
     "otp": {
-      "sha256": "1d5e4b97a7cfa0afa8787ae60a66426806f55897085dde1fd553ac2db39a6082",
-      "version": "25.3.1"
+      "sha256": "aed4e4726cdc587ab820c8379d63e511e46a1b1cc0c59d6a720b51ae625b2510",
+      "version": "25.3.2"
     },
     "version": "3.12.0-rc.1"
   },
