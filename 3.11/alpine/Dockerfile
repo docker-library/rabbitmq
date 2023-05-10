@@ -5,7 +5,7 @@
 #
 
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
-FROM alpine:3.17 as build-base
+FROM alpine:3.18 as build-base
 
 RUN apk add --no-cache \
 	build-base \
@@ -161,7 +161,7 @@ RUN set -eux; \
 # Check that Erlang/OTP crypto & ssl were compiled against OpenSSL correctly
 RUN erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
 
-FROM alpine:3.17
+FROM alpine:3.18
 
 COPY --from=erlang-builder /usr/local/bin/ /usr/local/bin/
 COPY --from=erlang-builder /usr/local/etc/ssl/ /usr/local/etc/ssl/
