@@ -210,7 +210,7 @@ RUN set -eux; \
 			| sort -u \
 			| awk 'system("test -e /usr/local/lib/" $1) == 0 { next } { print "so:" $1 }' \
 	)"; \
-	apk add --no-cache --virtual .otp-run-deps $runDeps; \
+	apk add --no-network --virtual .otp-run-deps $runDeps; \
 	\
 # Check that OpenSSL still works after purging build dependencies
 	sed -i.ORIG -e '/\.include.*fips/s/.*/.include \/usr\/local\/etc\/ssl\/fipsmodule.cnf/' \
