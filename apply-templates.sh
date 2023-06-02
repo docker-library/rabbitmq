@@ -32,9 +32,12 @@ generated_warning() {
 for version; do
 	export version
 
-	if jq -e '.[env.version] | not' versions.json > /dev/null; then
-		echo "deleting $version ..."
+	if [ -d "$version" ]; then
 		rm -rf "$version"
+	fi
+
+	if jq -e '.[env.version] | not' versions.json > /dev/null; then
+		echo "skipping $version ..."
 		continue
 	fi
 
@@ -42,6 +45,8 @@ for version; do
 		export variant
 
 		echo "processing $version/$variant ..."
+
+		mkdir -p "$version/$variant"
 
 		{
 			generated_warning
@@ -55,6 +60,8 @@ for version; do
 		fi
 
 		echo "processing $version/$variant/management ..."
+
+		mkdir -p "$version/$variant/management"
 
 		{
 			generated_warning
