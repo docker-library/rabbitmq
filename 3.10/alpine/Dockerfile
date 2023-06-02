@@ -24,15 +24,15 @@ ARG PGP_KEYSERVER=keyserver.ubuntu.com
 # run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.10 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.10/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
-ENV OPENSSL_VERSION 3.0.8
-ENV OPENSSL_SOURCE_SHA256="6c13d2bf38fdf31eac3ce2a347073673f5d63263398f1f69d0df4a41253e4b3e"
+ENV OPENSSL_VERSION 3.0.9
+ENV OPENSSL_SOURCE_SHA256="eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90"
 # https://www.openssl.org/community/otc.html
 ENV OPENSSL_PGP_KEY_IDS="0x8657ABB260F056B1E5190839D9C4D26D0E604491 0xB7C1C14360F353A36862E4D5231C84CDDCC69C45 0xC1F33DD8CE1D4CC613AF14DA9195C48241FBF7DD 0x95A9908DDFA16830BE9FB9003D30A3A9FF1360DC 0x7953AC1FBC3DC8B3B292393ED5E9E43F7DF9EE8C 0xA21FAB74B0088AA361152586B8EF1A6BA9DA2D5C 0xE5E52560DD91C556DDBDA5D02064C53641C25E5D"
 
-ENV OTP_VERSION 25.3.2
+ENV OTP_VERSION 25.3.2.1
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="aed4e4726cdc587ab820c8379d63e511e46a1b1cc0c59d6a720b51ae625b2510"
+ENV OTP_SOURCE_SHA256="197e597f3216b78ffb8f55d5663193151694c47489653ab04472f7dc4afc7079"
 
 # Install dependencies required to build Erlang/OTP from source
 # https://erlang.org/doc/installation_guide/INSTALL.html
@@ -166,6 +166,7 @@ FROM alpine:3.18
 COPY --from=erlang-builder /usr/local/bin/ /usr/local/bin/
 COPY --from=erlang-builder /usr/local/etc/ssl/ /usr/local/etc/ssl/
 COPY --from=erlang-builder /usr/local/lib/ /usr/local/lib/
+COPY --from=erlang-builder /usr/local/lib64/ /usr/local/lib64/
 
 ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
 
@@ -178,7 +179,7 @@ RUN set -eux; \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
 			| tr ',' '\n' \
 			| sort -u \
-			| awk 'system("test -e /usr/local/lib/" $1) == 0 { next } { print "so:" $1 }' \
+			| awk 'system("test -e /usr/local/lib64/" $1) == 0 { next } { print "so:" $1 }' \
 	)"; \
 	apk add --no-cache --virtual .otp-run-deps $runDeps; \
 	\
