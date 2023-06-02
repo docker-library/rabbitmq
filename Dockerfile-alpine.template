@@ -196,6 +196,7 @@ FROM alpine:3.18
 COPY --from=erlang-builder /usr/local/bin/ /usr/local/bin/
 COPY --from=erlang-builder /usr/local/etc/ssl/ /usr/local/etc/ssl/
 COPY --from=erlang-builder /usr/local/lib/ /usr/local/lib/
+COPY --from=erlang-builder /usr/local/lib64/ /usr/local/lib64/
 
 ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
 
@@ -208,7 +209,7 @@ RUN set -eux; \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
 			| tr ',' '\n' \
 			| sort -u \
-			| awk 'system("test -e /usr/local/lib/" $1) == 0 { next } { print "so:" $1 }' \
+			| awk 'system("test -e /usr/local/lib64/" $1) == 0 { next } { print "so:" $1 }' \
 	)"; \
 	apk add --no-cache --virtual .otp-run-deps $runDeps; \
 	\
