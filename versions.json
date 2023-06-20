@@ -1,48 +1,72 @@
 {
   "3.10": {
+    "alpine": {
+      "version": "3.18"
+    },
     "openssl": {
-      "sha256": "eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90",
-      "version": "3.0.9"
+      "sha256": "b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674",
+      "version": "3.1.1"
     },
     "otp": {
       "sha256": "83a36f3d90deef36adb615bbfb46cd327f0b76b7668e1f7f253fd66b4ae24518",
       "version": "25.3.2.2"
+    },
+    "ubuntu": {
+      "version": "22.04"
     },
     "version": "3.10.24"
   },
   "3.10-rc": null,
   "3.11": {
+    "alpine": {
+      "version": "3.18"
+    },
     "openssl": {
-      "sha256": "eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90",
-      "version": "3.0.9"
+      "sha256": "b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674",
+      "version": "3.1.1"
     },
     "otp": {
       "sha256": "83a36f3d90deef36adb615bbfb46cd327f0b76b7668e1f7f253fd66b4ae24518",
       "version": "25.3.2.2"
+    },
+    "ubuntu": {
+      "version": "22.04"
     },
     "version": "3.11.18"
   },
   "3.11-rc": null,
   "3.12": {
+    "alpine": {
+      "version": "3.18"
+    },
     "openssl": {
-      "sha256": "eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90",
-      "version": "3.0.9"
+      "sha256": "b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674",
+      "version": "3.1.1"
     },
     "otp": {
       "sha256": "83a36f3d90deef36adb615bbfb46cd327f0b76b7668e1f7f253fd66b4ae24518",
       "version": "25.3.2.2"
+    },
+    "ubuntu": {
+      "version": "22.04"
     },
     "version": "3.12.0"
   },
   "3.12-rc": null,
   "3.9": {
+    "alpine": {
+      "version": "3.18"
+    },
     "openssl": {
-      "sha256": "eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90",
-      "version": "3.0.9"
+      "sha256": "b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674",
+      "version": "3.1.1"
     },
     "otp": {
       "sha256": "83a36f3d90deef36adb615bbfb46cd327f0b76b7668e1f7f253fd66b4ae24518",
       "version": "25.3.2.2"
+    },
+    "ubuntu": {
+      "version": "22.04"
     },
     "version": "3.9.29"
   },

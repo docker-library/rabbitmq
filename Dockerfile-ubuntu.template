@@ -1,6 +1,6 @@
 # The official Canonical Ubuntu Focal image is ideal from a security perspective,
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
-FROM ubuntu:20.04 as build-base
+FROM ubuntu:{{ .ubuntu.version }} as build-base
 
 RUN set -eux; \
 	apt-get update; \
@@ -191,7 +191,7 @@ RUN set -eux; \
 # Check that Erlang/OTP crypto & ssl were compiled against OpenSSL correctly
 RUN erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
 
-FROM ubuntu:20.04
+FROM ubuntu:{{ .ubuntu.version }}
 
 COPY --from=erlang-builder /usr/local/bin/ /usr/local/bin/
 COPY --from=erlang-builder /usr/local/etc/ssl/ /usr/local/etc/ssl/
