@@ -110,10 +110,10 @@ RUN set -eux; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
-# JIT is only supported on amd64 (until 24.x+1, where it will support arm64 as well); https://github.com/erlang/otp/blob/OTP-24.0.5/erts/configure#L21694-L21709 / https://github.com/erlang/otp/pull/4869
+# JIT is only supported on amd64 + arm64; https://github.com/erlang/otp/blob/OTP-25.3.2.2/erts/configure#L24306-L24347
 	jitFlag=; \
 	case "$dpkgArch" in \
-		amd64) jitFlag='--enable-jit' ;; \
+		amd64 | arm64) jitFlag='--enable-jit' ;; \
 	esac; \
 	./configure \
 		--host="$hostArch" \
