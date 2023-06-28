@@ -101,7 +101,7 @@ RUN set -eux; \
 	./config \
 		enable-fips \
 		--openssldir="$OPENSSL_CONFIG_DIR" \
-		--libdir="lib/$debMultiarch" \
+		--libdir="/usr/local/lib/$debMultiarch" \
 # add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib/$debMultiarch is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
 		-Wl,-rpath="/usr/local/lib/$debMultiarch" \
 	; \
