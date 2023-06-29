@@ -71,8 +71,9 @@ RUN set -eux; \
 	./config \
 		enable-fips \
 		--openssldir="$OPENSSL_CONFIG_DIR" \
-# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib64 is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
-		-Wl,-rpath=/usr/local/lib64 \
+		--libdir=/usr/local/lib \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+		-Wl,-rpath=/usr/local/lib \
 	; \
 # Compile, install OpenSSL, verify that the command-line works & development headers are present
 	make -j "$(getconf _NPROCESSORS_ONLN)"; \
@@ -105,8 +106,8 @@ RUN set -eux; \
 	cd "$OTP_PATH"; \
 	export ERL_TOP="$OTP_PATH"; \
 	export CFLAGS='-g -O2'; \
-# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib64 is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
-	export CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib64"; \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+	export CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib"; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
@@ -166,7 +167,6 @@ FROM alpine:3.18
 COPY --from=erlang-builder /usr/local/bin/ /usr/local/bin/
 COPY --from=erlang-builder /usr/local/etc/ssl/ /usr/local/etc/ssl/
 COPY --from=erlang-builder /usr/local/lib/ /usr/local/lib/
-COPY --from=erlang-builder /usr/local/lib64/ /usr/local/lib64/
 
 ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
 
@@ -179,7 +179,7 @@ RUN set -eux; \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
 			| tr ',' '\n' \
 			| sort -u \
-			| awk 'system("test -e /usr/local/lib64/" $1) == 0 { next } { print "so:" $1 }' \
+			| awk 'system("test -e /usr/local/lib/" $1) == 0 { next } { print "so:" $1 }' \
 	)"; \
 	apk add --no-cache --virtual .otp-run-deps $runDeps; \
 	\
