@@ -50,7 +50,7 @@
     "ubuntu": {
       "version": "22.04"
     },
-    "version": "3.12.1"
+    "version": "3.12.2"
   },
   "3.12-rc": {
     "alpine": {
