@@ -68,7 +68,7 @@
     "ubuntu": {
       "version": "22.04"
     },
-    "version": "3.13.0-beta.2"
+    "version": "3.13.0-beta.3"
   },
   "3.9": {
     "alpine": {
