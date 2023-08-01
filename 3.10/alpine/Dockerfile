@@ -64,16 +64,33 @@ RUN set -eux; \
 # Configure OpenSSL for compilation
 	cd "$OPENSSL_PATH"; \
 # OpenSSL's "config" script uses a lot of "uname"-based target detection...
-	MACHINE="$(dpkg-architecture --query DEB_BUILD_GNU_CPU)" \
+	apkArch="$(apk --print-arch)"; \
+# https://dl-cdn.alpinelinux.org/alpine/edge/main/
+	case "$apkArch" in \
+# https://github.com/openssl/openssl/blob/openssl-3.1.1/Configurations/10-main.conf#L860 (look for "linux-" and "linux64-" keys)
+		aarch64) opensslMachine='linux-aarch64' ;; \
+# https://github.com/openssl/openssl/blob/openssl-3.1.1/Configurations/10-main.conf#L736-L766
+		armhf) opensslMachine='linux-armv4'; opensslExtraConfig='-march=armv6' ;; \
+		armv7) opensslMachine='linux-armv4'; opensslExtraConfig='-march=armv7-a' ;; \
+		ppc64le) opensslMachine='linux-ppc64le' ;; \
+		riscv64) opensslMachine='linux64-riscv64' ;; \
+		s390x) opensslMachine='linux64-s390x' ;; \
+		x86) opensslMachine='linux-x86' ;; \
+		x86_64) opensslMachine='linux-x86_64' ;; \
+		*) echo >&2 "error: unsupported arch: '$apkArch'"; exit 1 ;; \
+	esac; \
+	MACHINE="$opensslMachine" \
 	RELEASE="4.x.y-z" \
 	SYSTEM='Linux' \
 	BUILD='???' \
-	./config \
+	./Configure \
+		"$opensslMachine" \
 		enable-fips \
 		--openssldir="$OPENSSL_CONFIG_DIR" \
 		--libdir=/usr/local/lib \
 # add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
 		-Wl,-rpath=/usr/local/lib \
+		${opensslExtraConfig:-} \
 	; \
 # Compile, install OpenSSL, verify that the command-line works & development headers are present
 	make -j "$(getconf _NPROCESSORS_ONLN)"; \

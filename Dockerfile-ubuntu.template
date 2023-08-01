@@ -94,16 +94,33 @@ RUN set -eux; \
 # without specifying "--libdir", Erlang will fail during "crypto:supports()" looking for a "pthread_atfork" function that doesn't exist (but only on arm32v7/armhf??)
 	debMultiarch="$(dpkg-architecture --query DEB_HOST_MULTIARCH)"; \
 # OpenSSL's "config" script uses a lot of "uname"-based target detection...
-	MACHINE="$(dpkg-architecture --query DEB_BUILD_GNU_CPU)" \
+	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
+# https://deb.debian.org/debian/dists/unstable/main/
+	case "$dpkgArch" in \
+# https://github.com/openssl/openssl/blob/openssl-3.1.1/Configurations/10-main.conf#L860 (look for "linux-" and "linux64-" keys)
+# https://github.com/openssl/openssl/blob/openssl-3.1.1/Configurations/10-main.conf#L860 (look for "linux-" and "linux64-" keys)
+		amd64) opensslMachine='linux-x86_64' ;; \
+		arm64) opensslMachine='linux-aarch64' ;; \
+# https://github.com/openssl/openssl/blob/openssl-3.1.1/Configurations/10-main.conf#L736-L766
+		armhf) opensslMachine='linux-armv4'; opensslExtraConfig='-march=armv7-a' ;; \
+		i386) opensslMachine='linux-x86' ;; \
+		ppc64el) opensslMachine='linux-ppc64le' ;; \
+		riscv64) opensslMachine='linux64-riscv64' ;; \
+		s390x) opensslMachine='linux64-s390x' ;; \
+		*) echo >&2 "error: unsupported arch: '$apkArch'"; exit 1 ;; \
+	esac; \
+	MACHINE="$opensslMachine" \
 	RELEASE="4.x.y-z" \
 	SYSTEM='Linux' \
 	BUILD='???' \
-	./config \
+	./Configure \
+		"$opensslMachine" \
 		enable-fips \
 		--openssldir="$OPENSSL_CONFIG_DIR" \
 		--libdir="/usr/local/lib/$debMultiarch" \
 # add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib/$debMultiarch is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
 		-Wl,-rpath="/usr/local/lib/$debMultiarch" \
+		${opensslExtraConfig:-} \
 	; \
 # Compile, install OpenSSL, verify that the command-line works & development headers are present
 	make -j "$(getconf _NPROCESSORS_ONLN)"; \
