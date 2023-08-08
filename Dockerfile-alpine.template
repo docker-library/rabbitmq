@@ -21,6 +21,7 @@ ARG PGP_KEYSERVER=keyserver.ubuntu.com
 ENV OPENSSL_VERSION {{ .openssl.version }}
 ENV OPENSSL_SOURCE_SHA256="{{ .openssl.sha256 }}"
 # https://www.openssl.org/community/otc.html
+# https://www.openssl.org/source/
 ENV OPENSSL_PGP_KEY_IDS="{{
 [
 	# Dmitry Belyavsky
@@ -51,6 +52,10 @@ ENV OPENSSL_PGP_KEY_IDS="{{
 	# Matthias St. Pierre
 
 	# Nicola Tuveri
+
+	# OpenSSL OMC key
+	# https://github.com/openssl/web/pull/415
+	"EFC0 A467 D613 CB83 C7ED 6D30 D894 E2CE 8B3D 79F5",
 
 	# hack for trailing comma above
 	empty
