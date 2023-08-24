@@ -35,6 +35,10 @@ ENV OTP_VERSION 26.0.2
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
 ENV OTP_SOURCE_SHA256="47853ea9230643a0a31004433f07a71c1b92d6e0094534f629e3b75dbc62f193"
 
+# install openssl & erlang to a path that isn't auto-checked for libs to prevent accidental use by system packages
+ENV INSTALL_PATH_PREFIX='/usr/local/erlang'
+ENV PATH="$INSTALL_PATH_PREFIX/bin:$PATH"
+
 # Install dependencies required to build Erlang/OTP from source
 # https://erlang.org/doc/installation_guide/INSTALL.html
 # dpkg-dev: Required to set up host & build type when compiling Erlang/OTP
@@ -46,7 +50,7 @@ RUN set -eux; \
 	\
 	OPENSSL_SOURCE_URL="https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz"; \
 	OPENSSL_PATH="/usr/local/src/openssl-$OPENSSL_VERSION"; \
-	OPENSSL_CONFIG_DIR=/usr/local/etc/ssl; \
+	OPENSSL_CONFIG_DIR="$INSTALL_PATH_PREFIX/etc/ssl"; \
 	\
 # Required by the crypto & ssl Erlang/OTP applications
 	wget --output-document "$OPENSSL_PATH.tar.gz.asc" "$OPENSSL_SOURCE_URL.asc"; \
@@ -71,8 +75,9 @@ RUN set -eux; \
 # https://github.com/openssl/openssl/blob/openssl-3.1.1/Configurations/10-main.conf#L860 (look for "linux-" and "linux64-" keys)
 		aarch64) opensslMachine='linux-aarch64' ;; \
 # https://github.com/openssl/openssl/blob/openssl-3.1.1/Configurations/10-main.conf#L736-L766
-		armhf) opensslMachine='linux-armv4'; opensslExtraConfig='-march=armv6' ;; \
-		armv7) opensslMachine='linux-armv4'; opensslExtraConfig='-march=armv7-a' ;; \
+# https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html
+		armhf) opensslMachine='linux-armv4'; opensslExtraConfig='-march=armv6+fp' ;; \
+		armv7) opensslMachine='linux-armv4'; opensslExtraConfig='-march=armv7-a+fp' ;; \
 		ppc64le) opensslMachine='linux-ppc64le' ;; \
 		riscv64) opensslMachine='linux64-riscv64' ;; \
 		s390x) opensslMachine='linux64-s390x' ;; \
@@ -87,10 +92,11 @@ RUN set -eux; \
 	./Configure \
 		"$opensslMachine" \
 		enable-fips \
+		--prefix="$INSTALL_PATH_PREFIX" \
 		--openssldir="$OPENSSL_CONFIG_DIR" \
-		--libdir=/usr/local/lib \
-# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
-		-Wl,-rpath=/usr/local/lib \
+		--libdir="$INSTALL_PATH_PREFIX/lib" \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure "$INSTALL_PATH_PREFIX/lib" is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+		-Wl,-rpath="$INSTALL_PATH_PREFIX/lib" \
 		${opensslExtraConfig:-} \
 	; \
 # Compile, install OpenSSL, verify that the command-line works & development headers are present
@@ -124,8 +130,8 @@ RUN set -eux; \
 	cd "$OTP_PATH"; \
 	export ERL_TOP="$OTP_PATH"; \
 	export CFLAGS='-g -O2'; \
-# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
-	export CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib"; \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure "$INSTALL_PATH_PREFIX/lib" is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+	export CFLAGS="$CFLAGS -Wl,-rpath=$INSTALL_PATH_PREFIX/lib"; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
@@ -135,19 +141,20 @@ RUN set -eux; \
 		amd64 | arm64) jitFlag='--enable-jit' ;; \
 	esac; \
 	./configure \
+		--prefix="$INSTALL_PATH_PREFIX" \
 		--host="$hostArch" \
 		--build="$buildArch" \
-		--disable-dynamic-ssl-lib \
 		--disable-hipe \
 		--disable-sctp \
 		--disable-silent-rules \
+		--enable-builtin-zlib \
 		--enable-clock-gettime \
 		--enable-hybrid-heap \
 		--enable-kernel-poll \
-		--enable-builtin-zlib \
 		--enable-smp-support \
 		--enable-threads \
 		--with-microstate-accounting=extra \
+		--with-ssl="$INSTALL_PATH_PREFIX" \
 		--without-common_test \
 		--without-debugger \
 		--without-dialyzer \
@@ -173,24 +180,25 @@ RUN set -eux; \
 	make install; \
 	\
 # Remove unnecessary files
-	find /usr/local/lib/erlang -type d -name examples -exec rm -rf '{}' +; \
-	find /usr/local/lib/erlang -type d -name src -exec rm -rf '{}' +; \
-	find /usr/local/lib/erlang -type d -name include -exec rm -rf '{}' +
+	find "$INSTALL_PATH_PREFIX/lib/erlang" -type d -name examples -exec rm -rf '{}' +; \
+	find "$INSTALL_PATH_PREFIX/lib/erlang" -type d -name src -exec rm -rf '{}' +; \
+	find "$INSTALL_PATH_PREFIX/lib/erlang" -type d -name include -exec rm -rf '{}' +
 
 # Check that Erlang/OTP crypto & ssl were compiled against OpenSSL correctly
 RUN erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
 
 FROM alpine:3.18
 
-COPY --from=erlang-builder /usr/local/bin/ /usr/local/bin/
-COPY --from=erlang-builder /usr/local/etc/ssl/ /usr/local/etc/ssl/
-COPY --from=erlang-builder /usr/local/lib/ /usr/local/lib/
+# INSTALL_PATH_PREFIX is in a different stage, so define it again
+ENV INSTALL_PATH_PREFIX /usr/local/erlang
+COPY --from=erlang-builder "$INSTALL_PATH_PREFIX" "$INSTALL_PATH_PREFIX"
+ENV PATH="$INSTALL_PATH_PREFIX/bin:$PATH"
 
 ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
 
 RUN set -eux; \
 # Configure OpenSSL to use system certs
-	ln -vsf /etc/ssl/certs /etc/ssl/private /usr/local/etc/ssl; \
+	ln -vsf /etc/ssl/certs /etc/ssl/private "$INSTALL_PATH_PREFIX/etc/ssl"; \
 	\
 # Ensure run-time dependencies are installed
 	runDeps="$( \
@@ -201,10 +209,10 @@ RUN set -eux; \
 	)"; \
 	apk add --no-cache --virtual .otp-run-deps $runDeps; \
 	\
-# Check that OpenSSL still works after purging build dependencies
-	sed -i.ORIG -e '/\.include.*fips/s/.*/.include \/usr\/local\/etc\/ssl\/fipsmodule.cnf/' \
-	    -e '/# fips =/s/.*/fips = fips_sect/' /usr/local/etc/ssl/openssl.cnf; \
-	sed -i.ORIG -e '/^activate/s/^/#/' /usr/local/etc/ssl/fipsmodule.cnf; \
+# Check that OpenSSL still works after copying from previous builder
+	sed -i.ORIG -e "/\.include.*fips/ s!.*!.include $INSTALL_PATH_PREFIX/etc/ssl/fipsmodule.cnf!" \
+		-e '/# fips =/s/.*/fips = fips_sect/' "$INSTALL_PATH_PREFIX/etc/ssl/openssl.cnf"; \
+	sed -i.ORIG -e '/^activate/s/^/#/' "$INSTALL_PATH_PREFIX/etc/ssl/fipsmodule.cnf"; \
 	openssl version; \
 	openssl version -d; \
 	\
