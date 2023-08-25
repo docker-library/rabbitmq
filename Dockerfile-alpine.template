@@ -247,6 +247,7 @@ RUN set -eux; \
 	sed -i.ORIG -e "/\.include.*fips/ s!.*!.include $INSTALL_PATH_PREFIX/etc/ssl/fipsmodule.cnf!" \
 		-e '/# fips =/s/.*/fips = fips_sect/' "$INSTALL_PATH_PREFIX/etc/ssl/openssl.cnf"; \
 	sed -i.ORIG -e '/^activate/s/^/#/' "$INSTALL_PATH_PREFIX/etc/ssl/fipsmodule.cnf"; \
+	[ "$(command -v openssl)" = "$INSTALL_PATH_PREFIX/bin/openssl" ]; \
 	openssl version; \
 	openssl version -d; \
 	\

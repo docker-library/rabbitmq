@@ -67,7 +67,6 @@ RUN set -eux; \
 # Configure OpenSSL for compilation
 	cd "$OPENSSL_PATH"; \
 # without specifying "--libdir", Erlang will fail during "crypto:supports()" looking for a "pthread_atfork" function that doesn't exist (but only on arm32v7/armhf??)
-	debMultiarch="$(dpkg-architecture --query DEB_HOST_MULTIARCH)"; \
 # OpenSSL's "config" script uses a lot of "uname"-based target detection...
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
 # https://deb.debian.org/debian/dists/unstable/main/
@@ -94,9 +93,9 @@ RUN set -eux; \
 		enable-fips \
 		--prefix="$INSTALL_PATH_PREFIX" \
 		--openssldir="$OPENSSL_CONFIG_DIR" \
-		--libdir="$INSTALL_PATH_PREFIX/lib/$debMultiarch" \
-# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure "$INSTALL_PATH_PREFIX/lib/$debMultiarch" is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
-		-Wl,-rpath="$INSTALL_PATH_PREFIX/lib/$debMultiarch" \
+		--libdir="$INSTALL_PATH_PREFIX/lib" \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure "$INSTALL_PATH_PREFIX/lib" is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+		-Wl,-rpath="$INSTALL_PATH_PREFIX/lib" \
 		${opensslExtraConfig:-} \
 	; \
 # Compile, install OpenSSL, verify that the command-line works & development headers are present
@@ -128,8 +127,8 @@ RUN set -eux; \
 	cd "$OTP_PATH"; \
 	export ERL_TOP="$OTP_PATH"; \
 	CFLAGS="$(dpkg-buildflags --get CFLAGS)"; export CFLAGS; \
-# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure "$INSTALL_PATH_PREFIX/lib/$debMultiarch" is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
-	export CFLAGS="$CFLAGS -Wl,-rpath=$INSTALL_PATH_PREFIX/lib/$(dpkg-architecture --query DEB_HOST_MULTIARCH)"; \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure "$INSTALL_PATH_PREFIX/lib" is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+	export CFLAGS="$CFLAGS -Wl,-rpath=$INSTALL_PATH_PREFIX/lib"; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
@@ -204,6 +203,7 @@ RUN set -eux; \
 	sed -i.ORIG -e "/\.include.*fips/ s!.*!.include $INSTALL_PATH_PREFIX/etc/ssl/fipsmodule.cnf!" \
 		-e '/# fips =/s/.*/fips = fips_sect/' "$INSTALL_PATH_PREFIX/etc/ssl/openssl.cnf"; \
 	sed -i.ORIG -e '/^activate/s/^/#/' "$INSTALL_PATH_PREFIX/etc/ssl/fipsmodule.cnf"; \
+	[ "$(command -v openssl)" = "$INSTALL_PATH_PREFIX/bin/openssl" ]; \
 	openssl version; \
 	openssl version -d; \
 	\
