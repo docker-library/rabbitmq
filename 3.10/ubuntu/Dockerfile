@@ -107,7 +107,7 @@ RUN set -eux; \
 	ln -sf /etc/ssl/certs /etc/ssl/private "$OPENSSL_CONFIG_DIR"
 
 # smoke test
-RUN openssl version
+RUN $OPENSSL_INSTALL_PATH_PREFIX/bin/openssl version
 
 FROM openssl-builder as erlang-builder
 
@@ -189,7 +189,7 @@ RUN erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [cry
 
 FROM ubuntu:22.04
 
-# ERLANG_INSTALL_PATH_PREFIX is in a different stage, so define it again
+# OPENSSL/ERLANG_INSTALL_PATH_PREFIX are defined in a different stage, so define them again
 ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
 ENV OPENSSL_INSTALL_PATH_PREFIX /opt/openssl
 COPY --from=erlang-builder $ERLANG_INSTALL_PATH_PREFIX $ERLANG_INSTALL_PATH_PREFIX
@@ -225,8 +225,8 @@ RUN set -eux; \
 # Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
 ENV RABBITMQ_VERSION 3.10.25
 # https://www.rabbitmq.com/signatures.html#importing-gpg
-ENV RABBITMQ_PGP_KEY_ID="0x0A9AF2115F4687BD29803A206B73A36E6026DFCA"
-ENV RABBITMQ_HOME=/opt/rabbitmq
+ENV RABBITMQ_PGP_KEY_ID 0x0A9AF2115F4687BD29803A206B73A36E6026DFCA
+ENV RABBITMQ_HOME /opt/rabbitmq
 
 # Add RabbitMQ to PATH
 ENV PATH $RABBITMQ_HOME/sbin:$PATH
