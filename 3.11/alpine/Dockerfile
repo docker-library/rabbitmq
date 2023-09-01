@@ -35,6 +35,10 @@ ENV OTP_VERSION 25.3.2.5
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
 ENV OTP_SOURCE_SHA256="1f899b4b1ef8569c08713b76bc54607a09503a1d188e6d61512036188cc356db"
 
+# install openssl & erlang to a path that isn't auto-checked for libs to prevent accidental use by system packages
+ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
+ENV OPENSSL_INSTALL_PATH_PREFIX /opt/openssl
+
 # Install dependencies required to build Erlang/OTP from source
 # https://erlang.org/doc/installation_guide/INSTALL.html
 # dpkg-dev: Required to set up host & build type when compiling Erlang/OTP
@@ -46,7 +50,7 @@ RUN set -eux; \
 	\
 	OPENSSL_SOURCE_URL="https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz"; \
 	OPENSSL_PATH="/usr/local/src/openssl-$OPENSSL_VERSION"; \
-	OPENSSL_CONFIG_DIR=/usr/local/etc/ssl; \
+	OPENSSL_CONFIG_DIR="$OPENSSL_INSTALL_PATH_PREFIX/etc/ssl"; \
 	\
 # Required by the crypto & ssl Erlang/OTP applications
 	wget --output-document "$OPENSSL_PATH.tar.gz.asc" "$OPENSSL_SOURCE_URL.asc"; \
@@ -71,8 +75,9 @@ RUN set -eux; \
 # https://github.com/openssl/openssl/blob/openssl-3.1.1/Configurations/10-main.conf#L860 (look for "linux-" and "linux64-" keys)
 		aarch64) opensslMachine='linux-aarch64' ;; \
 # https://github.com/openssl/openssl/blob/openssl-3.1.1/Configurations/10-main.conf#L736-L766
-		armhf) opensslMachine='linux-armv4'; opensslExtraConfig='-march=armv6' ;; \
-		armv7) opensslMachine='linux-armv4'; opensslExtraConfig='-march=armv7-a' ;; \
+# https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html
+		armhf) opensslMachine='linux-armv4'; opensslExtraConfig='-march=armv6+fp' ;; \
+		armv7) opensslMachine='linux-armv4'; opensslExtraConfig='-march=armv7-a+fp' ;; \
 		ppc64le) opensslMachine='linux-ppc64le' ;; \
 		riscv64) opensslMachine='linux64-riscv64' ;; \
 		s390x) opensslMachine='linux64-s390x' ;; \
@@ -87,10 +92,11 @@ RUN set -eux; \
 	./Configure \
 		"$opensslMachine" \
 		enable-fips \
+		--prefix="$OPENSSL_INSTALL_PATH_PREFIX" \
 		--openssldir="$OPENSSL_CONFIG_DIR" \
-		--libdir=/usr/local/lib \
-# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
-		-Wl,-rpath=/usr/local/lib \
+		--libdir="$OPENSSL_INSTALL_PATH_PREFIX/lib" \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure "$INSTALL_PATH_PREFIX/lib" is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+		-Wl,-rpath="$OPENSSL_INSTALL_PATH_PREFIX/lib" \
 		${opensslExtraConfig:-} \
 	; \
 # Compile, install OpenSSL, verify that the command-line works & development headers are present
@@ -101,7 +107,7 @@ RUN set -eux; \
 	ln -sf /etc/ssl/certs /etc/ssl/private "$OPENSSL_CONFIG_DIR"
 
 # smoke test
-RUN openssl version
+RUN $OPENSSL_INSTALL_PATH_PREFIX/bin/openssl version
 
 FROM openssl-builder as erlang-builder
 
@@ -124,8 +130,8 @@ RUN set -eux; \
 	cd "$OTP_PATH"; \
 	export ERL_TOP="$OTP_PATH"; \
 	export CFLAGS='-g -O2'; \
-# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure /usr/local/lib is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
-	export CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib"; \
+# add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure "$INSTALL_PATH_PREFIX/lib" is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
+	export CFLAGS="$CFLAGS -Wl,-rpath=$OPENSSL_INSTALL_PATH_PREFIX/lib"; \
 	hostArch="$(dpkg-architecture --query DEB_HOST_GNU_TYPE)"; \
 	buildArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	dpkgArch="$(dpkg --print-architecture)"; dpkgArch="${dpkgArch##*-}"; \
@@ -135,19 +141,20 @@ RUN set -eux; \
 		amd64 | arm64) jitFlag='--enable-jit' ;; \
 	esac; \
 	./configure \
+		--prefix="$ERLANG_INSTALL_PATH_PREFIX" \
 		--host="$hostArch" \
 		--build="$buildArch" \
-		--disable-dynamic-ssl-lib \
 		--disable-hipe \
 		--disable-sctp \
 		--disable-silent-rules \
+		--enable-builtin-zlib \
 		--enable-clock-gettime \
 		--enable-hybrid-heap \
 		--enable-kernel-poll \
-		--enable-builtin-zlib \
 		--enable-smp-support \
 		--enable-threads \
 		--with-microstate-accounting=extra \
+		--with-ssl="$OPENSSL_INSTALL_PATH_PREFIX" \
 		--without-common_test \
 		--without-debugger \
 		--without-dialyzer \
@@ -173,38 +180,45 @@ RUN set -eux; \
 	make install; \
 	\
 # Remove unnecessary files
-	find /usr/local/lib/erlang -type d -name examples -exec rm -rf '{}' +; \
-	find /usr/local/lib/erlang -type d -name src -exec rm -rf '{}' +; \
-	find /usr/local/lib/erlang -type d -name include -exec rm -rf '{}' +
+	find "$ERLANG_INSTALL_PATH_PREFIX/lib/erlang" -type d -name examples -exec rm -rf '{}' +; \
+	find "$ERLANG_INSTALL_PATH_PREFIX/lib/erlang" -type d -name src -exec rm -rf '{}' +; \
+	find "$ERLANG_INSTALL_PATH_PREFIX/lib/erlang" -type d -name include -exec rm -rf '{}' +
 
 # Check that Erlang/OTP crypto & ssl were compiled against OpenSSL correctly
+ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$PATH
+RUN find $ERLANG_INSTALL_PATH_PREFIX -type f -name 'crypto.so' -exec ldd {} \; | awk '/libcrypto\.so/ { if (!index($3,ENVIRON["OPENSSL_INSTALL_PATH_PREFIX"])) exit 1 }'
 RUN erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
 
 FROM alpine:3.18
 
-COPY --from=erlang-builder /usr/local/bin/ /usr/local/bin/
-COPY --from=erlang-builder /usr/local/etc/ssl/ /usr/local/etc/ssl/
-COPY --from=erlang-builder /usr/local/lib/ /usr/local/lib/
+# OPENSSL/ERLANG_INSTALL_PATH_PREFIX are defined in a different stage, so define them again
+ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
+ENV OPENSSL_INSTALL_PATH_PREFIX /opt/openssl
+COPY --from=erlang-builder $ERLANG_INSTALL_PATH_PREFIX $ERLANG_INSTALL_PATH_PREFIX
+COPY --from=openssl-builder $OPENSSL_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_PREFIX
+ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$OPENSSL_INSTALL_PATH_PREFIX/bin:$PATH
 
-ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
+ENV RABBITMQ_DATA_DIR /var/lib/rabbitmq
 
 RUN set -eux; \
 # Configure OpenSSL to use system certs
-	ln -vsf /etc/ssl/certs /etc/ssl/private /usr/local/etc/ssl; \
+	ln -vsf /etc/ssl/certs /etc/ssl/private "$OPENSSL_INSTALL_PATH_PREFIX/etc/ssl"; \
 	\
 # Ensure run-time dependencies are installed
 	runDeps="$( \
-		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
+		scanelf --needed --nobanner --format '%n#p' --recursive $ERLANG_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_PREFIX \
 			| tr ',' '\n' \
 			| sort -u \
+			| grep -v '^$\|lib\(crypto\|ssl\)' \
 			| awk 'system("test -e /usr/local/lib/" $1) == 0 { next } { print "so:" $1 }' \
 	)"; \
 	apk add --no-cache --virtual .otp-run-deps $runDeps; \
 	\
-# Check that OpenSSL still works after purging build dependencies
-	sed -i.ORIG -e '/\.include.*fips/s/.*/.include \/usr\/local\/etc\/ssl\/fipsmodule.cnf/' \
-	    -e '/# fips =/s/.*/fips = fips_sect/' /usr/local/etc/ssl/openssl.cnf; \
-	sed -i.ORIG -e '/^activate/s/^/#/' /usr/local/etc/ssl/fipsmodule.cnf; \
+# Check that OpenSSL still works after copying from previous builder
+	sed -i.ORIG -e "/\.include.*fips/ s!.*!.include $OPENSSL_INSTALL_PATH_PREFIX/etc/ssl/fipsmodule.cnf!" \
+		-e '/# fips =/s/.*/fips = fips_sect/' "$OPENSSL_INSTALL_PATH_PREFIX/etc/ssl/openssl.cnf"; \
+	sed -i.ORIG -e '/^activate/s/^/#/' "$OPENSSL_INSTALL_PATH_PREFIX/etc/ssl/fipsmodule.cnf"; \
+	[ "$(command -v openssl)" = "$OPENSSL_INSTALL_PATH_PREFIX/bin/openssl" ]; \
 	openssl version; \
 	openssl version -d; \
 	\
@@ -232,11 +246,11 @@ RUN set -eux; \
 # Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
 ENV RABBITMQ_VERSION 3.11.22
 # https://www.rabbitmq.com/signatures.html#importing-gpg
-ENV RABBITMQ_PGP_KEY_ID="0x0A9AF2115F4687BD29803A206B73A36E6026DFCA"
-ENV RABBITMQ_HOME=/opt/rabbitmq
+ENV RABBITMQ_PGP_KEY_ID 0x0A9AF2115F4687BD29803A206B73A36E6026DFCA
+ENV RABBITMQ_HOME /opt/rabbitmq
 
 # Add RabbitMQ to PATH
-ENV PATH=$RABBITMQ_HOME/sbin:$PATH
+ENV PATH $RABBITMQ_HOME/sbin:$PATH
 
 # Install RabbitMQ
 RUN set -eux; \
