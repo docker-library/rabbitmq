@@ -196,6 +196,11 @@ COPY --from=erlang-builder $ERLANG_INSTALL_PATH_PREFIX $ERLANG_INSTALL_PATH_PREF
 COPY --from=openssl-builder $OPENSSL_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_PREFIX
 ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$OPENSSL_INSTALL_PATH_PREFIX/bin:$PATH
 
+RUN mkdir -p /usr/local/share/sbom/ && \
+<<EOT cat > /usr/local/share/sbom/openssl-erlang.spdx.json
+{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"openssl-erlang-sbom","documentNamespace":"https://docker.com/docker-scout/fs/sbom-61b3df18-3e41-47b8-a954-e4224f48b2f7","dataLicense":"CC0-1.0","packages":[{"name":"openssl","versionInfo":"3.1.3","SPDXID":"SPDXRef-Package--openssl","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:deb/ubuntu/openssl@3.1.3?os_name=ubuntu&os_version=22.04"}]},{"name":"erlang","versionInfo":"25.3.2.6","SPDXID":"SPDXRef-Package--erlang","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:deb/ubuntu/erlang@25.3.2.6?os_name=ubuntu&os_version=22.04"}]},{"name":"rabbitmq","versionInfo":"3.11.23","SPDXID":"SPDXRef-Package--rabbitmq","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:github/rabbitmq/rabbitmq-server@3.11.23"}]}]}
+EOT
+
 ENV RABBITMQ_DATA_DIR /var/lib/rabbitmq
 
 RUN set -eux; \

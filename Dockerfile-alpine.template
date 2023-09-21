@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.4
+
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
 FROM alpine:{{ .alpine.version }} as build-base
 
@@ -231,6 +233,57 @@ ENV OPENSSL_INSTALL_PATH_PREFIX /opt/openssl
 COPY --from=erlang-builder $ERLANG_INSTALL_PATH_PREFIX $ERLANG_INSTALL_PATH_PREFIX
 COPY --from=openssl-builder $OPENSSL_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_PREFIX
 ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$OPENSSL_INSTALL_PATH_PREFIX/bin:$PATH
+
+RUN mkdir -p /usr/local/share/sbom/ && \
+<<EOT cat > /usr/local/share/sbom/openssl-erlang.spdx.json
+{{
+	{
+		spdxVersion: "SPDX-2.3",
+		SPDXID: "SPDXRef-DOCUMENT",
+		name: "openssl-erlang-sbom",
+		documentNamespace: "https://docker.com/docker-scout/fs/sbom-61b3df18-3e41-47b8-a954-e4224f48b2f7",
+		dataLicense: "CC0-1.0",
+		packages: [
+			{
+				name: "openssl",
+				versionInfo: .openssl.version,
+				SPDXID: "SPDXRef-Package--openssl",
+				externalRefs: [
+					{
+						referenceCategory: "PACKAGE-MANAGER",
+						referenceType: "purl",
+						referenceLocator: ("pkg:apk/alpine/openssl@" + .openssl.version +"?os_name=alpine\u0026os_version=" + .alpine.version)
+					}
+				]
+			},
+			{
+				name: "erlang",
+				versionInfo: .otp.version,
+				SPDXID: "SPDXRef-Package--erlang",
+				externalRefs: [
+					{
+						referenceCategory: "PACKAGE-MANAGER",
+						referenceType: "purl",
+						referenceLocator: ("pkg:apk/alpine/erlang@" + .otp.version +"?os_name=alpine\u0026os_version=" + .alpine.version)
+					}
+				]
+			},
+			{
+				name: "rabbitmq",
+				versionInfo: .version,
+				SPDXID: "SPDXRef-Package--rabbitmq",
+				externalRefs: [
+					{
+						referenceCategory: "PACKAGE-MANAGER",
+						referenceType: "purl",
+						referenceLocator: ("pkg:github/rabbitmq/rabbitmq-server@" + .version)
+					}
+				]
+			}
+		]
+	} | tostring
+}}
+EOT
 
 ENV RABBITMQ_DATA_DIR /var/lib/rabbitmq
 
