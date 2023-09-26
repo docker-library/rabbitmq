@@ -4,8 +4,6 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-# syntax=docker/dockerfile:1.4
-
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
 FROM alpine:3.18 as build-base
 
@@ -196,14 +194,18 @@ FROM alpine:3.18
 # OPENSSL/ERLANG_INSTALL_PATH_PREFIX are defined in a different stage, so define them again
 ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
 ENV OPENSSL_INSTALL_PATH_PREFIX /opt/openssl
-COPY --from=erlang-builder $ERLANG_INSTALL_PATH_PREFIX $ERLANG_INSTALL_PATH_PREFIX
-COPY --from=openssl-builder $OPENSSL_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_PREFIX
-ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$OPENSSL_INSTALL_PATH_PREFIX/bin:$PATH
 
-RUN mkdir -p /usr/local/share/sbom/ && \
-<<EOT cat > /usr/local/share/sbom/openssl-erlang.spdx.json
-{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"openssl-erlang-sbom","documentNamespace":"https://docker.com/docker-scout/fs/sbom-61b3df18-3e41-47b8-a954-e4224f48b2f7","dataLicense":"CC0-1.0","packages":[{"name":"openssl","versionInfo":"3.1.3","SPDXID":"SPDXRef-Package--openssl","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:apk/alpine/openssl@3.1.3?os_name=alpine&os_version=3.18"}]},{"name":"erlang","versionInfo":"25.3.2.6","SPDXID":"SPDXRef-Package--erlang","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:apk/alpine/erlang@25.3.2.6?os_name=alpine&os_version=3.18"}]},{"name":"rabbitmq","versionInfo":"3.9.29","SPDXID":"SPDXRef-Package--rabbitmq","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:github/rabbitmq/rabbitmq-server@3.9.29"}]}]}
-EOT
+COPY --from=erlang-builder $ERLANG_INSTALL_PATH_PREFIX $ERLANG_INSTALL_PATH_PREFIX
+COPY <<ERLANG_SPDX /opt/erlang/erlang.spdx.json
+{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"erlang-sbom","packages":[{"name":"erlang","versionInfo":"25.3.2.6","SPDXID":"SPDXRef-Package--erlang","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:apk/alpine/erlang@25.3.2.6?os_name=alpine&os_version=3.18"}]}]}
+ERLANG_SPDX
+
+COPY --from=openssl-builder $OPENSSL_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_PREFIX
+COPY <<OPENSSL_SPDX /opt/openssl/openssl.spdx.json
+{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"openssl-sbom","packages":[{"name":"openssl","versionInfo":"3.1.3","SPDXID":"SPDXRef-Package--openssl","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:apk/alpine/openssl@3.1.3?os_name=alpine&os_version=3.18"}]}]}
+OPENSSL_SPDX
+
+ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$OPENSSL_INSTALL_PATH_PREFIX/bin:$PATH
 
 ENV RABBITMQ_DATA_DIR /var/lib/rabbitmq
 
@@ -301,6 +303,10 @@ RUN set -eux; \
 	su-exec rabbitmq rabbitmq-plugins list; \
 # no stale cookies
 	rm "$RABBITMQ_DATA_DIR/.erlang.cookie"
+
+COPY <<RABBITMQ_SPDX /opt/rabbitmq/rabbitmq.spdx.json
+{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"rabbitmq-sbom","packages":[{"name":"rabbitmq","versionInfo":"3.9.29","SPDXID":"SPDXRef-Package--rabbitmq","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:generic/rabbitmq@3.9.29?os_name=alpine&os_version=3.18"}]}]}
+RABBITMQ_SPDX
 
 # Enable Prometheus-style metrics by default (https://github.com/docker-library/rabbitmq/issues/419)
 RUN su-exec rabbitmq rabbitmq-plugins enable --offline rabbitmq_prometheus

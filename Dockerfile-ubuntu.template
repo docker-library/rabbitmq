@@ -227,18 +227,37 @@ FROM ubuntu:{{ .ubuntu.version }}
 ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
 ENV OPENSSL_INSTALL_PATH_PREFIX /opt/openssl
 COPY --from=erlang-builder $ERLANG_INSTALL_PATH_PREFIX $ERLANG_INSTALL_PATH_PREFIX
-COPY --from=openssl-builder $OPENSSL_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_PREFIX
-ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$OPENSSL_INSTALL_PATH_PREFIX/bin:$PATH
-
-RUN mkdir -p /usr/local/share/sbom/ && \
-<<EOT cat > /usr/local/share/sbom/openssl-erlang.spdx.json
+COPY <<ERLANG_SPDX /opt/erlang/erlang.spdx.json
 {{
 	{
 		spdxVersion: "SPDX-2.3",
 		SPDXID: "SPDXRef-DOCUMENT",
-		name: "openssl-erlang-sbom",
-		documentNamespace: "https://docker.com/docker-scout/fs/sbom-61b3df18-3e41-47b8-a954-e4224f48b2f7",
-		dataLicense: "CC0-1.0",
+		name: "erlang-sbom",
+		packages: [
+			{
+				name: "erlang",
+				versionInfo: .otp.version,
+				SPDXID: "SPDXRef-Package--erlang",
+				externalRefs: [
+					{
+						referenceCategory: "PACKAGE-MANAGER",
+						referenceType: "purl",
+						referenceLocator: ("pkg:deb/ubuntu/erlang@" + .otp.version +"?os_name=ubuntu\u0026os_version=" + .ubuntu.version)
+					}
+				]
+			}
+		]
+	} | tostring
+}}
+ERLANG_SPDX
+
+COPY --from=openssl-builder $OPENSSL_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_PREFIX
+COPY <<OPENSSL_SPDX /opt/openssl/openssl.spdx.json
+{{
+	{
+		spdxVersion: "SPDX-2.3",
+		SPDXID: "SPDXRef-DOCUMENT",
+		name: "openssl-sbom",
 		packages: [
 			{
 				name: "openssl",
@@ -251,35 +270,13 @@ RUN mkdir -p /usr/local/share/sbom/ && \
 						referenceLocator: ("pkg:deb/ubuntu/openssl@" + .openssl.version +"?os_name=ubuntu\u0026os_version=" + .ubuntu.version)
 					}
 				]
-			},
-			{
-				name: "erlang",
-				versionInfo: .otp.version,
-				SPDXID: "SPDXRef-Package--erlang",
-				externalRefs: [
-					{
-						referenceCategory: "PACKAGE-MANAGER",
-						referenceType: "purl",
-						referenceLocator: ("pkg:deb/ubuntu/erlang@" + .otp.version +"?os_name=ubuntu\u0026os_version=" + .ubuntu.version)
-					}
-				]
-			},
-			{
-				name: "rabbitmq",
-				versionInfo: .version,
-				SPDXID: "SPDXRef-Package--rabbitmq",
-				externalRefs: [
-					{
-						referenceCategory: "PACKAGE-MANAGER",
-						referenceType: "purl",
-						referenceLocator: ("pkg:github/rabbitmq/rabbitmq-server@" + .version)
-					}
-				]
 			}
 		]
 	} | tostring
 }}
-EOT
+OPENSSL_SPDX
+
+ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$OPENSSL_INSTALL_PATH_PREFIX/bin:$PATH
 
 ENV RABBITMQ_DATA_DIR /var/lib/rabbitmq
 
@@ -372,6 +369,30 @@ RUN set -eux; \
 	gosu rabbitmq rabbitmq-plugins list; \
 # no stale cookies
 	rm "$RABBITMQ_DATA_DIR/.erlang.cookie"
+
+COPY <<RABBITMQ_SPDX /opt/rabbitmq/rabbitmq.spdx.json
+{{
+	{
+		spdxVersion: "SPDX-2.3",
+		SPDXID: "SPDXRef-DOCUMENT",
+		name: "rabbitmq-sbom",
+		packages: [
+			{
+				name: "rabbitmq",
+				versionInfo: .version,
+				SPDXID: "SPDXRef-Package--rabbitmq",
+				externalRefs: [
+					{
+						referenceCategory: "PACKAGE-MANAGER",
+						referenceType: "purl",
+						referenceLocator: ("pkg:generic/rabbitmq@" + .version + "?os_name=alpine\u0026os_version=" + .alpine.version)
+					}
+				]
+			}
+		]
+	} | tostring
+}}
+RABBITMQ_SPDX
 
 # Enable Prometheus-style metrics by default (https://github.com/docker-library/rabbitmq/issues/419)
 RUN gosu rabbitmq rabbitmq-plugins enable --offline rabbitmq_prometheus
