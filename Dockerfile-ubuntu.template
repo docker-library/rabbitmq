@@ -1,5 +1,6 @@
 # The official Canonical Ubuntu Focal image is ideal from a security perspective,
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
+{{ include "template-helper-functions" }}
 FROM ubuntu:{{ .ubuntu.version }} as build-base
 
 RUN set -eux; \
@@ -230,24 +231,16 @@ COPY --from=erlang-builder $ERLANG_INSTALL_PATH_PREFIX $ERLANG_INSTALL_PATH_PREF
 COPY <<ERLANG_SPDX /opt/erlang/erlang.spdx.json
 {{
 	{
-		spdxVersion: "SPDX-2.3",
-		SPDXID: "SPDXRef-DOCUMENT",
-		name: "erlang-sbom",
-		packages: [
-			{
-				name: "erlang",
-				versionInfo: .otp.version,
-				SPDXID: "SPDXRef-Package--erlang",
-				externalRefs: [
-					{
-						referenceCategory: "PACKAGE-MANAGER",
-						referenceType: "purl",
-						referenceLocator: ("pkg:deb/ubuntu/erlang@" + .otp.version +"?os_name=ubuntu\u0026os_version=" + .ubuntu.version)
-					}
-				]
-			}
+		name: "erlang",
+		version: .otp.version,
+		params: {
+			os_name: "ubuntu",
+			os_version: .ubuntu.version
+		},
+		licenses: [
+			"Apache-2.0"
 		]
-	} | tostring
+	} | sbom | tostring
 }}
 ERLANG_SPDX
 
@@ -255,24 +248,16 @@ COPY --from=openssl-builder $OPENSSL_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_P
 COPY <<OPENSSL_SPDX /opt/openssl/openssl.spdx.json
 {{
 	{
-		spdxVersion: "SPDX-2.3",
-		SPDXID: "SPDXRef-DOCUMENT",
-		name: "openssl-sbom",
-		packages: [
-			{
-				name: "openssl",
-				versionInfo: .openssl.version,
-				SPDXID: "SPDXRef-Package--openssl",
-				externalRefs: [
-					{
-						referenceCategory: "PACKAGE-MANAGER",
-						referenceType: "purl",
-						referenceLocator: ("pkg:deb/ubuntu/openssl@" + .openssl.version +"?os_name=ubuntu\u0026os_version=" + .ubuntu.version)
-					}
-				]
-			}
+		name: "openssl",
+		version: .openssl.version,
+		params: {
+			os_name: "ubuntu",
+			os_version: .ubuntu.version
+		},
+		licenses: [
+			"Apache-2.0"
 		]
-	} | tostring
+	} | sbom | tostring
 }}
 OPENSSL_SPDX
 
@@ -373,24 +358,17 @@ RUN set -eux; \
 COPY <<RABBITMQ_SPDX /opt/rabbitmq/rabbitmq.spdx.json
 {{
 	{
-		spdxVersion: "SPDX-2.3",
-		SPDXID: "SPDXRef-DOCUMENT",
-		name: "rabbitmq-sbom",
-		packages: [
-			{
-				name: "rabbitmq",
-				versionInfo: .version,
-				SPDXID: "SPDXRef-Package--rabbitmq",
-				externalRefs: [
-					{
-						referenceCategory: "PACKAGE-MANAGER",
-						referenceType: "purl",
-						referenceLocator: ("pkg:generic/rabbitmq@" + .version + "?os_name=alpine\u0026os_version=" + .alpine.version)
-					}
-				]
-			}
+		name: "rabbitmq",
+		version: .version,
+		params: {
+			os_name: "ubuntu",
+			os_version: .ubuntu.version
+		},
+		licenses: [
+			"MPL-2.0",
+			"Apache-2.0"
 		]
-	} | tostring
+	} | sbom | tostring
 }}
 RABBITMQ_SPDX
 
