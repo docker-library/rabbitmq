@@ -1,4 +1,5 @@
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
+{{ include "template-helper-functions" }}
 FROM alpine:{{ .alpine.version }} as build-base
 
 RUN apk add --no-cache \
@@ -232,8 +233,41 @@ FROM alpine:{{ .alpine.version }}
 # OPENSSL/ERLANG_INSTALL_PATH_PREFIX are defined in a different stage, so define them again
 ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
 ENV OPENSSL_INSTALL_PATH_PREFIX /opt/openssl
+
 COPY --from=erlang-builder $ERLANG_INSTALL_PATH_PREFIX $ERLANG_INSTALL_PATH_PREFIX
+COPY <<ERLANG_SPDX /opt/erlang/erlang.spdx.json
+{{
+	{
+		name: "erlang",
+		version: .otp.version,
+		params: {
+			os_name: "alpine",
+			os_version: .alpine.version
+		},
+		licenses: [
+			"Apache-2.0"
+		]
+	} | sbom | tostring
+}}
+ERLANG_SPDX
+
 COPY --from=openssl-builder $OPENSSL_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_PREFIX
+COPY <<OPENSSL_SPDX /opt/openssl/openssl.spdx.json
+{{
+	{
+		name: "openssl",
+		version: .openssl.version,
+		params: {
+			os_name: "alpine",
+			os_version: .alpine.version
+		},
+		licenses: [
+			"Apache-2.0"
+		]
+	} | sbom | tostring
+}}
+OPENSSL_SPDX
+
 ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$OPENSSL_INSTALL_PATH_PREFIX/bin:$PATH
 
 ENV RABBITMQ_DATA_DIR /var/lib/rabbitmq
@@ -332,6 +366,23 @@ RUN set -eux; \
 	su-exec rabbitmq rabbitmq-plugins list; \
 # no stale cookies
 	rm "$RABBITMQ_DATA_DIR/.erlang.cookie"
+
+COPY <<RABBITMQ_SPDX /opt/rabbitmq/rabbitmq.spdx.json
+{{
+	{
+		name: "rabbitmq",
+		version: .version,
+		params: {
+			os_name: "alpine",
+			os_version: .alpine.version
+		},
+		licenses: [
+			"MPL-2.0",
+			"Apache-2.0"
+		]
+	} | sbom | tostring
+}}
+RABBITMQ_SPDX
 
 # Enable Prometheus-style metrics by default (https://github.com/docker-library/rabbitmq/issues/419)
 RUN su-exec rabbitmq rabbitmq-plugins enable --offline rabbitmq_prometheus
