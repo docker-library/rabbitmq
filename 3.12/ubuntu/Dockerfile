@@ -8,6 +8,8 @@
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
 FROM ubuntu:22.04 as build-base
 
+ARG BUILDKIT_SBOM_SCAN_STAGE=true
+
 RUN set -eux; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
@@ -18,6 +20,8 @@ RUN set -eux; \
 		wget
 
 FROM build-base as openssl-builder
+
+ARG BUILDKIT_SBOM_SCAN_STAGE=true
 
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
 ARG PGP_KEYSERVER=keyserver.ubuntu.com
@@ -110,6 +114,8 @@ RUN set -eux; \
 RUN $OPENSSL_INSTALL_PATH_PREFIX/bin/openssl version
 
 FROM openssl-builder as erlang-builder
+
+ARG BUILDKIT_SBOM_SCAN_STAGE=true
 
 RUN set -eux; \
 	OTP_SOURCE_URL="https://github.com/erlang/otp/releases/download/OTP-$OTP_VERSION/otp_src_$OTP_VERSION.tar.gz"; \

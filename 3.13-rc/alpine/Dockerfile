@@ -18,6 +18,8 @@ RUN apk add --no-cache \
 
 FROM build-base as openssl-builder
 
+ARG BUILDKIT_SBOM_SCAN_STAGE=true
+
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
 ARG PGP_KEYSERVER=keyserver.ubuntu.com
 # If you are building this image locally and are getting `gpg: keyserver receive failed: No data` errors,
@@ -110,6 +112,8 @@ RUN set -eux; \
 RUN $OPENSSL_INSTALL_PATH_PREFIX/bin/openssl version
 
 FROM openssl-builder as erlang-builder
+
+ARG BUILDKIT_SBOM_SCAN_STAGE=true
 
 RUN set -eux; \
 # /usr/local/src doesn't exist in Alpine by default
