@@ -1,5 +1,5 @@
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
-{{ include "template-helper-functions" }}
+{{ include ".template-helper-functions" }}
 FROM alpine:{{ .alpine.version }} as build-base
 
 RUN apk add --no-cache \

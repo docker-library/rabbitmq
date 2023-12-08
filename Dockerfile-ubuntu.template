@@ -1,6 +1,6 @@
 # The official Canonical Ubuntu Focal image is ideal from a security perspective,
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
-{{ include "template-helper-functions" }}
+{{ include ".template-helper-functions" }}
 FROM ubuntu:{{ .ubuntu.version }} as build-base
 
 ARG BUILDKIT_SBOM_SCAN_STAGE=true
