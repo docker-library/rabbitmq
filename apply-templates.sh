@@ -15,7 +15,8 @@ fi
 
 jqf='template-helper-functions.jq'
 if [ "$BASH_SOURCE" -nt "$jqf" ]; then
-	wget -qO "$jqf" 'https://github.com/docker-library/bashbrew/raw/master/scripts/template-helper-functions.jq'
+	# https://github.com/docker-library/bashbrew/blob/master/scripts/template-helper-functions.jq
+	wget -qO "$jqf" 'https://github.com/docker-library/bashbrew/raw/5a86c34c5a3ef370b3d22c398d45ccab53bd64bd/scripts/template-helper-functions.jq'
 fi
 
 if [ "$#" -eq 0 ]; then
