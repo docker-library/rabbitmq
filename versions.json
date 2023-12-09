@@ -1,7 +1,7 @@
 {
   "3.10": {
     "alpine": {
-      "version": "3.18"
+      "version": "3.19"
     },
     "openssl": {
       "sha256": "840af5366ab9b522bde525826be3ef0fb0af81c6a9ebd84caa600fea1731eee3",
@@ -19,7 +19,7 @@
   "3.10-rc": null,
   "3.11": {
     "alpine": {
-      "version": "3.18"
+      "version": "3.19"
     },
     "openssl": {
       "sha256": "840af5366ab9b522bde525826be3ef0fb0af81c6a9ebd84caa600fea1731eee3",
@@ -37,7 +37,7 @@
   "3.11-rc": null,
   "3.12": {
     "alpine": {
-      "version": "3.18"
+      "version": "3.19"
     },
     "openssl": {
       "sha256": "840af5366ab9b522bde525826be3ef0fb0af81c6a9ebd84caa600fea1731eee3",
@@ -55,7 +55,7 @@
   "3.12-rc": null,
   "3.13-rc": {
     "alpine": {
-      "version": "3.18"
+      "version": "3.19"
     },
     "openssl": {
       "sha256": "840af5366ab9b522bde525826be3ef0fb0af81c6a9ebd84caa600fea1731eee3",
@@ -72,7 +72,7 @@
   },
   "3.9": {
     "alpine": {
-      "version": "3.18"
+      "version": "3.19"
     },
     "openssl": {
       "sha256": "840af5366ab9b522bde525826be3ef0fb0af81c6a9ebd84caa600fea1731eee3",
