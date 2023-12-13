@@ -62,8 +62,8 @@
       "version": "3.1.4"
     },
     "otp": {
-      "sha256": "f1074cf3a54f1f87e66027d5abebab2fa76a0243453fa58bc5f30d0ce0313921",
-      "version": "26.1.2"
+      "sha256": "a85fa668a292868a7dc8c8ac18615995051392acbfbfa9cef1e8d84cf417ca87",
+      "version": "26.2"
     },
     "ubuntu": {
       "version": "22.04"
