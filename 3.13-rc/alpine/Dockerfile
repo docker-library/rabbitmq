@@ -33,10 +33,10 @@ ENV OPENSSL_SOURCE_SHA256="840af5366ab9b522bde525826be3ef0fb0af81c6a9ebd84caa600
 # https://www.openssl.org/source/
 ENV OPENSSL_PGP_KEY_IDS="0x8657ABB260F056B1E5190839D9C4D26D0E604491 0xB7C1C14360F353A36862E4D5231C84CDDCC69C45 0xC1F33DD8CE1D4CC613AF14DA9195C48241FBF7DD 0x95A9908DDFA16830BE9FB9003D30A3A9FF1360DC 0x7953AC1FBC3DC8B3B292393ED5E9E43F7DF9EE8C 0xA21FAB74B0088AA361152586B8EF1A6BA9DA2D5C 0xE5E52560DD91C556DDBDA5D02064C53641C25E5D 0xEFC0A467D613CB83C7ED6D30D894E2CE8B3D79F5"
 
-ENV OTP_VERSION 26.2
+ENV OTP_VERSION 26.2.1
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="a85fa668a292868a7dc8c8ac18615995051392acbfbfa9cef1e8d84cf417ca87"
+ENV OTP_SOURCE_SHA256="80d66bafbae409481a4e1badcb4a6275b07a8e9af82980c08d7a8add483232a9"
 
 # install openssl & erlang to a path that isn't auto-checked for libs to prevent accidental use by system packages
 ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
@@ -201,7 +201,7 @@ ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
 ENV OPENSSL_INSTALL_PATH_PREFIX /opt/openssl
 
 COPY --from=erlang-builder $ERLANG_INSTALL_PATH_PREFIX $ERLANG_INSTALL_PATH_PREFIX
-RUN echo '{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"erlang-sbom","packages":[{"name":"erlang","versionInfo":"26.2","SPDXID":"SPDXRef-Package--erlang","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:generic/erlang@26.2?os_name=alpine&os_version=3.19"}],"licenseDeclared":"Apache-2.0"}]}' > $ERLANG_INSTALL_PATH_PREFIX/erlang.spdx.json
+RUN echo '{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"erlang-sbom","packages":[{"name":"erlang","versionInfo":"26.2.1","SPDXID":"SPDXRef-Package--erlang","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:generic/erlang@26.2.1?os_name=alpine&os_version=3.19"}],"licenseDeclared":"Apache-2.0"}]}' > $ERLANG_INSTALL_PATH_PREFIX/erlang.spdx.json
 
 COPY --from=openssl-builder $OPENSSL_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_PREFIX
 RUN echo '{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"openssl-sbom","packages":[{"name":"openssl","versionInfo":"3.1.4","SPDXID":"SPDXRef-Package--openssl","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:generic/openssl@3.1.4?os_name=alpine&os_version=3.19"}],"licenseDeclared":"Apache-2.0"}]}' > $OPENSSL_INSTALL_PATH_PREFIX/openssl.spdx.json
@@ -254,7 +254,7 @@ RUN set -eux; \
 		tzdata
 
 # Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
-ENV RABBITMQ_VERSION 3.13.0-rc.2
+ENV RABBITMQ_VERSION 3.13.0-rc.3
 # https://www.rabbitmq.com/signatures.html#importing-gpg
 ENV RABBITMQ_PGP_KEY_ID 0x0A9AF2115F4687BD29803A206B73A36E6026DFCA
 ENV RABBITMQ_HOME /opt/rabbitmq
@@ -305,7 +305,7 @@ RUN set -eux; \
 # no stale cookies
 	rm "$RABBITMQ_DATA_DIR/.erlang.cookie";\
 	\
-	echo '{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"rabbitmq-sbom","packages":[{"name":"rabbitmq","versionInfo":"3.13.0-rc.2","SPDXID":"SPDXRef-Package--rabbitmq","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:generic/rabbitmq@3.13.0-rc.2?os_name=alpine&os_version=3.19"}],"licenseDeclared":"MPL-2.0 AND Apache-2.0"}]}' > $RABBITMQ_HOME/rabbitmq.spdx.json;
+	echo '{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"rabbitmq-sbom","packages":[{"name":"rabbitmq","versionInfo":"3.13.0-rc.3","SPDXID":"SPDXRef-Package--rabbitmq","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:generic/rabbitmq@3.13.0-rc.3?os_name=alpine&os_version=3.19"}],"licenseDeclared":"MPL-2.0 AND Apache-2.0"}]}' > $RABBITMQ_HOME/rabbitmq.spdx.json;
 
 # Enable Prometheus-style metrics by default (https://github.com/docker-library/rabbitmq/issues/419)
 RUN su-exec rabbitmq rabbitmq-plugins enable --offline rabbitmq_prometheus
