@@ -40,8 +40,8 @@
       "version": "3.19"
     },
     "openssl": {
-      "sha256": "840af5366ab9b522bde525826be3ef0fb0af81c6a9ebd84caa600fea1731eee3",
-      "version": "3.1.4"
+      "sha256": "6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262",
+      "version": "3.1.5"
     },
     "otp": {
       "sha256": "9424d7713b361c8a24690515acbd7e0fd37b67d54cad1e1e4af146eae0e335d3",
