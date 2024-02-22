@@ -24,7 +24,7 @@ ARG BUILDKIT_SBOM_SCAN_STAGE=true
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
 ARG PGP_KEYSERVER=keyserver.ubuntu.com
 # If you are building this image locally and are getting `gpg: keyserver receive failed: No data` errors,
-# run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.13-rc --build-arg PGP_KEYSERVER=pgpkeys.eu 3.13-rc/ubuntu
+# run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:3.13 --build-arg PGP_KEYSERVER=pgpkeys.eu 3.13/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
 ENV OPENSSL_VERSION 3.1.5
@@ -254,7 +254,7 @@ RUN set -eux; \
 		tzdata
 
 # Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
-ENV RABBITMQ_VERSION 3.13.0-rc.5
+ENV RABBITMQ_VERSION 3.13.0
 # https://www.rabbitmq.com/signatures.html#importing-gpg
 ENV RABBITMQ_PGP_KEY_ID 0x0A9AF2115F4687BD29803A206B73A36E6026DFCA
 ENV RABBITMQ_HOME /opt/rabbitmq
@@ -305,7 +305,7 @@ RUN set -eux; \
 # no stale cookies
 	rm "$RABBITMQ_DATA_DIR/.erlang.cookie";\
 	\
-	echo '{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"rabbitmq-sbom","packages":[{"name":"rabbitmq","versionInfo":"3.13.0-rc.5","SPDXID":"SPDXRef-Package--rabbitmq","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:generic/rabbitmq@3.13.0-rc.5?os_name=alpine&os_version=3.19"}],"licenseDeclared":"MPL-2.0 AND Apache-2.0"}]}' > $RABBITMQ_HOME/rabbitmq.spdx.json;
+	echo '{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"rabbitmq-sbom","packages":[{"name":"rabbitmq","versionInfo":"3.13.0","SPDXID":"SPDXRef-Package--rabbitmq","externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:generic/rabbitmq@3.13.0?os_name=alpine&os_version=3.19"}],"licenseDeclared":"MPL-2.0 AND Apache-2.0"}]}' > $RABBITMQ_HOME/rabbitmq.spdx.json;
 
 # Enable Prometheus-style metrics by default (https://github.com/docker-library/rabbitmq/issues/419)
 RUN su-exec rabbitmq rabbitmq-plugins enable --offline rabbitmq_prometheus
