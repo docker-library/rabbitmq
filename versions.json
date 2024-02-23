@@ -1,40 +1,4 @@
 {
-  "3.10": {
-    "alpine": {
-      "version": "3.19"
-    },
-    "openssl": {
-      "sha256": "6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262",
-      "version": "3.1.5"
-    },
-    "otp": {
-      "sha256": "b305190e01e84eddb26d0140637f26adf674c87351c679f3bbefc8685d22cc05",
-      "version": "25.3.2.9"
-    },
-    "ubuntu": {
-      "version": "22.04"
-    },
-    "version": "3.10.25"
-  },
-  "3.10-rc": null,
-  "3.11": {
-    "alpine": {
-      "version": "3.19"
-    },
-    "openssl": {
-      "sha256": "6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262",
-      "version": "3.1.5"
-    },
-    "otp": {
-      "sha256": "b305190e01e84eddb26d0140637f26adf674c87351c679f3bbefc8685d22cc05",
-      "version": "25.3.2.9"
-    },
-    "ubuntu": {
-      "version": "22.04"
-    },
-    "version": "3.11.28"
-  },
-  "3.11-rc": null,
   "3.12": {
     "alpine": {
       "version": "3.19"
@@ -70,23 +34,5 @@
     },
     "version": "3.13.0"
   },
-  "3.13-rc": null,
-  "3.9": {
-    "alpine": {
-      "version": "3.19"
-    },
-    "openssl": {
-      "sha256": "6ae015467dabf0469b139ada93319327be24b98251ffaeceda0221848dc09262",
-      "version": "3.1.5"
-    },
-    "otp": {
-      "sha256": "b305190e01e84eddb26d0140637f26adf674c87351c679f3bbefc8685d22cc05",
-      "version": "25.3.2.9"
-    },
-    "ubuntu": {
-      "version": "22.04"
-    },
-    "version": "3.9.29"
-  },
-  "3.9-rc": null
+  "3.13-rc": null
 }
