@@ -1,6 +1,5 @@
 # The official Canonical Ubuntu Focal image is ideal from a security perspective,
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
-{{ include ".template-helper-functions" }}
 FROM ubuntu:{{ .ubuntu.version }} as build-base
 
 ARG BUILDKIT_SBOM_SCAN_STAGE=true
@@ -234,34 +233,7 @@ FROM ubuntu:{{ .ubuntu.version }}
 ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
 ENV OPENSSL_INSTALL_PATH_PREFIX /opt/openssl
 COPY --from=erlang-builder $ERLANG_INSTALL_PATH_PREFIX $ERLANG_INSTALL_PATH_PREFIX
-RUN echo '{{
-		{
-			name: "erlang",
-			version: .otp.version,
-			params: {
-				os_name: "ubuntu",
-				os_version: .ubuntu.version
-			},
-			licenses: [
-				"Apache-2.0"
-			]
-		} | sbom | tostring
-	}}' > $ERLANG_INSTALL_PATH_PREFIX/erlang.spdx.json
-
 COPY --from=openssl-builder $OPENSSL_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_PREFIX
-RUN echo '{{
-		{
-			name: "openssl",
-			version: .openssl.version,
-			params: {
-				os_name: "ubuntu",
-				os_version: .ubuntu.version
-			},
-			licenses: [
-				"Apache-2.0"
-			]
-		} | sbom | tostring
-	}}' > $OPENSSL_INSTALL_PATH_PREFIX/openssl.spdx.json
 
 ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$OPENSSL_INSTALL_PATH_PREFIX/bin:$PATH
 
@@ -355,22 +327,7 @@ RUN set -eux; \
 	gosu rabbitmq rabbitmqctl list_ciphers; \
 	gosu rabbitmq rabbitmq-plugins list; \
 # no stale cookies
-	rm "$RABBITMQ_DATA_DIR/.erlang.cookie"; \
-	\
-	echo '{{
-			{
-				name: "rabbitmq",
-				version: .version,
-				params: {
-					os_name: "ubuntu",
-					os_version: .ubuntu.version
-				},
-				licenses: [
-					"MPL-2.0",
-					"Apache-2.0"
-				]
-			} | sbom | tostring
-		}}' > $RABBITMQ_HOME/rabbitmq.spdx.json
+	rm "$RABBITMQ_DATA_DIR/.erlang.cookie"
 
 # Enable Prometheus-style metrics by default (https://github.com/docker-library/rabbitmq/issues/419)
 RUN gosu rabbitmq rabbitmq-plugins enable --offline rabbitmq_prometheus
