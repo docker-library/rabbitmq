@@ -34,5 +34,22 @@
     },
     "version": "3.13.4"
   },
-  "3.13-rc": null
+  "3.13-rc": null,
+  "4.0-rc": {
+    "alpine": {
+      "version": "3.20"
+    },
+    "openssl": {
+      "sha256": "777cd596284c883375a2a7a11bf5d2786fc5413255efab20c50d6ffe6d020b7e",
+      "version": "3.3.1"
+    },
+    "otp": {
+      "sha256": "e49708cf1f602863e394869af48df4abcb39e3633b96cb4babde3ee7aa724872",
+      "version": "26.2.5.2"
+    },
+    "ubuntu": {
+      "version": "24.04"
+    },
+    "version": "4.0.0-beta.1"
+  }
 }
