@@ -161,6 +161,15 @@ RUN set -eux; \
 	echo "$OTP_SOURCE_SHA256 *$OTP_PATH.tar.gz" | sha256sum --check --strict -; \
 	tar --extract --file "$OTP_PATH.tar.gz" --directory "$OTP_PATH" --strip-components 1; \
 	\
+{{ if .otp.version | startswith("25.") or startswith("26.") then ( -}}
+# backport https://github.com/erlang/otp/pull/7952 (applied upstream in OTP 27+) to fix time64 compilation issues on 32bit architectures
+# see also https://bugs.debian.org/1067701, https://salsa.debian.org/erlang-team/packages/erlang/-/blob/89c4e190c6d1d7ee0133d9a8d6bf651ff1861e46/debian/patches/time64.patch
+	wget --output-document otp-time64.patch 'https://github.com/erlang/otp/pull/7952.patch?full_index=1'; \
+	echo 'd1a0c0433a9a08c83171bedd438dd59bb336b40ec75f59edfc3a647b8b0c612d *otp-time64.patch' | sha256sum --check --strict -; \
+	patch --input="$PWD/otp-time64.patch" --directory="$OTP_PATH" --strip=1; \
+	rm otp-time64.patch; \
+	\
+{{ ) else "" end -}}
 # Configure Erlang/OTP for compilation, disable unused features & applications
 # https://erlang.org/doc/applications.html
 # ERL_TOP is required for Erlang/OTP makefiles to find the absolute path for the installation
