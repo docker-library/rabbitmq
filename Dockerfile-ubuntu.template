@@ -84,7 +84,7 @@ ENV OPENSSL_INSTALL_PATH_PREFIX /opt/openssl
 # gnupg: Required to verify OpenSSL artefacts
 # libncurses5-dev: Required for Erlang/OTP new shell & observer_cli - https://github.com/zhongwencool/observer_cli
 RUN set -eux; \
-	OPENSSL_SOURCE_URL="https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz"; \
+	OPENSSL_SOURCE_URL="https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz"; \
 	OPENSSL_PATH="/usr/local/src/openssl-$OPENSSL_VERSION"; \
 	OPENSSL_CONFIG_DIR="$OPENSSL_INSTALL_PATH_PREFIX/etc/ssl"; \
 	\
