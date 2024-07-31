@@ -123,18 +123,27 @@ for version in "${versions[@]}"; do
 	export otpVersion otpSourceSha256
 
 	opensslMajor="${opensslMajors[$rcVersion]}"
-	opensslVersion="$(
-		wget -qO- 'https://www.openssl.org/source/' \
-			| grep -oE 'href="openssl-'"$opensslMajor"'[^"]+[.]tar[.]gz"' \
-			| sed -e 's/^href="openssl-//' -e 's/[.]tar[.]gz"//' \
-			| sort -uV \
-			| tail -1
-	)"
+	# grab versions from upstream and ignore any alpha/beta releases
+	opensslVersions=( $(
+	git ls-remote --tags https://github.com/openssl/openssl.git \
+			"refs/tags/openssl-$opensslMajor.*"\
+			| cut -d'/' -f3- \
+			| cut -d'^' -f1 \
+			| cut -d- -f2- \
+			| grep -vE -- '-[A-Za-z]+' \
+			| sort -urV
+	) )
+	opensslVersion=
+	for possibleVersion in "${opensslVersions[@]}"; do
+		if opensslSourceSha256="$(wget -qO- "https://github.com/openssl/openssl/releases/download/openssl-$possibleVersion/openssl-$possibleVersion.tar.gz.sha256")"; then
+			opensslVersion="$possibleVersion"
+			break
+		fi
+	done
 	if [ -z "$opensslVersion" ]; then
 		echo >&2 "warning: failed to get OpenSSL version for '$version' ($fullVersion); skipping"
 		continue
 	fi
-	opensslSourceSha256="$(wget -qO- "https://www.openssl.org/source/openssl-$opensslVersion.tar.gz.sha256")"
 	export opensslVersion opensslSourceSha256
 
 	# OpenSSL 3.0.5's sha256 file starts with a single space 😬
