@@ -1,7 +1,7 @@
 {
   "3.12": {
     "alpine": {
-      "version": "3.19"
+      "version": "3.20"
     },
     "openssl": {
       "sha256": "5d2be4036b478ef3cb0a854ca9b353072c3a0e26d8a56f8f0ab9fb6ed32d38d7",
@@ -19,7 +19,7 @@
   "3.12-rc": null,
   "3.13": {
     "alpine": {
-      "version": "3.19"
+      "version": "3.20"
     },
     "openssl": {
       "sha256": "5d2be4036b478ef3cb0a854ca9b353072c3a0e26d8a56f8f0ab9fb6ed32d38d7",
