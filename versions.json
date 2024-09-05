@@ -4,8 +4,8 @@
       "version": "3.20"
     },
     "openssl": {
-      "sha256": "5d2be4036b478ef3cb0a854ca9b353072c3a0e26d8a56f8f0ab9fb6ed32d38d7",
-      "version": "3.1.6"
+      "sha256": "053a31fa80cf4aebe1068c987d2ef1e44ce418881427c4464751ae800c31d06c",
+      "version": "3.1.7"
     },
     "otp": {
       "sha256": "00c2619648e05a25b39035ea51b65fc79c998e55f178cccc6c1b920f3f10dfba",
@@ -22,8 +22,8 @@
       "version": "3.20"
     },
     "openssl": {
-      "sha256": "5d2be4036b478ef3cb0a854ca9b353072c3a0e26d8a56f8f0ab9fb6ed32d38d7",
-      "version": "3.1.6"
+      "sha256": "053a31fa80cf4aebe1068c987d2ef1e44ce418881427c4464751ae800c31d06c",
+      "version": "3.1.7"
     },
     "otp": {
       "sha256": "e49708cf1f602863e394869af48df4abcb39e3633b96cb4babde3ee7aa724872",
@@ -40,8 +40,8 @@
       "version": "3.20"
     },
     "openssl": {
-      "sha256": "777cd596284c883375a2a7a11bf5d2786fc5413255efab20c50d6ffe6d020b7e",
-      "version": "3.3.1"
+      "sha256": "2e8a40b01979afe8be0bbfb3de5dc1c6709fedb46d6c89c10da114ab5fc3d281",
+      "version": "3.3.2"
     },
     "otp": {
       "sha256": "e49708cf1f602863e394869af48df4abcb39e3633b96cb4babde3ee7aa724872",
