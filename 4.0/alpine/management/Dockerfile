@@ -4,7 +4,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-FROM rabbitmq:4.0-rc
+FROM rabbitmq:4.0-alpine
 
 RUN set eux; \
 	rabbitmq-plugins enable --offline rabbitmq_management; \
@@ -15,9 +15,7 @@ RUN set eux; \
 	cp /plugins/rabbitmq_management-*/priv/www/cli/rabbitmqadmin /usr/local/bin/rabbitmqadmin; \
 	[ -s /usr/local/bin/rabbitmqadmin ]; \
 	chmod +x /usr/local/bin/rabbitmqadmin; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends python3; \
-	rm -rf /var/lib/apt/lists/*; \
+	apk add --no-cache python3; \
 	rabbitmqadmin --version
 
 EXPOSE 15671 15672
