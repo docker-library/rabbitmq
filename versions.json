@@ -35,7 +35,7 @@
     "version": "3.13.7"
   },
   "3.13-rc": null,
-  "4.0-rc": {
+  "4.0": {
     "alpine": {
       "version": "3.20"
     },
@@ -50,6 +50,7 @@
     "ubuntu": {
       "version": "24.04"
     },
-    "version": "4.0.0-rc.2"
-  }
+    "version": "4.0.0"
+  },
+  "4.0-rc": null
 }
