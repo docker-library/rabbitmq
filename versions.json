@@ -1,22 +1,4 @@
 {
-  "3.12": {
-    "alpine": {
-      "version": "3.20"
-    },
-    "openssl": {
-      "sha256": "053a31fa80cf4aebe1068c987d2ef1e44ce418881427c4464751ae800c31d06c",
-      "version": "3.1.7"
-    },
-    "otp": {
-      "sha256": "5effb0f7d791c9fb216e530f61f3380bf7052a5dfd98b4de2caa05a259abaf05",
-      "version": "25.3.2.15"
-    },
-    "ubuntu": {
-      "version": "22.04"
-    },
-    "version": "3.12.14"
-  },
-  "3.12-rc": null,
   "3.13": {
     "alpine": {
       "version": "3.20"
