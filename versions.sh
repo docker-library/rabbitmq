@@ -4,17 +4,20 @@ set -Eeuo pipefail
 declare -A alpineVersions=(
 	[3.13]='3.20'
 	[4.0]='3.20'
+	[4.1]='3.20'
 )
 
 declare -A ubuntuVersions=(
 	[3.13]='22.04'
 	[4.0]='24.04'
+	[4.1]='24.04'
 )
 
 # https://www.rabbitmq.com/which-erlang.html ("Maximum supported Erlang/OTP")
 declare -A otpMajors=(
 	[3.13]='26'
 	[4.0]='26'
+	[4.1]='27'
 )
 
 # https://www.openssl.org/policies/releasestrat.html
@@ -22,6 +25,7 @@ declare -A otpMajors=(
 declare -A opensslMajors=(
 	[3.13]='3.1'
 	[4.0]='3.3'
+	[4.1]='3.3'
 )
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"

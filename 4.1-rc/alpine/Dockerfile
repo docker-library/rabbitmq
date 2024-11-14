@@ -1,5 +1,11 @@
+#
+# NOTE: THIS DOCKERFILE IS GENERATED VIA "apply-templates.sh"
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
+
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
-FROM alpine:{{ .alpine.version }} as build-base
+FROM alpine:3.20 as build-base
 
 RUN apk add --no-cache \
 	build-base \
@@ -17,31 +23,18 @@ ARG BUILDKIT_SBOM_SCAN_STAGE=true
 # Default to a PGP keyserver that pgp-happy-eyeballs recognizes, but allow for substitutions locally
 ARG PGP_KEYSERVER=keyserver.ubuntu.com
 # If you are building this image locally and are getting `gpg: keyserver receive failed: No data` errors,
-# run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:{{ env.version }} --build-arg PGP_KEYSERVER=pgpkeys.eu {{ env.version }}/ubuntu
+# run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:4.1-rc --build-arg PGP_KEYSERVER=pgpkeys.eu 4.1-rc/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
-ENV OPENSSL_VERSION {{ .openssl.version }}
-ENV OPENSSL_SOURCE_SHA256="{{ .openssl.sha256 }}"
+ENV OPENSSL_VERSION 3.3.2
+ENV OPENSSL_SOURCE_SHA256="2e8a40b01979afe8be0bbfb3de5dc1c6709fedb46d6c89c10da114ab5fc3d281"
 # https://www.openssl.org/source/
-ENV OPENSSL_PGP_KEY_IDS="{{
-[
-	# "OpenSSL <openssl@openssl.org>"
-	# https://openssl-library.org/source/index.html
-	# "The current releases are signed by the OpenSSL key with fingerprint:"
-	# https://keys.openpgp.org/search?q=openssl%40openssl.org
-	"BA54 73A2 B058 7B07 FB27 CF2D 2160 94DF D0CB 81EF",
+ENV OPENSSL_PGP_KEY_IDS="0xBA5473A2B0587B07FB27CF2D216094DFD0CB81EF"
 
-	# hack for trailing comma above
-	empty
-]
-# TODO auto-generate / scrape this list from the canonical upstream source instead (check the signature file and add an entry in the .openssl object with just the one signature that we expect to have signed this release, after cross-referencing the official OMC list?)
-| map("0x" + gsub(" "; "")) | join(" ")
-}}"
-
-ENV OTP_VERSION {{ .otp.version }}
+ENV OTP_VERSION 27.1.2
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="{{ .otp.sha256 }}"
+ENV OTP_SOURCE_SHA256="1772e9fa07b2b020ed5911d6ce78b251dfb6ed8509ed7de9d372e96b87251d14"
 
 # install openssl & erlang to a path that isn't auto-checked for libs to prevent accidental use by system packages
 ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
@@ -199,7 +192,7 @@ ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$PATH
 RUN find $ERLANG_INSTALL_PATH_PREFIX -type f -name 'crypto.so' -exec ldd {} \; | awk '/libcrypto\.so/ { if (!index($3,ENVIRON["OPENSSL_INSTALL_PATH_PREFIX"])) exit 1 }'
 RUN erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
 
-FROM alpine:{{ .alpine.version }}
+FROM alpine:3.20
 
 # OPENSSL/ERLANG_INSTALL_PATH_PREFIX are defined in a different stage, so define them again
 ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
@@ -256,7 +249,7 @@ RUN set -eux; \
 		tzdata
 
 # Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
-ENV RABBITMQ_VERSION {{ .version }}
+ENV RABBITMQ_VERSION 4.1.0-beta.1
 # https://www.rabbitmq.com/signatures.html#importing-gpg
 ENV RABBITMQ_PGP_KEY_ID 0x0A9AF2115F4687BD29803A206B73A36E6026DFCA
 ENV RABBITMQ_HOME /opt/rabbitmq
@@ -274,11 +267,7 @@ RUN set -eux; \
 		xz \
 	; \
 	\
-{{ if env.version | IN("3.13", "4.0") then ( -}}
-	RABBITMQ_SOURCE_URL="https://github.com/rabbitmq/rabbitmq-server/releases/download/v$RABBITMQ_VERSION/rabbitmq-server-generic-unix-latest-toolchain-$RABBITMQ_VERSION.tar.xz"; \
-{{ ) else ( -}}
 	RABBITMQ_SOURCE_URL="https://github.com/rabbitmq/rabbitmq-server/releases/download/v$RABBITMQ_VERSION/rabbitmq-server-generic-unix-$RABBITMQ_VERSION.tar.xz"; \
-{{ ) end -}}
 	RABBITMQ_PATH="/usr/local/src/rabbitmq-$RABBITMQ_VERSION"; \
 	\
 	wget --output-document "$RABBITMQ_PATH.tar.xz.asc" "$RABBITMQ_SOURCE_URL.asc"; \
