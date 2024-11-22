@@ -274,7 +274,7 @@ RUN set -eux; \
 		xz \
 	; \
 	\
-{{ if env.version | IN("3.13", "4.0") then ( -}}
+{{ if env.version | rtrimstr("-rc") | IN("3.13", "4.0") then ( -}}
 	RABBITMQ_SOURCE_URL="https://github.com/rabbitmq/rabbitmq-server/releases/download/v$RABBITMQ_VERSION/rabbitmq-server-generic-unix-latest-toolchain-$RABBITMQ_VERSION.tar.xz"; \
 {{ ) else ( -}}
 	RABBITMQ_SOURCE_URL="https://github.com/rabbitmq/rabbitmq-server/releases/download/v$RABBITMQ_VERSION/rabbitmq-server-generic-unix-$RABBITMQ_VERSION.tar.xz"; \
