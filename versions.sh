@@ -16,7 +16,7 @@ declare -A ubuntuVersions=(
 # https://www.rabbitmq.com/which-erlang.html ("Maximum supported Erlang/OTP")
 declare -A otpMajors=(
 	[3.13]='26'
-	[4.0]='26'
+	[4.0]='27'
 	[4.1]='27'
 )
 
