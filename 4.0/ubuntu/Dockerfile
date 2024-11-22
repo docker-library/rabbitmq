@@ -34,10 +34,10 @@ ENV OPENSSL_SOURCE_SHA256="2e8a40b01979afe8be0bbfb3de5dc1c6709fedb46d6c89c10da11
 # https://www.openssl.org/source/
 ENV OPENSSL_PGP_KEY_IDS="0xBA5473A2B0587B07FB27CF2D216094DFD0CB81EF"
 
-ENV OTP_VERSION 26.2.5.5
+ENV OTP_VERSION 27.1.2
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="d6e92683cc7505faf124252d390ba14d0c335d15a138c6b770d3b80b33db8f48"
+ENV OTP_SOURCE_SHA256="1772e9fa07b2b020ed5911d6ce78b251dfb6ed8509ed7de9d372e96b87251d14"
 
 # install openssl & erlang to a path that isn't auto-checked for libs to prevent accidental use by system packages
 ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
@@ -125,13 +125,6 @@ RUN set -eux; \
 	wget --progress dot:giga --output-document "$OTP_PATH.tar.gz" "$OTP_SOURCE_URL"; \
 	echo "$OTP_SOURCE_SHA256 *$OTP_PATH.tar.gz" | sha256sum --check --strict -; \
 	tar --extract --file "$OTP_PATH.tar.gz" --directory "$OTP_PATH" --strip-components 1; \
-	\
-# backport https://github.com/erlang/otp/pull/7952 (applied upstream in OTP 27+) to fix time64 compilation issues on 32bit architectures
-# see also https://bugs.debian.org/1067701, https://salsa.debian.org/erlang-team/packages/erlang/-/blob/89c4e190c6d1d7ee0133d9a8d6bf651ff1861e46/debian/patches/time64.patch
-	wget --output-document otp-time64.patch 'https://github.com/erlang/otp/pull/7952.patch?full_index=1'; \
-	echo 'd1a0c0433a9a08c83171bedd438dd59bb336b40ec75f59edfc3a647b8b0c612d *otp-time64.patch' | sha256sum --check --strict -; \
-	patch --input="$PWD/otp-time64.patch" --directory="$OTP_PATH" --strip=1; \
-	rm otp-time64.patch; \
 	\
 # Configure Erlang/OTP for compilation, disable unused features & applications
 # https://erlang.org/doc/applications.html
