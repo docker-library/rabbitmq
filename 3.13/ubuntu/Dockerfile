@@ -6,7 +6,7 @@
 
 # The official Canonical Ubuntu Focal image is ideal from a security perspective,
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
-FROM ubuntu:22.04 as build-base
+FROM ubuntu:24.04 as build-base
 
 ARG BUILDKIT_SBOM_SCAN_STAGE=true
 
@@ -199,7 +199,7 @@ ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$PATH
 RUN find $ERLANG_INSTALL_PATH_PREFIX -type f -name 'crypto.so' -exec ldd {} \; | awk '/libcrypto\.so/ { if (!index($3,ENVIRON["OPENSSL_INSTALL_PATH_PREFIX"])) exit 1 }'
 RUN erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # OPENSSL/ERLANG_INSTALL_PATH_PREFIX are defined in a different stage, so define them again
 ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang

@@ -8,7 +8,7 @@ declare -A alpineVersions=(
 )
 
 declare -A ubuntuVersions=(
-	[3.13]='22.04'
+	[3.13]='24.04'
 	[4.0]='24.04'
 	[4.1]='24.04'
 )
