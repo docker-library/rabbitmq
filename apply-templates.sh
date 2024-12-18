@@ -53,6 +53,12 @@ for version; do
 			gawk -f "$jqt" "Dockerfile-$variant.template"
 		} > "$version/$variant/Dockerfile"
 
+		if (($(find "patch/$variant" -type f -name '*.patch' | wc -l) > 0))
+		then
+			mkdir -p "$version/$variant/patch"
+			cp -af "patch/$variant/"* "$version/$variant/patch"
+		fi
+
 		cp -f docker-entrypoint.sh conf.d/*.conf "$version/$variant/"
 
 		if [ "$variant" = 'alpine' ]; then
