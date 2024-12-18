@@ -5,7 +5,7 @@
 #
 
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
-FROM alpine:3.21 as build-base
+FROM alpine:3.21 AS build-base
 
 RUN apk add --no-cache \
 	build-base \
@@ -16,7 +16,7 @@ RUN apk add --no-cache \
 	linux-headers \
 	ncurses-dev
 
-FROM build-base as openssl-builder
+FROM build-base AS openssl-builder
 
 ARG BUILDKIT_SBOM_SCAN_STAGE=true
 
@@ -110,19 +110,23 @@ RUN set -eux; \
 # smoke test
 RUN $OPENSSL_INSTALL_PATH_PREFIX/bin/openssl version
 
-FROM openssl-builder as erlang-builder
+FROM openssl-builder AS erlang-builder
 
 ARG BUILDKIT_SBOM_SCAN_STAGE=true
 
-RUN set -eux; \
 # /usr/local/src doesn't exist in Alpine by default
-	mkdir -p /usr/local/src; \
-	\
+RUN set -eux; \
+	OTP_PATH="/usr/local/src/otp-$OTP_VERSION"; \
+	mkdir -p "/usr/local/src/patch"; \
+	mkdir -p "$OTP_PATH"
+
+COPY patch/ /usr/local/src/patch/
+
+RUN set -eux; \
 	OTP_SOURCE_URL="https://github.com/erlang/otp/releases/download/OTP-$OTP_VERSION/otp_src_$OTP_VERSION.tar.gz"; \
 	OTP_PATH="/usr/local/src/otp-$OTP_VERSION"; \
 	\
 # Download, verify & extract OTP_SOURCE
-	mkdir -p "$OTP_PATH"; \
 	wget --output-document "$OTP_PATH.tar.gz" "$OTP_SOURCE_URL"; \
 	echo "$OTP_SOURCE_SHA256 *$OTP_PATH.tar.gz" | sha256sum -c -; \
 	tar --extract --file "$OTP_PATH.tar.gz" --directory "$OTP_PATH" --strip-components 1; \
@@ -131,6 +135,13 @@ RUN set -eux; \
 # https://erlang.org/doc/applications.html
 # ERL_TOP is required for Erlang/OTP makefiles to find the absolute path for the installation
 	cd "$OTP_PATH"; \
+	if [ -d /usr/local/src/patch/otp/$OTP_VERSION ]; then \
+	  for patch_file in /usr/local/src/patch/otp/$OTP_VERSION/*.patch; do \
+	    if [ -f "$patch_file" ]; then \
+	      patch -p0 < "$patch_file"; \
+	    fi; \
+	  done; \
+	fi; \
 	export ERL_TOP="$OTP_PATH"; \
 	export CFLAGS='-g -O2'; \
 # add -rpath to avoid conflicts between our OpenSSL's "libssl.so" and the libssl package by making sure "$INSTALL_PATH_PREFIX/lib" is searched first (but only for Erlang/OpenSSL to avoid issues with other tools using libssl; https://github.com/docker-library/rabbitmq/issues/364)
