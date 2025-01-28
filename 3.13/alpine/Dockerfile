@@ -31,10 +31,10 @@ ENV OPENSSL_SOURCE_SHA256="053a31fa80cf4aebe1068c987d2ef1e44ce418881427c4464751a
 # https://www.openssl.org/source/
 ENV OPENSSL_PGP_KEY_IDS="0xBA5473A2B0587B07FB27CF2D216094DFD0CB81EF"
 
-ENV OTP_VERSION 26.2.5.6
+ENV OTP_VERSION 26.2.5.7
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="96ce3340450756fdabf8fdb2e3ceb0489eb679f6b51b7b7ac6417c2e6f495bb8"
+ENV OTP_SOURCE_SHA256="49afee0ae2c5f9537c4c433caf1ae6d04d8b2cf74aa92c50f133d9feebdf1036"
 
 # install openssl & erlang to a path that isn't auto-checked for libs to prevent accidental use by system packages
 ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
@@ -126,11 +126,6 @@ RUN set -eux; \
 	wget --output-document "$OTP_PATH.tar.gz" "$OTP_SOURCE_URL"; \
 	echo "$OTP_SOURCE_SHA256 *$OTP_PATH.tar.gz" | sha256sum -c -; \
 	tar --extract --file "$OTP_PATH.tar.gz" --directory "$OTP_PATH" --strip-components 1; \
-	\
-# https://github.com/erlang/otp/pull/9212
-	wget --output-document otp-9212.patch 'https://github.com/erlang/otp/commit/e2604aa7a92b3bb7c1293afd12705c7ce9c952a4.patch?full_index=1'; \
-	echo '35ec51529bdd6cab4b173b4e1fe844efa82f74eba76a99a74f746778d64dffa7 *otp-9212.patch' | sha256sum -c -; \
-	patch --input="$PWD/otp-9212.patch" --directory="$OTP_PATH" --strip=1; \
 	\
 # Configure Erlang/OTP for compilation, disable unused features & applications
 # https://erlang.org/doc/applications.html

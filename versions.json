@@ -8,8 +8,8 @@
       "version": "3.1.7"
     },
     "otp": {
-      "sha256": "96ce3340450756fdabf8fdb2e3ceb0489eb679f6b51b7b7ac6417c2e6f495bb8",
-      "version": "26.2.5.6"
+      "sha256": "49afee0ae2c5f9537c4c433caf1ae6d04d8b2cf74aa92c50f133d9feebdf1036",
+      "version": "26.2.5.7"
     },
     "ubuntu": {
       "version": "24.04"
@@ -26,8 +26,8 @@
       "version": "3.3.2"
     },
     "otp": {
-      "sha256": "b66c2cc4fa2c87211b668e4486d4f3e5b1b6705698873ea3e6d9850801ac992d",
-      "version": "27.2"
+      "sha256": "07982134e10637dde57cf9cdc6dda6f65425810229986136d184766d4db9eda3",
+      "version": "27.2.1"
     },
     "ubuntu": {
       "version": "24.04"
@@ -44,8 +44,8 @@
       "version": "3.3.2"
     },
     "otp": {
-      "sha256": "b66c2cc4fa2c87211b668e4486d4f3e5b1b6705698873ea3e6d9850801ac992d",
-      "version": "27.2"
+      "sha256": "07982134e10637dde57cf9cdc6dda6f65425810229986136d184766d4db9eda3",
+      "version": "27.2.1"
     },
     "ubuntu": {
       "version": "24.04"

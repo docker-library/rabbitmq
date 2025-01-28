@@ -134,11 +134,6 @@ RUN set -eux; \
 	echo "$OTP_SOURCE_SHA256 *$OTP_PATH.tar.gz" | sha256sum -c -; \
 	tar --extract --file "$OTP_PATH.tar.gz" --directory "$OTP_PATH" --strip-components 1; \
 	\
-# https://github.com/erlang/otp/pull/9212
-	wget --output-document otp-9212.patch 'https://github.com/erlang/otp/commit/e2604aa7a92b3bb7c1293afd12705c7ce9c952a4.patch?full_index=1'; \
-	echo '35ec51529bdd6cab4b173b4e1fe844efa82f74eba76a99a74f746778d64dffa7 *otp-9212.patch' | sha256sum -c -; \
-	patch --input="$PWD/otp-9212.patch" --directory="$OTP_PATH" --strip=1; \
-	\
 # Configure Erlang/OTP for compilation, disable unused features & applications
 # https://erlang.org/doc/applications.html
 # ERL_TOP is required for Erlang/OTP makefiles to find the absolute path for the installation
