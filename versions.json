@@ -4,8 +4,8 @@
       "version": "3.21"
     },
     "openssl": {
-      "sha256": "053a31fa80cf4aebe1068c987d2ef1e44ce418881427c4464751ae800c31d06c",
-      "version": "3.1.7"
+      "sha256": "d319da6aecde3aa6f426b44bbf997406d95275c5c59ab6f6ef53caaa079f456f",
+      "version": "3.1.8"
     },
     "otp": {
       "sha256": "49afee0ae2c5f9537c4c433caf1ae6d04d8b2cf74aa92c50f133d9feebdf1036",
