@@ -148,6 +148,8 @@ for version in "${versions[@]}"; do
 
 	# OpenSSL 3.0.5's sha256 file starts with a single space 😬
 	opensslSourceSha256="${opensslSourceSha256# }"
+	# OpenSSL 3.1.8+ and 3.3.3+ now include the filename
+	opensslSourceSha256="${opensslSourceSha256%% *}"
 
 	alpineVersion="${alpineVersions[$rcVersion]}"
 	export alpineVersion
