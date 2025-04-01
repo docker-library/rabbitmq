@@ -173,6 +173,7 @@ RUN set -eux; \
 		--without-observer \
 		--without-odbc \
 		--without-reltool \
+		--without-snmp \
 		--without-ssh \
 		--without-tftp \
 		--without-wx \
