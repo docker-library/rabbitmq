@@ -44,8 +44,8 @@
       "version": "3.3.3"
     },
     "otp": {
-      "sha256": "6d30f0ac69a565adf1317f5ba6c8d53e9c9163adec4ae5cba49584e59fa20da8",
-      "version": "27.3.1"
+      "sha256": "7997a0900d149c82ae3d0f523d7dfa960ac3cd58acf0b158519c108eb5c65661",
+      "version": "27.3.2"
     },
     "ubuntu": {
       "version": "24.04"
