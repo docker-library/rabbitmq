@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 declare -A aliases=(
-	[4.0]='4 latest'
+	[4.1]='4 latest'
 	[3.13]='3'
 )
 defaultVariant='ubuntu'
