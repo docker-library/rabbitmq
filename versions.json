@@ -1,7 +1,7 @@
 {
   "3.13": {
     "alpine": {
-      "version": "3.21"
+      "version": "3.22"
     },
     "openssl": {
       "sha256": "d319da6aecde3aa6f426b44bbf997406d95275c5c59ab6f6ef53caaa079f456f",
@@ -19,7 +19,7 @@
   "3.13-rc": null,
   "4.0": {
     "alpine": {
-      "version": "3.21"
+      "version": "3.22"
     },
     "openssl": {
       "sha256": "712590fd20aaa60ec75d778fe5b810d6b829ca7fb1e530577917a131f9105539",
@@ -37,7 +37,7 @@
   "4.0-rc": null,
   "4.1": {
     "alpine": {
-      "version": "3.21"
+      "version": "3.22"
     },
     "openssl": {
       "sha256": "712590fd20aaa60ec75d778fe5b810d6b829ca7fb1e530577917a131f9105539",
