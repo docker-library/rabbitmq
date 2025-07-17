@@ -31,10 +31,10 @@ ENV OPENSSL_SOURCE_SHA256="d319da6aecde3aa6f426b44bbf997406d95275c5c59ab6f6ef53c
 # https://www.openssl.org/source/
 ENV OPENSSL_PGP_KEY_IDS="0xBA5473A2B0587B07FB27CF2D216094DFD0CB81EF"
 
-ENV OTP_VERSION 26.2.5.13
+ENV OTP_VERSION 26.2.5.14
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="a02efb423a7ecdee661b3c3ad2661521d9c00c2dd866c004d95a87d486a03bab"
+ENV OTP_SOURCE_SHA256="39f5e25709820606ab11c867285a2132ac4b2999827af0071a1fb2ef1589ad9a"
 
 # install openssl & erlang to a path that isn't auto-checked for libs to prevent accidental use by system packages
 ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
