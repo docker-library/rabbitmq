@@ -96,7 +96,6 @@ for version in "${versions[@]}"; do
 		if [[ "$fullVersion" == "$rcFullVersion"* ]] || [ "$latestVersion" = "$rcFullVersion" ]; then
 			# "x.y.z-rc1" == x.y.z*
 			echo >&2 "warning: skipping/removing '$version' ('$rcVersion' is at '$rcFullVersion' which is newer than '$fullVersion')"
-			json="$(jq <<<"$json" -c '.[env.version] = null')"
 			continue
 		fi
 	fi
@@ -184,6 +183,16 @@ for version in "${versions[@]}"; do
 			}
 		'
 	)"
+
+	# make sure RCs and releases have corresponding pairs
+	json="$(jq <<<"$json" -c '
+		.[
+			env.rcVersion
+			+ if env.version == env.rcVersion then
+				"-rc"
+			else "" end
+		] //= null
+	')"
 done
 
 jq <<<"$json" -S . > versions.json
