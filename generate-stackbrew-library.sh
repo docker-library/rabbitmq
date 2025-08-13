@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-declare -A aliases=(
-	[4.1]='4 latest'
-	[3.13]='3'
-)
 defaultVariant='ubuntu'
 
 self="$(basename "$BASH_SOURCE")"
@@ -14,7 +10,7 @@ if [ "$#" -eq 0 ]; then
 	versions="$(jq -r '
 		to_entries
 		# sort version numbers with highest first
-		| sort_by(.key | split("[.-]"; "") | map(try tonumber // .))
+		| sort_by(.key | split("[.-]"; "") | map(tonumber? // .))
 		| reverse
 		| map(if .value then .key | @sh else empty end)
 		| join(" ")
@@ -81,6 +77,8 @@ join() {
 	echo "${out#$sep}"
 }
 
+declare -A usedAliases=()
+
 for version; do
 	export version
 	rcVersion="${version%-rc}"
@@ -103,16 +101,22 @@ for version; do
 	versionAliases=()
 	if [ "$version" = "$rcVersion" ]; then
 		while [ "$fullVersion" != "$version" -a "${fullVersion%[.-]*}" != "$fullVersion" ]; do
-			versionAliases+=( $fullVersion )
+			versionAliases+=( "$fullVersion" )
 			fullVersion="${fullVersion%[.-]*}"
 		done
 	else
-		versionAliases+=( $fullVersion )
+		versionAliases+=( "$fullVersion" )
 	fi
-	versionAliases+=(
-		$version
-		${aliases[$version]:-}
-	)
+	versionAliases+=( $version )
+
+	if [ "$version" = "$rcVersion" ]; then
+		for tagAlias in "${fullVersion%%.*}" latest; do
+			if [ -z "${usedAliases[$tagAlias]:-}" ]; then
+				versionAliases+=( "$tagAlias" )
+				usedAliases["$tagAlias"]="$version"
+			fi
+		done
+	fi
 
 	for variant in ubuntu alpine; do
 		dir="$version/$variant"
