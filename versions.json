@@ -53,7 +53,23 @@
     "version": "4.1.5"
   },
   "4.1-rc": null,
-  "4.2": null,
+  "4.2": {
+    "alpine": {
+      "version": "3.22"
+    },
+    "openssl": {
+      "sha256": "9d62c00a5a6903740c8703f0e006257f429d565d3b91ac1a9bd4a4c700002e01",
+      "version": "3.3.5"
+    },
+    "otp": {
+      "sha256": "597618c75890e8e606033bc8dbf6ec87fdf4e892c10b4912ae3c9a4f01384579",
+      "version": "27.3.4.3"
+    },
+    "ubuntu": {
+      "version": "24.04"
+    },
+    "version": "4.2.0"
+  },
   "4.2-rc": {
     "alpine": {
       "version": "3.22"
