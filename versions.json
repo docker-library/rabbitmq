@@ -8,8 +8,8 @@
       "version": "3.1.8"
     },
     "otp": {
-      "sha256": "28e6d63d82927f132d56289dd3c428ef8bce6bf2283c8549aa0a7afca1a8fe3b",
-      "version": "26.2.5.15"
+      "sha256": "932d091933f818d89c2cf7a8c23d84781bbae4b1ee7b846e8676e22768570cae",
+      "version": "26.2.5.16"
     },
     "ubuntu": {
       "version": "24.04"
