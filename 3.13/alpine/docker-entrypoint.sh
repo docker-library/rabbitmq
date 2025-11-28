@@ -47,4 +47,8 @@ if [ -z "${RABBITMQ_USE_LONGNAME:-}" ] && [ "$(hostname)" != "$(hostname -s)" ];
 	: "${RABBITMQ_USE_LONGNAME:=true}"
 fi
 
+# the rabbitmq-server startup script uses RUNNING_UNDER_SYSTEMD to determine if the erl command
+# should be started via exec, which results in beam.smp becoming PID 1 in the container
+export RUNNING_UNDER_SYSTEMD=true
+
 exec "$@"
