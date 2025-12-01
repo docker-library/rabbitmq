@@ -20,6 +20,8 @@ fi
 
 generated_warning() {
 	cat <<-EOH
+		# syntax=docker/dockerfile:1
+		# check=skip=SecretsUsedInArgOrEnv
 		#
 		# NOTE: THIS DOCKERFILE IS GENERATED VIA "apply-templates.sh"
 		#
