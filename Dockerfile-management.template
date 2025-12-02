@@ -1,3 +1,50 @@
+# vim:noet:
+FROM {{
+	"rabbitmq:" + env.version
+	+ if env.variant == "alpine" then "-alpine" else "" end
+}} AS builder
+
+RUN set +e; set -ux; \
+{{ if env.variant == "alpine" then ( -}}
+	apk add --no-cache build-base wget unzip musl-dev; \
+{{ ) else ( -}}
+	apt-get update; \
+	apt-get install -y --no-install-recommends build-essential unzip wget; \
+{{ ) end -}}
+	\
+	wget --quiet --output-document=rmqadmin.zip "https://github.com/rabbitmq/rabbitmqadmin-ng/archive/refs/tags/v{{ .rabbitmqadmin.version }}.zip"; \
+	wget --quiet --output-document=rustup-init.sh https://sh.rustup.rs; \
+	\
+{{ if env.variant == "alpine" then ( -}}
+	echo "{{ .rabbitmqadmin.sha256 }} rmqadmin.zip" | sha256sum -c -; \
+	echo "{{ .rabbitmqadmin.rustInitSha256 }} rustup-init.sh" | sha256sum -c -; \
+{{ ) else ( -}}
+	echo "{{ .rabbitmqadmin.sha256 }} rmqadmin.zip" | sha256sum --check --strict -; \
+	echo "{{ .rabbitmqadmin.rustInitSha256 }} rustup-init.sh" | sha256sum --check --strict -; \
+{{ ) end -}}
+	\
+	/bin/sh -x ./rustup-init.sh -y --default-toolchain stable --profile minimal; \
+	. "$HOME/.cargo/env"; \
+	unzip -q rmqadmin.zip; \
+	cd "rabbitmqadmin-ng-{{ .rabbitmqadmin.version }}"; \
+	export OPENSSL_DIR=/opt/openssl; \
+	\
+{{ if env.variant == "alpine" then ( -}}
+# NOTE: since OpenSSL is dynamically linked to musl, rabbitmqadmin must also be (https://users.rust-lang.org/t/sigsegv-with-program-linked-against-openssl-in-an-alpine-container/52172)
+	export RUSTFLAGS="-C target-feature=-crt-static -C link-arg=-Wl,-rpath,/opt/openssl/lib"; \
+{{ ) else ( -}}
+	export RUSTFLAGS="-C link-arg=-Wl,-rpath,/opt/openssl/lib"; \
+{{ ) end -}}
+	\
+	if cargo build --release && [ -f target/release/rabbitmqadmin ]; then \
+		cp target/release/rabbitmqadmin /usr/local/bin/rabbitmqadmin; \
+		chmod +x /usr/local/bin/rabbitmqadmin; \
+	else \
+		echo "[INFO] could not build rabbitmqadmin-ng via Rust toolchain."; \
+	fi
+
+RUN touch /usr/local/bin/rabbitmqadmin
+
 FROM {{
 	"rabbitmq:" + env.version
 	+ if env.variant == "alpine" then "-alpine" else "" end
@@ -6,19 +53,17 @@ FROM {{
 RUN set -eux; \
 	rabbitmq-plugins enable --offline rabbitmq_management; \
 # make sure the metrics collector is re-enabled (disabled in the base image for Prometheus-style metrics by default)
-	rm -f /etc/rabbitmq/conf.d/20-management_agent.disable_metrics_collector.conf; \
-# grab "rabbitmqadmin" from inside the "rabbitmq_management-X.Y.Z" plugin folder
-# see https://github.com/docker-library/rabbitmq/issues/207
-	cp /plugins/rabbitmq_management-*/priv/www/cli/rabbitmqadmin /usr/local/bin/rabbitmqadmin; \
-	[ -s /usr/local/bin/rabbitmqadmin ]; \
-	chmod +x /usr/local/bin/rabbitmqadmin; \
-{{ if env.variant == "alpine" then ( -}}
-	apk add --no-cache python3; \
-{{ ) else ( -}}
-	apt-get update; \
-	apt-get install -y --no-install-recommends python3; \
-	rm -rf /var/lib/apt/lists/*; \
-{{ ) end -}}
-	rabbitmqadmin --version
+	rm -f /etc/rabbitmq/conf.d/20-management_agent.disable_metrics_collector.conf
+
+# Copy Rust binary from builder if it exists
+COPY --from=builder /usr/local/bin/rabbitmqadmin /tmp/rabbitmqadmin-rust
+
+RUN set -eux; \
+	if [ -x /tmp/rabbitmqadmin-rust ]; then \
+		mv /tmp/rabbitmqadmin-rust /usr/local/bin/rabbitmqadmin; \
+		rabbitmqadmin --help; \
+	else \
+		echo "[INFO] rabbitmqadmin is not available on this platform."; \
+	fi
 
 EXPOSE 15671 15672

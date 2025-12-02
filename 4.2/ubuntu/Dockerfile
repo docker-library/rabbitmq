@@ -6,6 +6,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
+# vim:noet:
 # The official Canonical Ubuntu Focal image is ideal from a security perspective,
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
 FROM ubuntu:24.04 AS build-base

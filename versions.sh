@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# vim:noet:
 set -Eeuo pipefail
 
 declare -A alpineVersions=(
@@ -160,7 +161,30 @@ for version in "${versions[@]}"; do
 	ubuntuVersion="${ubuntuVersions[$rcVersion]}"
 	export ubuntuVersion
 
-	echo "$version: $fullVersion (otp $otpVersion, openssl $opensslVersion, alpine, $alpineVersion, ubuntu $ubuntuVersion)"
+	if [[ ${rabbitmqadminVersion:-undefined} == 'undefined' ]]
+	then
+		rabbitmqadminVersion="$(wget --quiet --output-document=- \
+			--header='Accept: application/vnd.github+json' \
+			--header='X-GitHub-Api-Version: 2022-11-28' \
+			https://api.github.com/repos/rabbitmq/rabbitmqadmin-ng/releases/latest | jq -r '.tag_name')"
+		rabbitmqadminVersion="${rabbitmqadminVersion#v}" # NOTE: removes leading "v"
+		readonly rabbitmqadminVersion
+
+		readonly rabbitmqadminSourceZipUrl="https://github.com/rabbitmq/rabbitmqadmin-ng/archive/refs/tags/v$rabbitmqadminVersion.zip"
+		wget --quiet --output-document=rmqadmin.zip "$rabbitmqadminSourceZipUrl"
+		rabbitmqadminSourceSha256="$(sha256sum rmqadmin.zip | cut -d' ' -f1)"
+		# TODO rm -f rmqadmin.zip
+		readonly rabbitmqadminSourceSha256
+
+		wget --quiet --output-document=rustup-init.sh https://sh.rustup.rs
+		rustInitSha256="$(sha256sum rustup-init.sh | cut -d' ' -f1)"
+		# TODO rm -f rustup-init.sh
+		readonly rustInitSha256
+
+		export rustInitSha256 rabbitmqadminVersion rabbitmqadminSourceSha256
+	fi
+
+	echo "$version: $fullVersion (otp $otpVersion, openssl $opensslVersion, rabbitmqadmin $rabbitmqadminVersion, alpine, $alpineVersion, ubuntu $ubuntuVersion)"
 
 	json="$(
 		jq <<<"$json" -c '
@@ -179,6 +203,11 @@ for version in "${versions[@]}"; do
 				},
 				ubuntu: {
 					version: env.ubuntuVersion
+				},
+				rabbitmqadmin: {
+					version: env.rabbitmqadminVersion,
+					sha256: env.rabbitmqadminSourceSha256,
+					rustInitSha256: env.rustInitSha256,
 				},
 			}
 		'
