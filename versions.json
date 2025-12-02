@@ -11,6 +11,12 @@
       "sha256": "932d091933f818d89c2cf7a8c23d84781bbae4b1ee7b846e8676e22768570cae",
       "version": "26.2.5.16"
     },
+    "rabbitmqadmin": {
+      "aarch64_digest": "a90d65072eb3fe4cc5883b7396cdf180cf883111c0626a80a2ad6256b87879d4",
+      "aarch64_download_url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.17.0/rabbitmqadmin-2.17.0-aarch64-unknown-linux-gnu",
+      "x86_64_digest": "a0995c7bb4597f33cddefce80dc2e234c571d8716c8ba946b1e288f3ab6e6dbb",
+      "x86_64_download_url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.17.0/rabbitmqadmin-2.17.0-x86_64-unknown-linux-gnu"
+    },
     "ubuntu": {
       "version": "24.04"
     },
@@ -28,6 +34,12 @@
     "otp": {
       "sha256": "658529f94cc5b8833907aa680a5e979e67c32dd6ebba69ed3b90b95f526ccda2",
       "version": "27.3.4.6"
+    },
+    "rabbitmqadmin": {
+      "aarch64_digest": "a90d65072eb3fe4cc5883b7396cdf180cf883111c0626a80a2ad6256b87879d4",
+      "aarch64_download_url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.17.0/rabbitmqadmin-2.17.0-aarch64-unknown-linux-gnu",
+      "x86_64_digest": "a0995c7bb4597f33cddefce80dc2e234c571d8716c8ba946b1e288f3ab6e6dbb",
+      "x86_64_download_url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.17.0/rabbitmqadmin-2.17.0-x86_64-unknown-linux-gnu"
     },
     "ubuntu": {
       "version": "24.04"
@@ -47,6 +59,12 @@
       "sha256": "658529f94cc5b8833907aa680a5e979e67c32dd6ebba69ed3b90b95f526ccda2",
       "version": "27.3.4.6"
     },
+    "rabbitmqadmin": {
+      "aarch64_digest": "a90d65072eb3fe4cc5883b7396cdf180cf883111c0626a80a2ad6256b87879d4",
+      "aarch64_download_url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.17.0/rabbitmqadmin-2.17.0-aarch64-unknown-linux-gnu",
+      "x86_64_digest": "a0995c7bb4597f33cddefce80dc2e234c571d8716c8ba946b1e288f3ab6e6dbb",
+      "x86_64_download_url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.17.0/rabbitmqadmin-2.17.0-x86_64-unknown-linux-gnu"
+    },
     "ubuntu": {
       "version": "24.04"
     },
@@ -64,6 +82,12 @@
     "otp": {
       "sha256": "658529f94cc5b8833907aa680a5e979e67c32dd6ebba69ed3b90b95f526ccda2",
       "version": "27.3.4.6"
+    },
+    "rabbitmqadmin": {
+      "aarch64_digest": "a90d65072eb3fe4cc5883b7396cdf180cf883111c0626a80a2ad6256b87879d4",
+      "aarch64_download_url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.17.0/rabbitmqadmin-2.17.0-aarch64-unknown-linux-gnu",
+      "x86_64_digest": "a0995c7bb4597f33cddefce80dc2e234c571d8716c8ba946b1e288f3ab6e6dbb",
+      "x86_64_download_url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.17.0/rabbitmqadmin-2.17.0-x86_64-unknown-linux-gnu"
     },
     "ubuntu": {
       "version": "24.04"

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# vim:noet:
 set -Eeuo pipefail
 
 declare -A alpineVersions=(
@@ -160,7 +161,36 @@ for version in "${versions[@]}"; do
 	ubuntuVersion="${ubuntuVersions[$rcVersion]}"
 	export ubuntuVersion
 
-	echo "$version: $fullVersion (otp $otpVersion, openssl $opensslVersion, alpine, $alpineVersion, ubuntu $ubuntuVersion)"
+	if [[ ${rmqadmin_version:-undefined} == 'undefined' ]]
+	then
+		rmqadmin_release_json="$(wget --quiet --output-document=- \
+			--header='Accept: application/vnd.github+json' \
+			--header='X-GitHub-Api-Version: 2022-11-28' \
+			https://api.github.com/repos/rabbitmq/rabbitmqadmin-ng/releases/latest)"
+
+		rmqadmin_version="$(echo "$rmqadmin_release_json" | jq -r '.tag_name')"
+		rmqadmin_version="${rmqadmin_version#v}" # NOTE: removes leading "v"
+		readonly rmqadmin_version
+
+		rmqadmin_aarch64_download_url="$(echo "$rmqadmin_release_json" | jq -r '.assets[] | select(.name | test(".*aarch64.*linux.*")) | .browser_download_url')"
+		readonly rmqadmin_aarch64_download_url
+
+		rmqadmin_aarch64_digest="$(echo "$rmqadmin_release_json" | jq -r '.assets[] | select(.name | test(".*aarch64.*linux.*")) | .digest | split("sha256:")[1]')"
+		readonly rmqadmin_aarch64_digest
+
+		rmqadmin_x86_64_download_url="$(echo "$rmqadmin_release_json" | jq -r '.assets[] | select(.name | test(".*x86_64.*linux.*")) | .browser_download_url')"
+		readonly rmqadmin_x86_64_download_url
+
+		rmqadmin_x86_64_digest="$(echo "$rmqadmin_release_json" | jq -r '.assets[] | select(.name | test(".*x86_64.*linux.*")) | .digest | split("sha256:")[1]')"
+		readonly rmqadmin_x86_64_digest
+
+		unset rmqadmin_release_json
+
+		export rmqadmin_aarch64_download_url rmqadmin_aarch64_digest \
+			rmqadmin_x86_64_download_url rmqadmin_x86_64_digest
+	fi
+
+	echo "$version: $fullVersion (otp $otpVersion, openssl $opensslVersion, rabbitmqadmin $rmqadmin_version, alpine, $alpineVersion, ubuntu $ubuntuVersion)"
 
 	json="$(
 		jq <<<"$json" -c '
@@ -179,6 +209,12 @@ for version in "${versions[@]}"; do
 				},
 				ubuntu: {
 					version: env.ubuntuVersion
+				},
+				rabbitmqadmin: {
+					aarch64_download_url: env.rmqadmin_aarch64_download_url,
+					aarch64_digest: env.rmqadmin_aarch64_digest,
+					x86_64_download_url: env.rmqadmin_x86_64_download_url,
+					x86_64_digest: env.rmqadmin_x86_64_digest,
 				},
 			}
 		'
