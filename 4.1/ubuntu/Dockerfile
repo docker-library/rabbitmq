@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+# check=skip=SecretsUsedInArgOrEnv
 #
 # NOTE: THIS DOCKERFILE IS GENERATED VIA "apply-templates.sh"
 #
@@ -6,7 +8,7 @@
 
 # The official Canonical Ubuntu Focal image is ideal from a security perspective,
 # especially for the enterprises that we, the RabbitMQ team, have to deal with
-FROM ubuntu:24.04 as build-base
+FROM ubuntu:24.04 AS build-base
 
 ARG BUILDKIT_SBOM_SCAN_STAGE=true
 
@@ -19,7 +21,7 @@ RUN set -eux; \
 		libncurses5-dev \
 		wget
 
-FROM build-base as openssl-builder
+FROM build-base AS openssl-builder
 
 ARG BUILDKIT_SBOM_SCAN_STAGE=true
 
@@ -29,19 +31,19 @@ ARG PGP_KEYSERVER=keyserver.ubuntu.com
 # run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:4.1 --build-arg PGP_KEYSERVER=pgpkeys.eu 4.1/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
-ENV OPENSSL_VERSION 3.5.4
+ENV OPENSSL_VERSION=3.5.4
 ENV OPENSSL_SOURCE_SHA256="967311f84955316969bdb1d8d4b983718ef42338639c621ec4c34fddef355e99"
 # https://www.openssl.org/source/
 ENV OPENSSL_PGP_KEY_IDS="0xBA5473A2B0587B07FB27CF2D216094DFD0CB81EF"
 
-ENV OTP_VERSION 27.3.4.6
+ENV OTP_VERSION=27.3.4.6
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
 ENV OTP_SOURCE_SHA256="658529f94cc5b8833907aa680a5e979e67c32dd6ebba69ed3b90b95f526ccda2"
 
 # install openssl & erlang to a path that isn't auto-checked for libs to prevent accidental use by system packages
-ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
-ENV OPENSSL_INSTALL_PATH_PREFIX /opt/openssl
+ENV ERLANG_INSTALL_PATH_PREFIX=/opt/erlang
+ENV OPENSSL_INSTALL_PATH_PREFIX=/opt/openssl
 
 # Install dependencies required to build Erlang/OTP from source
 # https://erlang.org/doc/installation_guide/INSTALL.html
@@ -112,7 +114,7 @@ RUN set -eux; \
 # smoke test
 RUN $OPENSSL_INSTALL_PATH_PREFIX/bin/openssl version
 
-FROM openssl-builder as erlang-builder
+FROM openssl-builder AS erlang-builder
 
 ARG BUILDKIT_SBOM_SCAN_STAGE=true
 
@@ -189,21 +191,21 @@ RUN set -eux; \
 	find "$ERLANG_INSTALL_PATH_PREFIX/lib/erlang" -type d -name include -exec rm -rf '{}' +
 
 # Check that Erlang/OTP crypto & ssl were compiled against OpenSSL correctly
-ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$PATH
+ENV PATH=$ERLANG_INSTALL_PATH_PREFIX/bin:$PATH
 RUN find $ERLANG_INSTALL_PATH_PREFIX -type f -name 'crypto.so' -exec ldd {} \; | awk '/libcrypto\.so/ { if (!index($3,ENVIRON["OPENSSL_INSTALL_PATH_PREFIX"])) exit 1 }'
 RUN erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
 
 FROM ubuntu:24.04
 
 # OPENSSL/ERLANG_INSTALL_PATH_PREFIX are defined in a different stage, so define them again
-ENV ERLANG_INSTALL_PATH_PREFIX /opt/erlang
-ENV OPENSSL_INSTALL_PATH_PREFIX /opt/openssl
+ENV ERLANG_INSTALL_PATH_PREFIX=/opt/erlang
+ENV OPENSSL_INSTALL_PATH_PREFIX=/opt/openssl
 COPY --from=erlang-builder $ERLANG_INSTALL_PATH_PREFIX $ERLANG_INSTALL_PATH_PREFIX
 COPY --from=openssl-builder $OPENSSL_INSTALL_PATH_PREFIX $OPENSSL_INSTALL_PATH_PREFIX
 
-ENV PATH $ERLANG_INSTALL_PATH_PREFIX/bin:$OPENSSL_INSTALL_PATH_PREFIX/bin:$PATH
+ENV PATH=$ERLANG_INSTALL_PATH_PREFIX/bin:$OPENSSL_INSTALL_PATH_PREFIX/bin:$PATH
 
-ENV RABBITMQ_DATA_DIR /var/lib/rabbitmq
+ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq
 
 RUN set -eux; \
 # Configure OpenSSL to use system certs
@@ -230,13 +232,13 @@ RUN set -eux; \
 	ln -sf "$RABBITMQ_DATA_DIR/.erlang.cookie" /root/.erlang.cookie
 
 # Use the latest stable RabbitMQ release (https://www.rabbitmq.com/download.html)
-ENV RABBITMQ_VERSION 4.1.6
+ENV RABBITMQ_VERSION=4.1.6
 # https://www.rabbitmq.com/signatures.html#importing-gpg
-ENV RABBITMQ_PGP_KEY_ID 0x0A9AF2115F4687BD29803A206B73A36E6026DFCA
-ENV RABBITMQ_HOME /opt/rabbitmq
+ENV RABBITMQ_PGP_KEY_ID=0x0A9AF2115F4687BD29803A206B73A36E6026DFCA
+ENV RABBITMQ_HOME=/opt/rabbitmq
 
 # Add RabbitMQ to PATH
-ENV PATH $RABBITMQ_HOME/sbin:$PATH
+ENV PATH=$RABBITMQ_HOME/sbin:$PATH
 
 # Install RabbitMQ
 RUN set -eux; \
@@ -302,7 +304,7 @@ RUN gosu rabbitmq rabbitmq-plugins enable --offline rabbitmq_prometheus
 RUN ln -sf /opt/rabbitmq/plugins /plugins
 
 # set home so that any `--user` knows where to put the erlang cookie
-ENV HOME $RABBITMQ_DATA_DIR
+ENV HOME=$RABBITMQ_DATA_DIR
 # Hint that the data (a.k.a. home dir) dir should be separate volume
 VOLUME $RABBITMQ_DATA_DIR
 
