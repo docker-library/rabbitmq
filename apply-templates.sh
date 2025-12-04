@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# vim:noet:
 set -Eeuo pipefail
 
 [ -f versions.json ] # run "versions.sh" first

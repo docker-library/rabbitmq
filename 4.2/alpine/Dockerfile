@@ -6,6 +6,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
+# vim:noet:
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
 FROM alpine:3.22 AS build-base
 
