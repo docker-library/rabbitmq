@@ -31,8 +31,8 @@ ARG PGP_KEYSERVER=keyserver.ubuntu.com
 # run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:4.0 --build-arg PGP_KEYSERVER=pgpkeys.eu 4.0/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
-ENV OPENSSL_VERSION=3.5.3
-ENV OPENSSL_SOURCE_SHA256="c9489d2abcf943cdc8329a57092331c598a402938054dc3a22218aea8a8ec3bf"
+ENV OPENSSL_VERSION=3.5.4
+ENV OPENSSL_SOURCE_SHA256="967311f84955316969bdb1d8d4b983718ef42338639c621ec4c34fddef355e99"
 # https://www.openssl.org/source/
 ENV OPENSSL_PGP_KEY_IDS="0xBA5473A2B0587B07FB27CF2D216094DFD0CB81EF"
 
