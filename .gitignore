@@ -1,4 +1,1 @@
-*.tar.gz
-*.zip
-rustup-init.sh
 .jq-template.awk
