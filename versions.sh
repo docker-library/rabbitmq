@@ -3,10 +3,10 @@
 set -Eeuo pipefail
 
 declare -A alpineVersions=(
-	[3.13]='3.22'
-	[4.0]='3.22'
-	[4.1]='3.22'
-	[4.2]='3.22'
+	[3.13]='3.23'
+	[4.0]='3.23'
+	[4.1]='3.23'
+	[4.2]='3.23'
 )
 
 declare -A ubuntuVersions=(
