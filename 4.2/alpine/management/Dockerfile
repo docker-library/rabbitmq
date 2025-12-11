@@ -7,12 +7,6 @@
 #
 
 # vim:noet:
-FROM rabbitmq:4.2-alpine AS builder
-
-RUN set -eux; \
-	echo "[INFO] rabbitmqadmin is not available on Alpine Linux"
-
-RUN touch /usr/local/bin/rabbitmqadmin
 
 FROM rabbitmq:4.2-alpine
 
@@ -21,15 +15,6 @@ RUN set -eux; \
 # make sure the metrics collector is re-enabled (disabled in the base image for Prometheus-style metrics by default)
 	rm -f /etc/rabbitmq/conf.d/20-management_agent.disable_metrics_collector.conf
 
-COPY --from=builder /usr/local/bin/rabbitmqadmin /tmp/rabbitmqadmin-rust
-
-RUN set -eux; \
-	if [ -s /tmp/rabbitmqadmin-rust ] && [ -x /tmp/rabbitmqadmin-rust ]; then \
-		mv /tmp/rabbitmqadmin-rust /usr/local/bin/rabbitmqadmin; \
-		rabbitmqadmin --help; \
-	else \
-		rm -f /tmp/rabbitmqadmin-rust; \
-		echo "[INFO] rabbitmqadmin is not available on this platform."; \
-	fi
+# rabbitmqadmin is not available (yet) on Alpine Linux; https://github.com/docker-library/rabbitmq/pull/780#issuecomment-3634857588
 
 EXPOSE 15671 15672

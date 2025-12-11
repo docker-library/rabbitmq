@@ -1,30 +1,4 @@
 # vim:noet:
-FROM {{
-	"rabbitmq:" + env.version
-	+ if env.variant == "alpine" then "-alpine" else "" end
-}} AS builder
-
-{{ if env.variant == "ubuntu" then ( -}}
-RUN set -eux; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends wget; \
-	arch="$(uname -m)"; \
-	if [ "$arch" = "x86_64" ]; then \
-		wget --quiet --output-document=/usr/local/bin/rabbitmqadmin "{{ .rabbitmqadmin.x86_64_download_url }}"; \
-		echo "{{ .rabbitmqadmin.x86_64_digest }} /usr/local/bin/rabbitmqadmin" | sha256sum --check --strict -; \
-	elif [ "$arch" = "aarch64" ]; then  \
-		wget --quiet --output-document=/usr/local/bin/rabbitmqadmin "{{ .rabbitmqadmin.aarch64_download_url }}"; \
-		echo "{{ .rabbitmqadmin.aarch64_digest }} /usr/local/bin/rabbitmqadmin" | sha256sum --check --strict -; \
-	else \
-		echo "[INFO] rabbitmqadmin is not available on Ubuntu $arch"; \
-	fi; \
-	chmod +x /usr/local/bin/rabbitmqadmin
-{{ ) else ( -}}
-RUN set -eux; \
-	echo "[INFO] rabbitmqadmin is not available on Alpine Linux"
-{{ ) end -}}
-
-RUN touch /usr/local/bin/rabbitmqadmin
 
 FROM {{
 	"rabbitmq:" + env.version
@@ -36,15 +10,51 @@ RUN set -eux; \
 # make sure the metrics collector is re-enabled (disabled in the base image for Prometheus-style metrics by default)
 	rm -f /etc/rabbitmq/conf.d/20-management_agent.disable_metrics_collector.conf
 
-COPY --from=builder /usr/local/bin/rabbitmqadmin /tmp/rabbitmqadmin-rust
-
+{{ if env.variant == "alpine" then ( -}}
+# rabbitmqadmin is not available (yet) on Alpine Linux; https://github.com/docker-library/rabbitmq/pull/780#issuecomment-3634857588
+{{ ) else ( -}}
 RUN set -eux; \
-	if [ -s /tmp/rabbitmqadmin-rust ] && [ -x /tmp/rabbitmqadmin-rust ]; then \
-		mv /tmp/rabbitmqadmin-rust /usr/local/bin/rabbitmqadmin; \
-		rabbitmqadmin --help; \
-	else \
-		rm -f /tmp/rabbitmqadmin-rust; \
-		echo "[INFO] rabbitmqadmin is not available on this platform."; \
-	fi
+	arch="$(dpkg --print-architecture)"; \
+	case "$arch" in \
+{{ .rabbitmqadmin.arches | to_entries | map( -}}
+{{ def deb_arches: {
+	# conversion mapping of bashbrew architectures to Debian architectures
+	# (most of these aren't supported/needed, but cargo-culting them makes sure nobody has to look these up in the future if the list grows)
+	# https://salsa.debian.org/dpkg-team/dpkg/-/blob/main/data/cputable
+	# https://wiki.debian.org/ArchitectureSpecificsMemo#Architecture_baselines
+	# https://deb.debian.org/debian/dists/unstable/Release ("Architectures:")
+	# http://deb.debian.org/debian/dists/unstable/main/
+	# http://deb.debian.org/debian/dists/stable/main/
+	# https://deb.debian.org/debian-ports/dists/unstable/main/
+	amd64: "amd64",
+	arm32v5: "armel",
+	arm32v7: "armhf",
+	arm64v8: "arm64",
+	i386: "i386",
+	mips64le: "mips64el",
+	ppc64le: "ppc64el",
+	riscv64: "riscv64",
+	s390x: "s390x",
+} -}}
+		{{ deb_arches[.key] // empty | @sh }}) url={{ .value.url | @sh }}; digest={{ .value.digest | @sh }} ;; \
+{{ ) | join("") -}}
+		*) echo "[INFO] rabbitmqadmin is not available on $arch (yet?)"; exit 0; \
+	esac; \
+	\
+	savedAptMark="$(apt-mark showmanual)"; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends ca-certificates wget; \
+	\
+	wget -O /usr/local/bin/rabbitmqadmin "$url"; \
+	echo "$digest */usr/local/bin/rabbitmqadmin" | sha256sum --strict --check -; \
+	\
+	apt-mark auto '.*' > /dev/null; \
+	apt-mark manual $savedAptMark > /dev/null; \
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+	apt-get dist-clean; \
+	\
+	chmod +x /usr/local/bin/rabbitmqadmin; \
+	rabbitmqadmin --help
+{{ ) end -}}
 
 EXPOSE 15671 15672
