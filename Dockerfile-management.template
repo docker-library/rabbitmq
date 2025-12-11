@@ -1,3 +1,31 @@
+# vim:noet:
+FROM {{
+	"rabbitmq:" + env.version
+	+ if env.variant == "alpine" then "-alpine" else "" end
+}} AS builder
+
+{{ if env.variant == "ubuntu" then ( -}}
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends wget; \
+	arch="$(uname -m)"; \
+	if [ "$arch" = "x86_64" ]; then \
+		wget --quiet --output-document=/usr/local/bin/rabbitmqadmin "{{ .rabbitmqadmin.x86_64_download_url }}"; \
+		echo "{{ .rabbitmqadmin.x86_64_digest }} /usr/local/bin/rabbitmqadmin" | sha256sum --check --strict -; \
+	elif [ "$arch" = "aarch64" ]; then  \
+		wget --quiet --output-document=/usr/local/bin/rabbitmqadmin "{{ .rabbitmqadmin.aarch64_download_url }}"; \
+		echo "{{ .rabbitmqadmin.aarch64_digest }} /usr/local/bin/rabbitmqadmin" | sha256sum --check --strict -; \
+	else \
+		echo "[INFO] rabbitmqadmin is not available on Ubuntu $arch"; \
+	fi; \
+	chmod +x /usr/local/bin/rabbitmqadmin
+{{ ) else ( -}}
+RUN set -eux; \
+	echo "[INFO] rabbitmqadmin is not available on Alpine Linux"
+{{ ) end -}}
+
+RUN touch /usr/local/bin/rabbitmqadmin
+
 FROM {{
 	"rabbitmq:" + env.version
 	+ if env.variant == "alpine" then "-alpine" else "" end
@@ -6,19 +34,17 @@ FROM {{
 RUN set -eux; \
 	rabbitmq-plugins enable --offline rabbitmq_management; \
 # make sure the metrics collector is re-enabled (disabled in the base image for Prometheus-style metrics by default)
-	rm -f /etc/rabbitmq/conf.d/20-management_agent.disable_metrics_collector.conf; \
-# grab "rabbitmqadmin" from inside the "rabbitmq_management-X.Y.Z" plugin folder
-# see https://github.com/docker-library/rabbitmq/issues/207
-	cp /plugins/rabbitmq_management-*/priv/www/cli/rabbitmqadmin /usr/local/bin/rabbitmqadmin; \
-	[ -s /usr/local/bin/rabbitmqadmin ]; \
-	chmod +x /usr/local/bin/rabbitmqadmin; \
-{{ if env.variant == "alpine" then ( -}}
-	apk add --no-cache python3; \
-{{ ) else ( -}}
-	apt-get update; \
-	apt-get install -y --no-install-recommends python3; \
-	rm -rf /var/lib/apt/lists/*; \
-{{ ) end -}}
-	rabbitmqadmin --version
+	rm -f /etc/rabbitmq/conf.d/20-management_agent.disable_metrics_collector.conf
+
+COPY --from=builder /usr/local/bin/rabbitmqadmin /tmp/rabbitmqadmin-rust
+
+RUN set -eux; \
+	if [ -s /tmp/rabbitmqadmin-rust ] && [ -x /tmp/rabbitmqadmin-rust ]; then \
+		mv /tmp/rabbitmqadmin-rust /usr/local/bin/rabbitmqadmin; \
+		rabbitmqadmin --help; \
+	else \
+		rm -f /tmp/rabbitmqadmin-rust; \
+		echo "[INFO] rabbitmqadmin is not available on this platform."; \
+	fi
 
 EXPOSE 15671 15672
