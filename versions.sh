@@ -3,14 +3,12 @@
 set -Eeuo pipefail
 
 declare -A alpineVersions=(
-	[3.13]='3.23'
 	[4.0]='3.23'
 	[4.1]='3.23'
 	[4.2]='3.23'
 )
 
 declare -A ubuntuVersions=(
-	[3.13]='24.04'
 	[4.0]='24.04'
 	[4.1]='24.04'
 	[4.2]='24.04'
@@ -18,7 +16,6 @@ declare -A ubuntuVersions=(
 
 # https://www.rabbitmq.com/which-erlang.html ("Maximum supported Erlang/OTP")
 declare -A otpMajors=(
-	[3.13]='26'
 	[4.0]='27'
 	[4.1]='27'
 	[4.2]='27'
@@ -27,7 +24,6 @@ declare -A otpMajors=(
 # https://www.openssl.org/policies/releasestrat.html
 # https://www.openssl.org/source/
 declare -A opensslMajors=(
-	[3.13]='3.1'
 	[4.0]='3.5'
 	[4.1]='3.5'
 	[4.2]='3.5'
