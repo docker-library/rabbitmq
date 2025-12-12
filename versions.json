@@ -1,35 +1,4 @@
 {
-  "3.13": {
-    "alpine": {
-      "version": "3.23"
-    },
-    "openssl": {
-      "sha256": "d319da6aecde3aa6f426b44bbf997406d95275c5c59ab6f6ef53caaa079f456f",
-      "version": "3.1.8"
-    },
-    "otp": {
-      "sha256": "932d091933f818d89c2cf7a8c23d84781bbae4b1ee7b846e8676e22768570cae",
-      "version": "26.2.5.16"
-    },
-    "rabbitmqadmin": {
-      "arches": {
-        "amd64": {
-          "digest": "2c6c56157ba64a257c328cb4143eed1917fa4c6dc86a07696f716b4dd5cf302f",
-          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.18.0/rabbitmqadmin-2.18.0-x86_64-unknown-linux-gnu"
-        },
-        "arm64v8": {
-          "digest": "9087efd64851401147b70b3eaa838e81c20697409df0f37c487e77827f342e79",
-          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.18.0/rabbitmqadmin-2.18.0-aarch64-unknown-linux-gnu"
-        }
-      },
-      "version": "2.18.0"
-    },
-    "ubuntu": {
-      "version": "24.04"
-    },
-    "version": "3.13.7"
-  },
-  "3.13-rc": null,
   "4.0": {
     "alpine": {
       "version": "3.23"
