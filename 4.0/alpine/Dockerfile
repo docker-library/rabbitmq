@@ -8,7 +8,7 @@
 
 # vim:noet:
 # Alpine Linux is not officially supported by the RabbitMQ team -- use at your own risk!
-FROM alpine:3.22 AS build-base
+FROM alpine:3.23 AS build-base
 
 RUN apk add --no-cache \
 	build-base \
@@ -196,7 +196,7 @@ ENV PATH=$ERLANG_INSTALL_PATH_PREFIX/bin:$PATH
 RUN find $ERLANG_INSTALL_PATH_PREFIX -type f -name 'crypto.so' -exec ldd {} \; | awk '/libcrypto\.so/ { if (!index($3,ENVIRON["OPENSSL_INSTALL_PATH_PREFIX"])) exit 1 }'
 RUN erl -noshell -eval 'ok = crypto:start(), ok = io:format("~p~n~n~p~n~n", [crypto:supports(), ssl:versions()]), init:stop().'
 
-FROM alpine:3.22
+FROM alpine:3.23
 
 # OPENSSL/ERLANG_INSTALL_PATH_PREFIX are defined in a different stage, so define them again
 ENV ERLANG_INSTALL_PATH_PREFIX=/opt/erlang
