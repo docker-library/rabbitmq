@@ -21,7 +21,7 @@ RUN set -eux; \
 	case "$arch" in \
 		'x86_64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.20.0/rabbitmqadmin-2.20.0-x86_64-unknown-linux-musl'; digest='017747084312a47c38eca52942e6f0dd06f5ab845ac0ce7e744d63de253cd0d6' ;; \
 		'aarch64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.20.0/rabbitmqadmin-2.20.0-aarch64-unknown-linux-musl'; digest='13a9f4f0457c95dbe5739a357663b18bda927b277ebdefe5038f0f9bf2b96570' ;; \
-		*) echo "[INFO] rabbitmqadmin is not available on $arch (yet?)"; exit 0; \
+		*) echo "[INFO] rabbitmqadmin is not available on $arch (yet?)"; exit 0 ;; \
 	esac; \
 	\
 	wget -O /usr/local/bin/rabbitmqadmin "$url"; \
