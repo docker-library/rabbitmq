@@ -11,7 +11,25 @@ RUN set -eux; \
 	rm -f /etc/rabbitmq/conf.d/20-management_agent.disable_metrics_collector.conf
 
 {{ if env.variant == "alpine" then ( -}}
-# rabbitmqadmin is not available (yet) on Alpine Linux; https://github.com/docker-library/rabbitmq/pull/780#issuecomment-3634857588
+RUN set -eux; \
+	arch="$(apk --print-arch)"; \
+	\
+	case "$arch" in \
+{{ .rabbitmqadmin.arches | to_entries | map( -}}
+{{ def alpine_arches: {
+	"alpine-amd64": "x86_64",
+	"alpine-arm64v8": "aarch64",
+} -}}
+		{{ alpine_arches[.key] // empty | @sh }}) url={{ .value.url | @sh }}; digest={{ .value.digest | @sh }} ;; \
+{{ ) | join("") -}}
+		*) echo "[INFO] rabbitmqadmin is not available on $arch (yet?)"; exit 0; \
+	esac; \
+	\
+	wget -O /usr/local/bin/rabbitmqadmin "$url"; \
+	echo "$digest */usr/local/bin/rabbitmqadmin" | sha256sum -c -; \
+	\
+	chmod +x /usr/local/bin/rabbitmqadmin; \
+	rabbitmqadmin --help
 {{ ) else ( -}}
 RUN set -eux; \
 	arch="$(dpkg --print-architecture)"; \

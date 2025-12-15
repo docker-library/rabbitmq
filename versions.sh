@@ -59,8 +59,8 @@ rabbitmqadmin="$(
 							(
 								[ "-x86_64-unknown-linux-gnu$", "amd64" ],
 								[ "-aarch64-unknown-linux-gnu$", "arm64v8" ],
-								# TODO [ "-x86_64-unknown-linux-musl$", "alpine-amd64" ],
-								# TODO [ "-aarch64-unknown-linux-musl$", "alpine-arm64v8" ],
+								[ "-x86_64-unknown-linux-musl$", "alpine-amd64" ],
+								[ "-aarch64-unknown-linux-musl$", "alpine-arm64v8" ],
 								empty
 							) as [ $regex, $arch ]
 							| if test($regex) then $arch else empty end
