@@ -8,10 +8,14 @@ FROM {{
 RUN set -eux; \
 	rabbitmq-plugins enable --offline rabbitmq_management; \
 # make sure the metrics collector is re-enabled (disabled in the base image for Prometheus-style metrics by default)
-	rm -f /etc/rabbitmq/conf.d/20-management_agent.disable_metrics_collector.conf
+	rm -f /etc/rabbitmq/conf.d/20-management_agent.disable_metrics_collector.conf; \
+	cp /plugins/rabbitmq_management-*/priv/www/cli/rabbitmqadmin /usr/local/bin/rabbitmqadmin; \
+	[ -s /usr/local/bin/rabbitmqadmin ]; \
+	chmod +x /usr/local/bin/rabbitmqadmin
 
 {{ if env.variant == "alpine" then ( -}}
 RUN set -eux; \
+	apk add --no-cache python3; \
 	arch="$(apk --print-arch)"; \
 	\
 	case "$arch" in \
@@ -22,16 +26,19 @@ RUN set -eux; \
 } -}}
 		{{ alpine_arches[.key] // empty | @sh }}) url={{ .value.url | @sh }}; digest={{ .value.digest | @sh }} ;; \
 {{ ) | join("") -}}
-		*) echo "[INFO] rabbitmqadmin is not available on $arch (yet?)"; exit 0 ;; \
+		*) echo "[WARNING] rabbitmqadmin-ng is not available on $arch (yet?)"; exit 0 ;; \
 	esac; \
 	\
-	wget -O /usr/local/bin/rabbitmqadmin "$url"; \
-	echo "$digest */usr/local/bin/rabbitmqadmin" | sha256sum -c -; \
+	wget -O /usr/local/bin/rabbitmqadmin-ng "$url"; \
+	echo "$digest */usr/local/bin/rabbitmqadmin-ng" | sha256sum -c -; \
 	\
-	chmod +x /usr/local/bin/rabbitmqadmin; \
-	rabbitmqadmin --help
+	chmod +x /usr/local/bin/rabbitmqadmin-ng; \
+	rabbitmqadmin-ng --help; \
+	rabbitmqadmin --version
 {{ ) else ( -}}
 RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends python3; \
 	arch="$(dpkg --print-architecture)"; \
 	case "$arch" in \
 {{ .rabbitmqadmin.arches | to_entries | map( -}}
@@ -56,23 +63,24 @@ RUN set -eux; \
 } -}}
 		{{ deb_arches[.key] // empty | @sh }}) url={{ .value.url | @sh }}; digest={{ .value.digest | @sh }} ;; \
 {{ ) | join("") -}}
-		*) echo "[INFO] rabbitmqadmin is not available on $arch (yet?)"; exit 0 ;; \
+		*) echo "[WARNING] rabbitmqadmin-ng is not available on $arch (yet?)"; exit 0 ;; \
 	esac; \
 	\
 	savedAptMark="$(apt-mark showmanual)"; \
-	apt-get update; \
 	apt-get install -y --no-install-recommends ca-certificates wget; \
 	\
-	wget -O /usr/local/bin/rabbitmqadmin "$url"; \
-	echo "$digest */usr/local/bin/rabbitmqadmin" | sha256sum --strict --check -; \
+	wget -O /usr/local/bin/rabbitmqadmin-ng "$url"; \
+	echo "$digest */usr/local/bin/rabbitmqadmin-ng" | sha256sum --strict --check -; \
 	\
 	apt-mark auto '.*' > /dev/null; \
 	apt-mark manual $savedAptMark > /dev/null; \
 	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
 	apt-get dist-clean; \
+	rm -rf /var/lib/apt/lists/*; \
 	\
-	chmod +x /usr/local/bin/rabbitmqadmin; \
-	rabbitmqadmin --help
+	chmod +x /usr/local/bin/rabbitmqadmin-ng; \
+	rabbitmqadmin-ng --help; \
+	rabbitmqadmin --version
 {{ ) end -}}
 
 EXPOSE 15671 15672
