@@ -32,15 +32,15 @@ ARG PGP_KEYSERVER=keyserver.ubuntu.com
 # run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:4.2 --build-arg PGP_KEYSERVER=pgpkeys.eu 4.2/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
-ENV OPENSSL_VERSION=3.5.4
-ENV OPENSSL_SOURCE_SHA256="967311f84955316969bdb1d8d4b983718ef42338639c621ec4c34fddef355e99"
+ENV OPENSSL_VERSION=3.5.5
+ENV OPENSSL_SOURCE_SHA256="b28c91532a8b65a1f983b4c28b7488174e4a01008e29ce8e69bd789f28bc2a89"
 # https://www.openssl.org/source/
 ENV OPENSSL_PGP_KEY_IDS="0xBA5473A2B0587B07FB27CF2D216094DFD0CB81EF"
 
-ENV OTP_VERSION=27.3.4.6
+ENV OTP_VERSION=27.3.4.7
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
 # https://erlang.org/pipermail/erlang-questions/2019-January/097067.html
-ENV OTP_SOURCE_SHA256="658529f94cc5b8833907aa680a5e979e67c32dd6ebba69ed3b90b95f526ccda2"
+ENV OTP_SOURCE_SHA256="77e133c0662e89adbc5ce785f652c15d8cd8df1b7c1651ab605b274e196ec555"
 
 # install openssl & erlang to a path that isn't auto-checked for libs to prevent accidental use by system packages
 ENV ERLANG_INSTALL_PATH_PREFIX=/opt/erlang
