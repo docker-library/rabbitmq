@@ -18,8 +18,8 @@ RUN set -eux; \
 RUN set -eux; \
 	arch="$(dpkg --print-architecture)"; \
 	case "$arch" in \
-		'amd64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.24.0/rabbitmqadmin-2.24.0-x86_64-unknown-linux-gnu'; digest='bfe960478861860badda5d7c2bf400d16b65dfdefa27057ff300b1844bf615af' ;; \
-		'arm64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.24.0/rabbitmqadmin-2.24.0-aarch64-unknown-linux-gnu'; digest='08c245cb6bdf70fc7d1d84ef761120897a30bd44fc475f3b73294f5c5c04c572' ;; \
+		'amd64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.25.0/rabbitmqadmin-2.25.0-x86_64-unknown-linux-gnu'; digest='bce3355e1286361e29030767efc4ae53d98a60bb08a10fbb35cb7d0e1918f492' ;; \
+		'arm64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.25.0/rabbitmqadmin-2.25.0-aarch64-unknown-linux-gnu'; digest='b6fe805b2f5c62e562753f80a42c51da78357ba450375d7e6952ddd7c891adec' ;; \
 		*) echo "[INFO] rabbitmqadmin is not available on $arch (yet?)"; exit 0 ;; \
 	esac; \
 	\
