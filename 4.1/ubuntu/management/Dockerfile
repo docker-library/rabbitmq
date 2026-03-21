@@ -18,8 +18,8 @@ RUN set -eux; \
 RUN set -eux; \
 	arch="$(dpkg --print-architecture)"; \
 	case "$arch" in \
-		'amd64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.28.0/rabbitmqadmin-2.28.0-x86_64-unknown-linux-gnu'; digest='379a9584837d887544b0271fabe89432c2a2e881c5f7f157c8c8faf61c4c4a1b' ;; \
-		'arm64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.28.0/rabbitmqadmin-2.28.0-aarch64-unknown-linux-gnu'; digest='f29ca17f59d8cd82699f857a91f11edd150ba5a21ad27beb9fc811cc95efa894' ;; \
+		'amd64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.29.0/rabbitmqadmin-2.29.0-x86_64-unknown-linux-gnu'; digest='dce127b1bf19255e2706665decb7073f14fdddbc76cb62791d427020946b1a40' ;; \
+		'arm64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.29.0/rabbitmqadmin-2.29.0-aarch64-unknown-linux-gnu'; digest='4181fad3d3ed05691e474fcebb248f5ac834bbc39ce3551987bc2362824b0156' ;; \
 		*) echo "[INFO] rabbitmqadmin is not available on $arch (yet?)"; exit 0 ;; \
 	esac; \
 	\
