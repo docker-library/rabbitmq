@@ -14,23 +14,23 @@
     "rabbitmqadmin": {
       "arches": {
         "alpine-amd64": {
-          "digest": "57fe4a2bd4708d956a1707c61107c5c091fda8e7f8287bd778e453af03c9d808",
-          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.28.0/rabbitmqadmin-2.28.0-x86_64-unknown-linux-musl"
+          "digest": "cd5f56199daf7bf66cbe81e69340766fafde493bb46c9170a3bd271bb1967831",
+          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.29.0/rabbitmqadmin-2.29.0-x86_64-unknown-linux-musl"
         },
         "alpine-arm64v8": {
-          "digest": "ab16863159a7991664d72bf84235a29b653b29cc5eb61af6ba76f42d9d69ed26",
-          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.28.0/rabbitmqadmin-2.28.0-aarch64-unknown-linux-musl"
+          "digest": "3806e34c27de3faa722f7e5eca6def6dd1d4ad0100ee176ba0553bea35ba9801",
+          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.29.0/rabbitmqadmin-2.29.0-aarch64-unknown-linux-musl"
         },
         "amd64": {
-          "digest": "379a9584837d887544b0271fabe89432c2a2e881c5f7f157c8c8faf61c4c4a1b",
-          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.28.0/rabbitmqadmin-2.28.0-x86_64-unknown-linux-gnu"
+          "digest": "dce127b1bf19255e2706665decb7073f14fdddbc76cb62791d427020946b1a40",
+          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.29.0/rabbitmqadmin-2.29.0-x86_64-unknown-linux-gnu"
         },
         "arm64v8": {
-          "digest": "f29ca17f59d8cd82699f857a91f11edd150ba5a21ad27beb9fc811cc95efa894",
-          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.28.0/rabbitmqadmin-2.28.0-aarch64-unknown-linux-gnu"
+          "digest": "4181fad3d3ed05691e474fcebb248f5ac834bbc39ce3551987bc2362824b0156",
+          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.29.0/rabbitmqadmin-2.29.0-aarch64-unknown-linux-gnu"
         }
       },
-      "version": "2.28.0"
+      "version": "2.29.0"
     },
     "ubuntu": {
       "version": "24.04"
