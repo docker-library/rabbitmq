@@ -126,8 +126,8 @@
       "version": "3.5.6"
     },
     "otp": {
-      "sha256": "c93905c73ddb7afdfc7f0a46c33f95590eeffe9c2a8c75086d24bb9fe8abe029",
-      "version": "27.3.4.10"
+      "sha256": "9d63382d3e7707c058dabe338114e09ff8228d54d29df794d907d3c8dddde5f9",
+      "version": "27.3.4.11"
     },
     "rabbitmqadmin": {
       "arches": {
