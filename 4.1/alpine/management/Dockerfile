@@ -19,8 +19,8 @@ RUN set -eux; \
 	arch="$(apk --print-arch)"; \
 	\
 	case "$arch" in \
-		'x86_64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.30.0/rabbitmqadmin-2.30.0-x86_64-unknown-linux-musl'; digest='70d136a0cb1f105b0904748aae04a0fdb1619e1eb6cf93afacca773d4c7973f4' ;; \
-		'aarch64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.30.0/rabbitmqadmin-2.30.0-aarch64-unknown-linux-musl'; digest='3082218c983fdf6d4a7cbbf1b038829a391c9eba056e9828dddf97c46ac43488' ;; \
+		'x86_64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.31.0/rabbitmqadmin-2.31.0-x86_64-unknown-linux-musl'; digest='f7c8f26c60d51edc50557f0f4043ad01ebc03e3278be29ff70556980e533abbe' ;; \
+		'aarch64') url='https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.31.0/rabbitmqadmin-2.31.0-aarch64-unknown-linux-musl'; digest='7978c1104b48982993d85baa86e78e5632f5a3dde9717362c549ac5a9884bfb7' ;; \
 		*) echo "[INFO] rabbitmqadmin is not available on $arch (yet?)"; exit 0 ;; \
 	esac; \
 	\
