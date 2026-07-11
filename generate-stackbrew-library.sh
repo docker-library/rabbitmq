@@ -118,7 +118,7 @@ for version; do
 		done
 	fi
 
-	for variant in ubuntu alpine; do
+	for variant in ubuntu alpine amazonlinux; do
 		dir="$version/$variant"
 		commit="$(dirCommit "$dir")"
 

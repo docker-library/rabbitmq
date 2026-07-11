@@ -3,6 +3,22 @@
     "alpine": {
       "version": "3.23"
     },
+    "amazonlinux": {
+      "version": "2023"
+    },
+    "gosu": {
+      "arches": {
+        "amd64": {
+          "digest": "52c8749d0142edd234e9d6bd5237dff2d81e71f43537e2f4f66f75dd4b243dd0",
+          "url": "https://github.com/tianon/gosu/releases/download/1.19/gosu-amd64"
+        },
+        "arm64": {
+          "digest": "3a8ef022d82c0bc4a98bcb144e77da714c25fcfa64dccc57f6aba7ae47ff1a44",
+          "url": "https://github.com/tianon/gosu/releases/download/1.19/gosu-arm64"
+        }
+      },
+      "version": "1.19"
+    },
     "openssl": {
       "sha256": "a8c0d28a529ca480f9f36cf5792e2cd21984552a3c8e4aa11a24aa31aeac98e8",
       "version": "3.5.7"
@@ -41,6 +57,22 @@
   "4.1": {
     "alpine": {
       "version": "3.23"
+    },
+    "amazonlinux": {
+      "version": "2023"
+    },
+    "gosu": {
+      "arches": {
+        "amd64": {
+          "digest": "52c8749d0142edd234e9d6bd5237dff2d81e71f43537e2f4f66f75dd4b243dd0",
+          "url": "https://github.com/tianon/gosu/releases/download/1.19/gosu-amd64"
+        },
+        "arm64": {
+          "digest": "3a8ef022d82c0bc4a98bcb144e77da714c25fcfa64dccc57f6aba7ae47ff1a44",
+          "url": "https://github.com/tianon/gosu/releases/download/1.19/gosu-arm64"
+        }
+      },
+      "version": "1.19"
     },
     "openssl": {
       "sha256": "a8c0d28a529ca480f9f36cf5792e2cd21984552a3c8e4aa11a24aa31aeac98e8",
@@ -81,6 +113,22 @@
     "alpine": {
       "version": "3.23"
     },
+    "amazonlinux": {
+      "version": "2023"
+    },
+    "gosu": {
+      "arches": {
+        "amd64": {
+          "digest": "52c8749d0142edd234e9d6bd5237dff2d81e71f43537e2f4f66f75dd4b243dd0",
+          "url": "https://github.com/tianon/gosu/releases/download/1.19/gosu-amd64"
+        },
+        "arm64": {
+          "digest": "3a8ef022d82c0bc4a98bcb144e77da714c25fcfa64dccc57f6aba7ae47ff1a44",
+          "url": "https://github.com/tianon/gosu/releases/download/1.19/gosu-arm64"
+        }
+      },
+      "version": "1.19"
+    },
     "openssl": {
       "sha256": "a8c0d28a529ca480f9f36cf5792e2cd21984552a3c8e4aa11a24aa31aeac98e8",
       "version": "3.5.7"
@@ -119,6 +167,22 @@
   "4.3": {
     "alpine": {
       "version": "3.23"
+    },
+    "amazonlinux": {
+      "version": "2023"
+    },
+    "gosu": {
+      "arches": {
+        "amd64": {
+          "digest": "52c8749d0142edd234e9d6bd5237dff2d81e71f43537e2f4f66f75dd4b243dd0",
+          "url": "https://github.com/tianon/gosu/releases/download/1.19/gosu-amd64"
+        },
+        "arm64": {
+          "digest": "3a8ef022d82c0bc4a98bcb144e77da714c25fcfa64dccc57f6aba7ae47ff1a44",
+          "url": "https://github.com/tianon/gosu/releases/download/1.19/gosu-arm64"
+        }
+      },
+      "version": "1.19"
     },
     "openssl": {
       "sha256": "a8c0d28a529ca480f9f36cf5792e2cd21984552a3c8e4aa11a24aa31aeac98e8",

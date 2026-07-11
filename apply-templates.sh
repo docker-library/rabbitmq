@@ -44,7 +44,7 @@ for version; do
 		continue
 	fi
 
-	for variant in alpine ubuntu; do
+	for variant in alpine amazonlinux ubuntu; do
 		export variant
 
 		echo "processing $version/$variant ..."

@@ -1,8 +1,9 @@
 # vim:noet:
 
 FROM {{
+	# "ubuntu" is the default variant, so its base image is untagged (see "defaultVariant" in generate-stackbrew-library.sh)
 	"rabbitmq:" + env.version
-	+ if env.variant == "alpine" then "-alpine" else "" end
+	+ if env.variant == "ubuntu" then "" else "-" + env.variant end
 }}
 
 RUN set -eux; \
@@ -27,6 +28,31 @@ RUN set -eux; \
 	\
 	wget -O /usr/local/bin/rabbitmqadmin "$url"; \
 	echo "$digest */usr/local/bin/rabbitmqadmin" | sha256sum -c -; \
+	\
+	chmod +x /usr/local/bin/rabbitmqadmin; \
+	rabbitmqadmin --help
+{{ ) elif env.variant == "amazonlinux" then ( -}}
+RUN set -eux; \
+	arch="$(uname -m)"; \
+	\
+	case "$arch" in \
+{{ .rabbitmqadmin.arches | to_entries | map( -}}
+{{ def uname_arches: {
+	"amd64": "x86_64",
+	"arm64v8": "aarch64",
+} -}}
+		{{ uname_arches[.key] // empty | @sh }}) url={{ .value.url | @sh }}; digest={{ .value.digest | @sh }} ;; \
+{{ ) | join("") -}}
+		*) echo "[INFO] rabbitmqadmin is not available on $arch (yet?)"; exit 0 ;; \
+	esac; \
+	\
+	dnf install -y wget; \
+	\
+	wget -O /usr/local/bin/rabbitmqadmin "$url"; \
+	echo "$digest */usr/local/bin/rabbitmqadmin" | sha256sum --strict --check -; \
+	\
+	dnf remove -y wget; \
+	dnf clean all; \
 	\
 	chmod +x /usr/local/bin/rabbitmqadmin; \
 	rabbitmqadmin --help

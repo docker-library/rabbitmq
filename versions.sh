@@ -16,6 +16,13 @@ declare -A ubuntuVersions=(
 	[4.3]='24.04'
 )
 
+declare -A amazonlinuxVersions=(
+	[4.0]='2023'
+	[4.1]='2023'
+	[4.2]='2023'
+	[4.3]='2023'
+)
+
 # https://www.rabbitmq.com/which-erlang.html ("Maximum supported Erlang/OTP")
 declare -A otpMajors=(
 	[4.0]='27'
@@ -82,6 +89,41 @@ rabbitmqadmin="$(
 	'
 )"
 export rabbitmqadmin
+
+gosu="$(
+	wget --quiet --output-document=- \
+		--header='Accept: application/vnd.github+json' \
+		--header='X-GitHub-Api-Version: 2022-11-28' \
+		https://api.github.com/repos/tianon/gosu/releases/latest \
+	| jq -c '
+		{
+			version: (.tag_name | ltrimstr("v")),
+			arches: (
+				.assets
+				| map({
+					key: (
+						.name
+						| first(
+							(
+								[ "^gosu-amd64$", "amd64" ],
+								[ "^gosu-arm64$", "arm64" ],
+								empty
+							) as [ $regex, $arch ]
+							| if test($regex) then $arch else empty end
+						)
+					),
+					value: {
+						url: .browser_download_url,
+						digest: ((.digest // error("gosu \(.name) is missing a sha256 digest")) | ltrimstr("sha256:")),
+					},
+				})
+				| sort_by(.key)
+				| from_entries
+			),
+		}
+	'
+)"
+export gosu
 
 for version in "${versions[@]}"; do
 	export version
@@ -198,7 +240,10 @@ for version in "${versions[@]}"; do
 	ubuntuVersion="${ubuntuVersions[$rcVersion]}"
 	export ubuntuVersion
 
-	echo "$version: $fullVersion (otp $otpVersion, openssl $opensslVersion, alpine $alpineVersion, ubuntu $ubuntuVersion)"
+	amazonlinuxVersion="${amazonlinuxVersions[$rcVersion]}"
+	export amazonlinuxVersion
+
+	echo "$version: $fullVersion (otp $otpVersion, openssl $opensslVersion, alpine $alpineVersion, ubuntu $ubuntuVersion, amazonlinux $amazonlinuxVersion)"
 
 	json="$(
 		jq <<<"$json" -c '
@@ -218,6 +263,10 @@ for version in "${versions[@]}"; do
 				ubuntu: {
 					version: env.ubuntuVersion
 				},
+				amazonlinux: {
+					version: env.amazonlinuxVersion
+				},
+				gosu: (env.gosu | fromjson),
 				rabbitmqadmin: (env.rabbitmqadmin | fromjson),
 			}
 		'
