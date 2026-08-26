@@ -32,10 +32,10 @@ ARG PGP_KEYSERVER=keyserver.ubuntu.com
 # run the build with a different PGP_KEYSERVER, e.g. docker build --tag rabbitmq:4.2 --build-arg PGP_KEYSERVER=pgpkeys.eu 4.2/ubuntu
 # For context, see https://github.com/docker-library/official-images/issues/4252
 
-ENV OPENSSL_VERSION=3.5.7
-ENV OPENSSL_SOURCE_SHA256="a8c0d28a529ca480f9f36cf5792e2cd21984552a3c8e4aa11a24aa31aeac98e8"
+ENV OPENSSL_VERSION=3.5.8
+ENV OPENSSL_SOURCE_SHA256="a8f84a39918ec6415ce765d9b429d313ba97b8143169c172e734b9514464f5b2"
 # https://www.openssl.org/source/
-ENV OPENSSL_PGP_KEY_IDS="0xBA5473A2B0587B07FB27CF2D216094DFD0CB81EF"
+ENV OPENSSL_PGP_KEY_IDS="0xB146647E45A7B33947AB226B2A2C87D161692D40"
 
 ENV OTP_VERSION=27.3.4.16
 # TODO add PGP checking when the feature will be added to Erlang/OTP's build system
