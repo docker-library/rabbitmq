@@ -47,8 +47,8 @@
       "version": "3.5.8"
     },
     "otp": {
-      "sha256": "b945362f125ecdba4281723595f08716808bafd9137ad153f12e1db917ce8517",
-      "version": "27.3.4.16"
+      "sha256": "56857d4e78e411252d6a5489a7f9870cf239b14250097ce3ceef97601905a2a9",
+      "version": "27.3.4.17"
     },
     "rabbitmqadmin": {
       "arches": {
