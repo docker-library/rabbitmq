@@ -7,6 +7,7 @@ declare -A alpineVersions=(
 	[4.1]='3.23'
 	[4.2]='3.23'
 	[4.3]='3.23'
+	[4.4]='3.24'
 )
 
 declare -A ubuntuVersions=(
@@ -14,6 +15,7 @@ declare -A ubuntuVersions=(
 	[4.1]='24.04'
 	[4.2]='24.04'
 	[4.3]='24.04'
+	[4.4]='26.04'
 )
 
 # https://www.rabbitmq.com/which-erlang.html ("Maximum supported Erlang/OTP")
@@ -22,6 +24,7 @@ declare -A otpMajors=(
 	[4.1]='27'
 	[4.2]='27'
 	[4.3]='27'
+	[4.4]='29'
 )
 
 # https://www.openssl.org/policies/releasestrat.html
@@ -31,6 +34,7 @@ declare -A opensslMajors=(
 	[4.1]='3.5'
 	[4.2]='3.5'
 	[4.3]='3.5'
+	[4.4]='3.5'
 )
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
