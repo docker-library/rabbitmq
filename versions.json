@@ -155,6 +155,43 @@
     "version": "4.3.6"
   },
   "4.3-rc": null,
-  "4.4": null,
+  "4.4": {
+    "alpine": {
+      "version": "3.24"
+    },
+    "openssl": {
+      "sha256": "603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a",
+      "version": "3.5.9"
+    },
+    "otp": {
+      "sha256": "c79966661e35fe4aff8ec003db63682e3b33b10b672220d51bf93c0a9244b049",
+      "version": "29.1.2"
+    },
+    "rabbitmqadmin": {
+      "arches": {
+        "alpine-amd64": {
+          "digest": "8e87764f19e80339abd16f5617bcd9712ad7560b75e123d5e8b8d7922c11ab6e",
+          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.35.0/rabbitmqadmin-2.35.0-x86_64-unknown-linux-musl"
+        },
+        "alpine-arm64v8": {
+          "digest": "bde1b0b5e45b5bd9758b2597b3a1c1031b492d0ca0654000222725f400291cbd",
+          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.35.0/rabbitmqadmin-2.35.0-aarch64-unknown-linux-musl"
+        },
+        "amd64": {
+          "digest": "31887e0dc96e7654a9dfa007182af1281ee2fd4045de011ca1af72b0b962df51",
+          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.35.0/rabbitmqadmin-2.35.0-x86_64-unknown-linux-gnu"
+        },
+        "arm64v8": {
+          "digest": "cd97862b5a19688779717bbd920bbf299a960ad6cafcd9121bf764c01e4c66eb",
+          "url": "https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.35.0/rabbitmqadmin-2.35.0-aarch64-unknown-linux-gnu"
+        }
+      },
+      "version": "2.35.0"
+    },
+    "ubuntu": {
+      "version": "26.04"
+    },
+    "version": "4.4.0"
+  },
   "4.4-rc": null
 }
