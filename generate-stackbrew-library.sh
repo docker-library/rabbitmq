@@ -138,6 +138,14 @@ for version; do
 			}' "$dir/Dockerfile")"
 		variantArches="${parentRepoToArches[$variantParent]}"
 
+		# DOI cannot support riscv64 on Ubuntu 25.10+ since it uses RVA23 and hardware does not exist yet
+		# https://github.com/docker-library/official-images/pull/19581#issuecomment-3161255023
+		# comparing to 26+ since we only care about lts releases of Ubuntu
+		parentTag="${variantParent#*:}"
+		if [ "$variant" = 'ubuntu' ] && [ "${parentTag%%.*}" -ge 26 ]; then
+			variantArches="$(sed <<<" $variantArches " -e 's/ riscv64 / /g')"
+		fi
+
 		echo
 		cat <<-EOE
 			Tags: $(join ', ' "${variantAliases[@]}")
